@@ -19,7 +19,7 @@ using Exception = Autodesk.AutoCAD.Runtime.Exception;
 
 namespace Pyrrha
 {
-    public static class Pyrrha
+    public static class StaticExtenstions
     {
         /// <summary>
         ///     Loads a linetype into the MdiActiveDocument
@@ -143,7 +143,7 @@ namespace Pyrrha
             return Color.FromColorIndex(ColorMethod.ByAci , colorIndex);
         }
 
-        public static Block CreateNewBlock(this Autodesk.AutoCAD.ApplicationServices.Document acDoc ,
+        public static BlockReference CreateNewBlock(this Autodesk.AutoCAD.ApplicationServices.Document acDoc ,
             string definitionName ,
             Scale3d scale ,
             Point3d pos ,
@@ -205,7 +205,7 @@ namespace Pyrrha
                 //Close transaction
                 trans.Commit();
             }
-            return new Block(blkRef);
+            return blkRef;
         }
 
         public static IList<Entity> ApplyFilter(this IList<Entity> entList , EntitySelectionFilter filter)

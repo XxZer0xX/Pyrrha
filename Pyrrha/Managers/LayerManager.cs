@@ -36,7 +36,7 @@ namespace Pyrrha.Managers
 
         public Layer CreateNewLayer( string layerName , short color )
         {
-            return this._createNewLayer( layerName , Pyrrha.GenerateAutoCadColor( color ) );
+            return this._createNewLayer( layerName , StaticExtenstions.GenerateAutoCadColor( color ) );
         }
 
         public Layer CreateNewLayer( string layerName , Color color )
@@ -46,7 +46,7 @@ namespace Pyrrha.Managers
 
         public Layer CreateNewLayer( string layerName , short color , string linetype )
         {
-            return this._createNewLayer( layerName , Pyrrha.GenerateAutoCadColor( color ) , linetype );
+            return this._createNewLayer( layerName , StaticExtenstions.GenerateAutoCadColor( color ) , linetype );
         }
 
         public Layer CreateNewLayer( string layerName , Color color , string linetype )
@@ -56,7 +56,7 @@ namespace Pyrrha.Managers
 
         public Layer CreateNewLayer( string layerName , short color , string linetype , LineWeight lineWeight )
         {
-            return this._createNewLayer( layerName , Pyrrha.GenerateAutoCadColor( color ) , linetype , lineWeight );
+            return this._createNewLayer( layerName , StaticExtenstions.GenerateAutoCadColor( color ) , linetype , lineWeight );
         }
 
         public Layer CreateNewLayer( string layerName , Color color , string linetype , LineWeight lineWeight )
@@ -71,7 +71,7 @@ namespace Pyrrha.Managers
             LineWeight lineWeight ,
             ResultBuffer XData )
         {
-            return this._createNewLayer( layerName , Pyrrha.GenerateAutoCadColor( color ) , linetype , lineWeight ,
+            return this._createNewLayer( layerName , StaticExtenstions.GenerateAutoCadColor( color ) , linetype , lineWeight ,
                                          XData );
         }
 
@@ -95,7 +95,7 @@ namespace Pyrrha.Managers
             var newLayerRecord = new LayerTableRecord
             {
                 Name = layerName ,
-                Color = color ?? Pyrrha.GenerateAutoCadColor( 7 ) ,
+                Color = color ?? StaticExtenstions.GenerateAutoCadColor( 7 ) ,
                 LineWeight = lineWeight ?? LineWeight.ByLineWeightDefault ,
                 XData = XData ,
             };
@@ -104,7 +104,7 @@ namespace Pyrrha.Managers
                 using ( var linetypeTable = (LinetypeTable)
                                             this._database.LinetypeTableId.Open( OpenMode.ForRead ) )
                 {
-                    if ( !linetypeTable.Has( linetype ) ) Pyrrha.LoadLinetype( linetype );
+                    if ( !linetypeTable.Has( linetype ) ) StaticExtenstions.LoadLinetype( linetype );
 
                     newLayerRecord.LinetypeObjectId = linetypeTable[linetype];
                 }

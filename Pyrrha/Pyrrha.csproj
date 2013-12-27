@@ -31,11 +31,11 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="AcDbMgd">
-      <HintPath>..\..\..\..\..\..\AutoCAD_ObjectARX\2012\inc\AcDbMgd.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\AutoCAD_ObjectARX\ 2012\inc\AcDbMgd.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="AcMgd">
-      <HintPath>..\..\..\..\..\..\AutoCAD_ObjectARX\2012\inc\AcMgd.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\AutoCAD_ObjectARX\ 2012\inc\AcMgd.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />
@@ -49,11 +49,7 @@
   <ItemGroup>
     <Compile Include="Application.cs" />
     <Compile Include="Document.cs" />
-    <Compile Include="Block.cs" />
-    <Compile Include="BlockAttribute.cs" />
-    <Compile Include="CadAccessExtenstions.cs" />
-    <Compile Include="Collections\AttributeDictionary.cs" />
-    <Compile Include="Collections\Enumerators\SafeDictionaryEnumerator.cs" />
+    <Compile Include="StaticExtenstions.cs" />
     <Compile Include="SelectionFilter\EntitySelectionFilter.cs" />
     <Compile Include="Layer.cs" />
     <Compile Include="Managers\LayerManager.cs" />

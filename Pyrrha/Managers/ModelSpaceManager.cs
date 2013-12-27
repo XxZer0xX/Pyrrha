@@ -48,7 +48,7 @@ namespace Pyrrha.Managers
 
         #region Methods
 
-        public Block CreateNewBlock(
+        public BlockReference CreateNewBlock(
            string definitionName ,
            Scale3d scale = default (Scale3d) ,
            Point3d pos = default(Point3d) ,
@@ -57,7 +57,7 @@ namespace Pyrrha.Managers
             return acDoc.CreateNewBlock(definitionName , scale , pos , layerName);
         }
 
-        public void AddEntity(List<Entity> entityList)
+        public void AddEntity(IList<Entity> entityList)
         {
             using (var modelSpace = (BlockTableRecord)_modelSpace.ObjectId.Open(OpenMode.ForWrite))
             {
@@ -73,7 +73,7 @@ namespace Pyrrha.Managers
             }
         }
 
-        public void CommitChanges(List<Entity> entityList)
+        public void CommitChanges(IList<Entity> entityList)
         {
             using (var trans = Database.TransactionManager.StartOpenCloseTransaction())
             {

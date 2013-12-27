@@ -24,7 +24,7 @@ namespace C_Sharp_Testing
 
             //foreach (Line lineEnt in entities)
             //{
-            //    lineEnt.Color = Pyrrha.Pyrrha.GenerateAutoCadColor(2);
+            //    lineEnt.Color = StaticExtenstions.StaticExtenstions.GenerateAutoCadColor(2);
             //}
 
             //ActiveDocument.ModelSpaceManager.CommitChanges(entities.ToList());
@@ -40,7 +40,8 @@ namespace C_Sharp_Testing
             sw = new Stopwatch();
             sw.Start();
 
-            var greenText = dbtext.ApplyFilter(new EntitySelectionFilter(color: 3));
+            dbtext.ToList().ForEach(ent => ent.Color = StaticExtenstions.GenerateAutoCadColor(3));
+            ActiveDocument.ModelSpaceManager.CommitChanges(dbtext);
 
             doc.Editor.WriteMessage("list refactor: {0}" , sw.ElapsedMilliseconds);
         }

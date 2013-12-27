@@ -99,7 +99,7 @@ namespace Pyrrha
                 {
                     var lineTable = (LinetypeTable) trans.GetObject(Database.LinetypeTableId, OpenMode.ForRead);
                     if (!lineTable.Has(value))
-                        Pyrrha.LoadLinetype(value);
+                        StaticExtenstions.LoadLinetype(value);
 
                     ( (LayerTableRecord) trans.GetObject(ObjectId, OpenMode.ForWrite) ).LinetypeObjectId =
                         lineTable[value];

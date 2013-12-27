@@ -1,5 +1,6 @@
 ﻿#region Referenceing
 
+using System;
 using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
@@ -9,6 +10,7 @@ using Pyrrha.Collections;
 
 namespace Pyrrha
 {
+    [Obsolete("Depreciated",true)]
     public class Block 
     {
         public readonly BlockReference OriginalBlockReference;

@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("StaticExtenstions")]
+[assembly: AssemblyTitle("Scripting")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Jacobs")]
-[assembly: AssemblyProduct("StaticExtenstions")]
-[assembly: AssemblyCopyright("Copyright © Jacobs 2013")]
+[assembly: AssemblyCompany("Microsoft")]
+[assembly: AssemblyProduct("Scripting")]
+[assembly: AssemblyCopyright("Copyright © Microsoft 2013")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("4a77848b-7b2d-47a5-a79d-91369b339cb7")]
+[assembly: Guid("9ce79be3-b19b-4934-8622-8186311b9f65")]
 
 // Version information for an assembly consists of the following four values:
 //

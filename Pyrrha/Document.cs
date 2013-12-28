@@ -277,17 +277,29 @@ namespace Pyrrha
 
         }
 
+        private IList<Entity> _getEntities(EntitySelectionFilter filter)
+        {
+            return _getEntities(new List<EntitySelectionFilter> { filter });
+        }
         private IList<Entity> _getEntities(IEnumerable<EntitySelectionFilter> filterList = null)
         {
             var objIdList = new List<ObjectId>();
-            foreach (var filter in filterList)
+            if (filterList == null)
             {
-                var objectIds = filter == null
-                    ? Editor.SelectAll().Value.GetObjectIds()
-                    : Editor.SelectAll(filter.Selection).Value.GetObjectIds();
-
-                if (objectIds.Count() > 0)
-                    objIdList.AddRange(objectIds);
+                var selection = Editor.SelectAll();
+                if (selection.Status == PromptStatus.Error)
+                    return null;
+                objIdList = selection.Value.GetObjectIds().ToList();
+            }
+                
+            else
+            {
+                foreach (var filter in filterList)
+                {
+                    var objectIds = Editor.SelectAll(filter.Selection).Value.GetObjectIds();
+                    if (objectIds.Count() > 0)
+                        objIdList.AddRange(objectIds);
+                }
             }
 
             var rtnList = new List<Entity>();
@@ -316,6 +328,7 @@ namespace Pyrrha
                         using (resBuffer)
                             moddedEntity.XData = resBuffer;
                         rtnList.Add(moddedEntity);
+                        actualEntity.Dispose();
                     }
                 }
                 trans.Commit();
@@ -323,10 +336,7 @@ namespace Pyrrha
             return rtnList.Count > 0 ? rtnList : null;
         }
 
-        private IList<Entity> _getEntities(EntitySelectionFilter filter)
-        {
-            return _getEntities(new List<EntitySelectionFilter> {filter});
-        }
+        
 
         #endregion
 

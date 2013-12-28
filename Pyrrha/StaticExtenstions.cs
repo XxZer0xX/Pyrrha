@@ -218,7 +218,10 @@ namespace Pyrrha
 
             using (var trans = acDb.TransactionManager.StartOpenCloseTransaction())
             {
-                handles = acEd.SelectAll(filter.Selection).Value.GetObjectIds().Select(objId =>
+                var selection = acEd.SelectAll(filter.Selection);
+                if (selection.Status == PromptStatus.Error)
+                    return null;
+                handles = selection.Value.GetObjectIds().Select(objId =>
                 {
                     using (var ent = (Entity)trans.GetObject(objId , OpenMode.ForRead))
                     {

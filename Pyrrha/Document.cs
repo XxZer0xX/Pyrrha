@@ -1,17 +1,17 @@
 ﻿#region Referenceing
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
-using Autodesk.AutoCAD.GraphicsInterface;
 using Pyrrha.Managers;
 using Pyrrha.SelectionFilter;
+using Pyrrha.Util;
 using DbTransactionManager = Autodesk.AutoCAD.DatabaseServices.TransactionManager;
+using AcApp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 #endregion
 
@@ -202,10 +202,19 @@ namespace Pyrrha
 
         #region Constructor
 
+       
+        public Document()
+            : this(AcApp.DocumentManager.MdiActiveDocument) { }
+
+        public Document(string path):this(AcApp.DocumentManager.Open(path,false))
+        { 
+        }
+        
         public Document(Autodesk.AutoCAD.ApplicationServices.Document documentParameter)
         {
             OriginalDocument = documentParameter;
         }
+
 
         #endregion
 
@@ -273,8 +282,11 @@ namespace Pyrrha
         public void SendCommandSynchronously(string command)
         {
             OriginalDocument.SendCommandSynchronously(command);
+        }
 
-
+        public void SaveAndCLose()
+        {
+            OriginalDocument.CloseAndSave(@"C\debug\text.dwg");
         }
 
         private IList<Entity> _getEntities(IEnumerable<EntitySelectionFilter> filterList = null)

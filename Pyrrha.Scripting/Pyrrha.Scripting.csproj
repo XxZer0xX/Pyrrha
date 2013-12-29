@@ -31,11 +31,11 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="AcDbMgd">
-      <HintPath>..\..\..\..\..\..\AutoCAD_ObjectARX\ 2012\inc\AcDbMgd.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\ObjectARX\ 2012\inc\AcDbMgd.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="AcMgd">
-      <HintPath>..\..\..\..\..\..\AutoCAD_ObjectARX\ 2012\inc\AcMgd.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\ObjectARX\ 2012\inc\AcMgd.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="IronPython, Version=2.7.0.40, Culture=neutral, PublicKeyToken=7f709c5b713576e1, processorArchitecture=MSIL" />

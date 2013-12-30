@@ -7,13 +7,10 @@ using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Runtime;
 using Pyrrha.SelectionFilter;
-<<<<<<< HEAD
 using Autodesk.AutoCAD.Geometry;
-
-=======
 using Pyrrha.Util;
 using Document = Pyrrha.Document;
->>>>>>> master
+
 
 namespace C_Sharp_Testing
 {
@@ -23,9 +20,7 @@ namespace C_Sharp_Testing
         [CommandMethod("tst1")]
         public void test1()
         {
-            
-            var doc = Application.DocumentManager.MdiActiveDocument;
-            var ActiveDocument = new Document(doc);
+            var ActiveDocument = new Document();
 
             //var entities = ActiveDocument.ModelSpaceEntities.Where(ent => ent is Line).ToArray();
 
@@ -42,10 +37,21 @@ namespace C_Sharp_Testing
             //var mtext = ActiveDocument.MText;
             //var dbtext = ActiveDocument.DBText;
 
-            var lineFilter = new LineSelectionFilter(startX: new PointOperation(">", 4));
-            var textFilter = new TextSelectionFilter { TextString = "TEXT", ColorIndex = 3 };
+            var lineFilter = new LineSelectionFilter(startX: new PointQuery(">", 4));
+            var textFilter = new TextSelectionFilter { ColorIndex = 3 };
             var lines = ActiveDocument.ModelSpaceEntities.ApplyFilter(lineFilter);
             var dbText = ActiveDocument.ModelSpaceEntities.ApplyFilter(textFilter);
+            var blocks = ActiveDocument.Blocks;
+
+            foreach ( var block in blocks )
+            {
+                var attr =
+                    block.AttributeCollection.Cast<AttributeReference>()
+                        .FirstOrDefault( attrr => attrr.Tag.Equals( "app#", StringComparison.CurrentCultureIgnoreCase ) );
+                if ( attr != null )
+                    attr.TextString = "Success!!";
+            }
+            ActiveDocument.ModelSpaceManager.CommitChanges(blocks);
 
             //doc.Editor.WriteMessage("{0} text entities processed: {1}\n"
             //                            , ActiveDocument.AllText.Count

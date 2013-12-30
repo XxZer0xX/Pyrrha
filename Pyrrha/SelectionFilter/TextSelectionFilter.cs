@@ -9,15 +9,15 @@ namespace Pyrrha.SelectionFilter
 {
     public class TextSelectionFilter : EntitySelectionFilter
     {
-        public PointOperation? AlignmentX { get; set; }
-        public PointOperation? AlignmentY { get; set; }
-        public PointOperation? AlignmentZ { get; set; }
+        public PointQuery? AlignmentX { get; set; }
+        public PointQuery? AlignmentY { get; set; }
+        public PointQuery? AlignmentZ { get; set; }
         public double? Height { get; set; }
         public AttachmentPoint? Justify { get; set; }
         public double? Oblique { get; set; }
-        public PointOperation? PositionX { get; set; }
-        public PointOperation? PositionY { get; set; }
-        public PointOperation? PositionZ { get; set; }
+        public PointQuery? PositionX { get; set; }
+        public PointQuery? PositionY { get; set; }
+        public PointQuery? PositionZ { get; set; }
         public double? Rotation { get; set; }
         public string TextString { get; set; }
         public string TextStyle { get; set; }
@@ -25,14 +25,14 @@ namespace Pyrrha.SelectionFilter
         public double? Width { get; set; }
 
         public TextSelectionFilter( double? height = null,
-            PointOperation? alignmentX = null,
-            PointOperation? alignmentY = null,
-            PointOperation? alignmentZ = null,
+            PointQuery? alignmentX = null,
+            PointQuery? alignmentY = null,
+            PointQuery? alignmentZ = null,
             AttachmentPoint? justify = null,
             double? oblique = null,
-            PointOperation? positionX = null,
-            PointOperation? positionY = null,
-            PointOperation? positionZ = null,
+            PointQuery? positionX = null,
+            PointQuery? positionY = null,
+            PointQuery? positionZ = null,
             double? rotation = null,
             string textString = null,
             string textStyle = null,
@@ -56,7 +56,7 @@ namespace Pyrrha.SelectionFilter
             Width = width;
         }
 
-        internal override List<TypedValue> GetSelectionFilter()
+        internal override IList<TypedValue> GetSelectionFilter()
         {
             var rtnList = base.GetSelectionFilter(); // Get the entity filter content
             var text = new DBText();
@@ -65,7 +65,7 @@ namespace Pyrrha.SelectionFilter
             var opString = AlignmentX == null ? "*" : AlignmentX.Value.Operator;
             opString += AlignmentY == null ? ",*" : "," + AlignmentY.Value.Operator;
             opString += AlignmentZ == null ? ",*" : "," + AlignmentZ.Value.Operator;
-            if ((opString).Contains('='))
+            if (!opString.Equals("*,*,*"))
             {
                 rtnList.Add(new TypedValue(-4, opString));
                 var sPoint = new Point3d(AlignmentX == null ? 0 : AlignmentX.Value.PointValue,
@@ -87,7 +87,7 @@ namespace Pyrrha.SelectionFilter
             opString = PositionX == null ? "*" : PositionX.Value.Operator;
             opString += PositionY == null ? ",*" : "," + PositionY.Value.Operator;
             opString += PositionZ == null ? ",*" : "," + PositionZ.Value.Operator;
-            if ((opString).Contains('='))
+            if (!opString.Equals("*,*,*"))
             {
                 rtnList.Add(new TypedValue(-4, opString));
                 var sPoint = new Point3d(PositionX == null ? 0 : PositionX.Value.PointValue,

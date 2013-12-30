@@ -171,7 +171,7 @@ namespace Pyrrha
         /// </summary>
         public IList<Entity> AllText
         {
-            get { return DBText.Union(MText).ToList(); }
+            get { return _getEntities(new EntitySelectionFilter("*TEXT")); }
         }
 
         /// <summary>
@@ -210,7 +210,7 @@ namespace Pyrrha
         { 
         }
         
-        public Document(Autodesk.AutoCAD.ApplicationServices.Document documentParameter)
+        private Document(Autodesk.AutoCAD.ApplicationServices.Document documentParameter)
         {
             OriginalDocument = documentParameter;
         }
@@ -293,6 +293,7 @@ namespace Pyrrha
         {
             return _getEntities(new List<EntitySelectionFilter> { filter });
         }
+
         private IList<Entity> _getEntities(IEnumerable<EntitySelectionFilter> filterList = null)
         {
             var objIdList = new List<ObjectId>();
@@ -315,9 +316,8 @@ namespace Pyrrha
             }
 
             var rtnList = new List<Entity>();
-            using (var trans = TransactionManager.StartOpenCloseTransaction())
+            using (var regAppTable = (RegAppTable)Database.RegAppTableId.Open(OpenMode.ForRead))
             {
-                var regAppTable = (RegAppTable)trans.GetObject(Database.RegAppTableId , OpenMode.ForRead);
                 if (!regAppTable.Has("PYRRHA"))
                 {
                     using (var innerTrans = TransactionManager.StartOpenCloseTransaction())
@@ -328,24 +328,9 @@ namespace Pyrrha
                         innerTrans.AddNewlyCreatedDBObject(newAppRcd , true);
                         innerTrans.Commit();
                     }
-                }
-
-                foreach (var objId in objIdList)
-                {
-                    using (var actualEntity = trans.GetObject(objId , OpenMode.ForRead))
-                    {
-                        var moddedEntity = (Entity)actualEntity.Clone();
-                        var resBuffer = new ResultBuffer(
-                            new TypedValue(1001 , "PYRRHA") , new TypedValue(1005 , actualEntity.Handle));
-                        using (resBuffer)
-                            moddedEntity.XData = resBuffer;
-                        rtnList.Add(moddedEntity);
-                        actualEntity.Dispose();
-                    }
-                }
-                trans.Commit();
+                } 
             }
-            return rtnList.Count > 0 ? rtnList : null;
+            return StaticExtenstions.GetEntityClones(objIdList) ?? null;
         }
 
         

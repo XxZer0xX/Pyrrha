@@ -14,21 +14,21 @@ namespace Pyrrha.SelectionFilter
     public sealed class LineSelectionFilter : EntitySelectionFilter
     {
         public double? Angle { get; set; }
-        public PointOperation? EndX { get; set; }
-        public PointOperation? EndY { get; set; }
-        public PointOperation? EndZ { get; set; }
-        public PointOperation? StartX { get; set; }
-        public PointOperation? StartY { get; set; }
-        public PointOperation? StartZ { get; set; }
+        public PointQuery? EndX { get; set; }
+        public PointQuery? EndY { get; set; }
+        public PointQuery? EndZ { get; set; }
+        public PointQuery? StartX { get; set; }
+        public PointQuery? StartY { get; set; }
+        public PointQuery? StartZ { get; set; }
         public double? Thickness { get; set; }
         
         public LineSelectionFilter(double? angle = null,
-            PointOperation? endX = null,
-            PointOperation? endY = null,
-            PointOperation? endZ = null,
-            PointOperation? startX = null,
-            PointOperation? startY = null,
-            PointOperation? startZ = null,
+            PointQuery? endX = null,
+            PointQuery? endY = null,
+            PointQuery? endZ = null,
+            PointQuery? startX = null,
+            PointQuery? startY = null,
+            PointQuery? startZ = null,
             double? thickness = null)
             : base(type: "LINE")
         {
@@ -42,7 +42,7 @@ namespace Pyrrha.SelectionFilter
             Thickness = thickness;
         }
 
-        internal override List<TypedValue> GetSelectionFilter()
+        internal override IList<TypedValue> GetSelectionFilter()
         {
             var rtnList = base.GetSelectionFilter(); // Get the entity filter content
 
@@ -53,7 +53,7 @@ namespace Pyrrha.SelectionFilter
             var opString = StartX == null ? "*" : StartX.Value.Operator;
             opString += StartY == null ? ",*" : "," + StartY.Value.Operator;
             opString += StartZ == null ? ",*" : "," + StartZ.Value.Operator;
-            if ((opString).Contains('='))
+            if (!opString.Equals("*,*,*"))
             {
                 rtnList.Add(new TypedValue(-4, opString));
                 var sPoint = new Point3d(StartX == null ? 0 : StartX.Value.PointValue,
@@ -66,7 +66,7 @@ namespace Pyrrha.SelectionFilter
             opString = EndX == null ? "*" : EndX.Value.Operator;
             opString += EndY == null ? ",*" : "," + EndY.Value.Operator;
             opString += EndZ == null ? ",*" : "," + EndZ.Value.Operator;
-            if ((opString).Contains('='))
+            if (!opString.Equals("*,*,*"))
             {
                 rtnList.Add(new TypedValue(-4, opString));
                 var sPoint = new Point3d(EndX == null ? 0 : EndX.Value.PointValue,

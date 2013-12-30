@@ -53,7 +53,7 @@ namespace Pyrrha.SelectionFilter
             Visible = visible;
         }
 
-        internal virtual List<TypedValue> GetSelectionFilter()
+        internal virtual IList<TypedValue> GetSelectionFilter()
         {
             var rtnList = new List<TypedValue>();
             if (Type != null)
@@ -77,7 +77,8 @@ namespace Pyrrha.SelectionFilter
             
             return rtnList.Count > 0 ? rtnList : null;
         }
-        private List<TypedValue> _closeFilter(IEnumerable<TypedValue> filterContent)
+
+        private IList<TypedValue> _closeFilter(IEnumerable<TypedValue> filterContent)
         {
             var rtnList = filterContent.ToList();
             if (rtnList.Count > 1)

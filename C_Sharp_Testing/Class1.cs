@@ -7,8 +7,13 @@ using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Runtime;
 using Pyrrha.SelectionFilter;
+<<<<<<< HEAD
+using Autodesk.AutoCAD.Geometry;
+
+=======
 using Pyrrha.Util;
 using Document = Pyrrha.Document;
+>>>>>>> master
 
 namespace C_Sharp_Testing
 {
@@ -31,21 +36,32 @@ namespace C_Sharp_Testing
 
             //ActiveDocument.ModelSpaceManager.CommitChanges(entities.ToList());
 
-
-            var sw = new Stopwatch();
-            sw.Start();
+            //var sw = new Stopwatch();
+            //sw.Start();
             //var allText = ActiveDocument.AllText;
             //var mtext = ActiveDocument.MText;
-            var dbtext = ActiveDocument.DBText;
+            //var dbtext = ActiveDocument.DBText;
 
-            doc.Editor.WriteMessage("list full: {0}" , sw.ElapsedMilliseconds);
-            sw = new Stopwatch();
-            sw.Start();
+            var lineFilter = new LineSelectionFilter(startX: new PointOperation(">", 4));
+            var textFilter = new TextSelectionFilter { TextString = "TEXT", ColorIndex = 3 };
+            var lines = ActiveDocument.ModelSpaceEntities.ApplyFilter(lineFilter);
+            var dbText = ActiveDocument.ModelSpaceEntities.ApplyFilter(textFilter);
 
-            dbtext.ToList().ForEach(ent => ent.Color = StaticExtenstions.GenerateAutoCadColor(3));
-            ActiveDocument.ModelSpaceManager.CommitChanges(dbtext);
+            //doc.Editor.WriteMessage("{0} text entities processed: {1}\n"
+            //                            , ActiveDocument.AllText.Count
+            //                            , sw.ElapsedMilliseconds);
 
-            doc.Editor.WriteMessage("list refactor: {0}" , sw.ElapsedMilliseconds);
+            //sw = new Stopwatch();
+            //sw.Start();
+
+            //dbtext.ToList().ForEach(ent => ent.Color = StaticExtenstions.GenerateAutoCadColor(3));
+            //ActiveDocument.ModelSpaceManager.CommitChanges(dbtext);
+
+            //sw.Stop();
+            //doc.Editor.WriteMessage("{0} DbText entities modified: {1}\n" 
+            //                        , dbtext.Count
+            //                        , sw.ElapsedMilliseconds);
+
         }
     }
 

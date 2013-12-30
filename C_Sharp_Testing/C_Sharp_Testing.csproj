@@ -31,6 +31,11 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="AcDbMgd">
+      <HintPath>..\..\..\..\..\..\ObjectARX\2012\inc\AcDbMgd.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="AcMgd">
+      <HintPath>..\..\..\..\..\..\ObjectARX\2012\inc\AcMgd.dll</HintPath>
       <HintPath>..\..\..\..\..\..\ObjectARX\ 2012\inc\AcDbMgd.dll</HintPath>
       <Private>False</Private>
     </Reference>

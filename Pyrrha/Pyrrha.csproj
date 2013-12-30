@@ -36,6 +36,11 @@
     </Reference>
     <Reference Include="AcMgd">
       <HintPath>..\..\..\..\..\..\ObjectARX\2012\inc\AcMgd.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\ObjectARX\ 2012\inc\AcDbMgd.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="AcMgd">
+      <HintPath>..\..\..\..\..\..\ObjectARX\ 2012\inc\AcMgd.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />
@@ -47,11 +52,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Application.cs" />
     <Compile Include="Document.cs" />
     <Compile Include="SelectionFilter\PointQuery.cs" />
     <Compile Include="SelectionFilter\TextSelectionFilter.cs" />
     <Compile Include="StaticExtenstions.cs" />
+    <Compile Include="Util\StaticExtenstions.cs" />
     <Compile Include="SelectionFilter\EntitySelectionFilter.cs" />
     <Compile Include="Layer.cs" />
     <Compile Include="Managers\LayerManager.cs" />

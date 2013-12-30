@@ -3,12 +3,17 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
-using Pyrrha;
 using Autodesk.AutoCAD.Runtime;
 using Pyrrha.SelectionFilter;
+<<<<<<< HEAD
 using Autodesk.AutoCAD.Geometry;
 
+=======
+using Pyrrha.Util;
+using Document = Pyrrha.Document;
+>>>>>>> master
 
 namespace C_Sharp_Testing
 {

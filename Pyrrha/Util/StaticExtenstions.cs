@@ -1,23 +1,23 @@
 ﻿#region Referenceing
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
-using Autodesk.AutoCAD.ApplicationServices;
+
 using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using Pyrrha.SelectionFilter;
+using AcApp = Autodesk.AutoCAD.ApplicationServices.Application;
 using Exception = Autodesk.AutoCAD.Runtime.Exception;
 
 #endregion
 
-namespace Pyrrha
+namespace Pyrrha.Util
 {
     public static class StaticExtenstions
     {
@@ -26,18 +26,18 @@ namespace Pyrrha
         /// </summary>
         public static void LoadLinetype(string value)
         {
-            Autodesk.AutoCAD.ApplicationServices.Document acDoc = Application.DocumentManager.MdiActiveDocument;
+            Autodesk.AutoCAD.ApplicationServices.Document acDoc = AcApp.DocumentManager.MdiActiveDocument;
 
             using (OpenCloseTransaction trans = acDoc.TransactionManager.StartOpenCloseTransaction())
             {
                 var lineTypeTable = trans.GetObject(
-                    acDoc.Database.LinetypeTableId , OpenMode.ForRead) as LinetypeTable;
+                    acDoc.Database.LinetypeTableId, OpenMode.ForRead) as LinetypeTable;
 
                 if (lineTypeTable == null)
                     throw new NullReferenceException("AutoDesk.AutoCad.DatabaseServices.LineTypeTable");
 
                 if (!lineTypeTable.Has(value))
-                    acDoc.Database.LoadLineTypeFile(value , "acad.lin");
+                    acDoc.Database.LoadLineTypeFile(value, "acad.lin");
 
                 trans.Commit();
             }
@@ -46,18 +46,18 @@ namespace Pyrrha
         /// <summary>
         ///     Loads a linetype into the database.
         /// </summary>
-        public static void LoadLinetype(this Database database , string value)
+        public static void LoadLinetype(this Database database, string value)
         {
             using (OpenCloseTransaction trans = database.TransactionManager.StartOpenCloseTransaction())
             {
                 var lineTypeTable = trans.GetObject(
-                    database.LinetypeTableId , OpenMode.ForRead) as LinetypeTable;
+                    database.LinetypeTableId, OpenMode.ForRead) as LinetypeTable;
 
                 if (lineTypeTable == null)
                     throw new NullReferenceException("AutoDesk.AutoCad.DatabaseServices.LineTypeTable");
 
                 if (!lineTypeTable.Has(value))
-                    database.LoadLineTypeFile(value , "acad.lin");
+                    database.LoadLineTypeFile(value, "acad.lin");
 
                 trans.Commit();
             }
@@ -66,7 +66,7 @@ namespace Pyrrha
         /// <summary>
         ///     If document has specified linetype loaded.
         /// </summary>
-        public static bool LinetypeIsLoaded(this Document document , string linetype)
+        public static bool LinetypeIsLoaded(this Document document, string linetype)
         {
             using (var lineTypeTable = document.Database.LinetypeTableId.Open(OpenMode.ForRead))
                 return ((LinetypeTable)lineTypeTable).Has(linetype);
@@ -89,12 +89,13 @@ namespace Pyrrha
                 foreach (ObjectId objId in objIdCollection)
                     try
                     {
-                        (trans.GetObject(objId , OpenMode.ForWrite)).Erase();
-                    } catch (Exception e)
+                        (trans.GetObject(objId, OpenMode.ForWrite)).Erase();
+                    }
+                    catch (Exception e)
                     {
                         if (!e.ErrorStatus.Equals(ErrorStatus.WasErased) &&
                             !e.ErrorStatus.Equals(ErrorStatus.CannotBeErasedByCaller) &&
-                            !e.Message.Equals("eVSIsAcadDefault" , StringComparison.CurrentCultureIgnoreCase)) throw;
+                            !e.Message.Equals("eVSIsAcadDefault", StringComparison.CurrentCultureIgnoreCase)) throw;
                     }
                 //  --------------------------------------------------
 
@@ -102,12 +103,18 @@ namespace Pyrrha
             }
         }
 
-        public static void SendCommandSynchronously(this Autodesk.AutoCAD.ApplicationServices.Document document , string commandString)
+        public static void SendCommandSynchronously(this Autodesk.AutoCAD.ApplicationServices.Document document, string commandString)
         {
             object[] data = { commandString + "\n" };
-            object comDocument = document.AcadDocument;
-            comDocument.GetType().InvokeMember("SendCommand" , BindingFlags.InvokeMethod ,
-                                            null , comDocument , data);
+            var comDocument = document.AcadDocument;
+            comDocument.GetType().InvokeMember("SendCommand", BindingFlags.InvokeMethod,
+                                            null, comDocument, data);
+        }
+
+        public static void WriteToActiveDocument(string message)
+        {
+            if (AcApp.DocumentManager.MdiActiveDocument != null)
+                AcApp.DocumentManager.MdiActiveDocument.Editor.WriteMessage(message);
         }
 
         private static ObjectIdCollection IterateDb(Database dbParameter)
@@ -120,7 +127,7 @@ namespace Pyrrha
             {
                 var objId = new ObjectId();
 
-                if (!(dbParameter.TryGetObjectId(new Handle(i) , out objId)))
+                if (!(dbParameter.TryGetObjectId(new Handle(i), out objId)))
                     continue;
 
                 if (!objId.IsValid || objId.IsEffectivelyErased)
@@ -128,7 +135,7 @@ namespace Pyrrha
 
                 using (OpenCloseTransaction trans = dbParameter.TransactionManager.StartOpenCloseTransaction())
                 {
-                    using (DBObject obj = trans.GetObject(objId , OpenMode.ForRead , false , false))
+                    using (DBObject obj = trans.GetObject(objId, OpenMode.ForRead, false, false))
 
                         objIdCollection.Add(objId);
 
@@ -140,13 +147,13 @@ namespace Pyrrha
 
         public static Color GenerateAutoCadColor(short colorIndex)
         {
-            return Color.FromColorIndex(ColorMethod.ByAci , colorIndex);
+            return Color.FromColorIndex(ColorMethod.ByAci, colorIndex);
         }
 
-        public static BlockReference CreateNewBlock(this Autodesk.AutoCAD.ApplicationServices.Document acDoc ,
-            string definitionName ,
-            Scale3d scale ,
-            Point3d pos ,
+        public static BlockReference CreateNewBlock(this Autodesk.AutoCAD.ApplicationServices.Document acDoc,
+            string definitionName,
+            Scale3d scale,
+            Point3d pos,
             string layerName)
         {
             // Create placeholder for new block
@@ -158,7 +165,7 @@ namespace Pyrrha
             using (var trans = Database.TransactionManager.StartOpenCloseTransaction())
             {
                 // Open the block table
-                var blkTbl = (BlockTable)trans.GetObject(Database.BlockTableId , OpenMode.ForRead);
+                var blkTbl = (BlockTable)trans.GetObject(Database.BlockTableId, OpenMode.ForRead);
 
                 // Check for the block definition in the block table
                 if (!blkTbl.Has(definitionName))
@@ -167,9 +174,9 @@ namespace Pyrrha
                 }
 
                 // Get the record
-                var blkRcd = (BlockTableRecord)trans.GetObject(blkTbl[definitionName] , OpenMode.ForWrite);
+                var blkRcd = (BlockTableRecord)trans.GetObject(blkTbl[definitionName], OpenMode.ForWrite);
 
-                var layerTable = (LayerTable)trans.GetObject(Database.LayerTableId , OpenMode.ForRead);
+                var layerTable = (LayerTable)trans.GetObject(Database.LayerTableId, OpenMode.ForRead);
 
                 if (!layerTable.Has(layerName))
                     layerName = "0";
@@ -178,9 +185,9 @@ namespace Pyrrha
 
                     // Have user specify point of insertion and get value
                     : acDoc.Editor.GetPoint(
-                        new PromptPointOptions("Please choose insertion point")).Value , blkRcd.ObjectId)
+                        new PromptPointOptions("Please choose insertion point")).Value, blkRcd.ObjectId)
                 {
-                    LayerId = layerName == "0" ? layerTable["0"] : layerTable[layerName] ,
+                    LayerId = layerName == "0" ? layerTable["0"] : layerTable[layerName],
                     ScaleFactors = scale
                 };
 
@@ -190,17 +197,17 @@ namespace Pyrrha
                 using (var modelSpace = (BlockTableRecord)SymbolUtilityServices.GetBlockModelSpaceId(Database).Open(OpenMode.ForWrite))
                     modelSpace.AppendEntity(blkRef);
 
-                foreach (var attrDef in blkRcd.Cast<ObjectId>().Select(objid => trans.GetObject(objid , OpenMode.ForWrite))
+                foreach (var attrDef in blkRcd.Cast<ObjectId>().Select(objid => trans.GetObject(objid, OpenMode.ForWrite))
                     .Where(obj => obj is AttributeDefinition))
                 {
                     var attRef = new AttributeReference();
-                    attRef.SetAttributeFromBlock((AttributeDefinition)attrDef , blkRef.BlockTransform);
+                    attRef.SetAttributeFromBlock((AttributeDefinition)attrDef, blkRef.BlockTransform);
                     blkRef.AttributeCollection.AppendAttribute(attRef);
-                    trans.AddNewlyCreatedDBObject(attRef , true);
+                    trans.AddNewlyCreatedDBObject(attRef, true);
                 }
 
                 // Append the new block
-                trans.AddNewlyCreatedDBObject(blkRef , true);
+                trans.AddNewlyCreatedDBObject(blkRef, true);
 
                 //Close transaction
                 trans.Commit();
@@ -208,7 +215,7 @@ namespace Pyrrha
             return blkRef;
         }
 
-        public static IList<Entity> ApplyFilter(this IList<Entity> entList , EntitySelectionFilter filter)
+        public static IList<Entity> ApplyFilter(this IList<Entity> entList, EntitySelectionFilter filter)
         {
             var acDoc = Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument;
             var acEd = acDoc.Editor;
@@ -223,7 +230,7 @@ namespace Pyrrha
                     return null;
                 handles = selection.Value.GetObjectIds().Select(objId =>
                 {
-                    using (var ent = (Entity)trans.GetObject(objId , OpenMode.ForRead))
+                    using (var ent = (Entity)trans.GetObject(objId, OpenMode.ForRead))
                     {
                         return ent.Handle;
                     }
@@ -250,7 +257,7 @@ namespace Pyrrha
 
                 rtnList.Add(entity);
                 handles.Remove(handle);
-                
+
             }
 
             return rtnList;

@@ -1,19 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
+﻿#region Referencing
+
+using System;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Windows.Forms;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Runtime;
 using IronPython.Hosting;
-using Microsoft.Scripting;
-using Microsoft.Scripting.Hosting;
-using Application = Autodesk.AutoCAD.ApplicationServices.Application;
+using Pyrrha.Util;
+using AcApp = Autodesk.AutoCAD.ApplicationServices.Application;
 using Exception = System.Exception;
 
-namespace Pyrrha.Util.Scripting
+#endregion
+
+namespace Pyrrha.Scripting.AutoCad
 {
     public class CommandLineLoader
     {
@@ -29,13 +29,12 @@ namespace Pyrrha.Util.Scripting
             PythonLoad(false);
         }
 
-
         public static void PythonLoad(bool useCmdLine)
         {
-            var doc = Application.DocumentManager.MdiActiveDocument;
+            var doc = AcApp.DocumentManager.MdiActiveDocument;
             var ed = doc.Editor;
 
-            var fd = (short)Application.GetSystemVariable("FILEDIA");
+            var fd = (short)AcApp.GetSystemVariable("FILEDIA");
 
             // Todo Implement Custom Loader View
 
@@ -56,10 +55,10 @@ namespace Pyrrha.Util.Scripting
         [LispFunction("PYLOAD")]
         public ResultBuffer PythonLoadLisp(ResultBuffer rb)
         {
-            const int RTSTR = 5005;
+            const int rtstr = 5005;
 
             var doc =
-              Application.DocumentManager.MdiActiveDocument;
+              AcApp.DocumentManager.MdiActiveDocument;
             if (rb == null)
             {
                 doc.Editor.WriteMessage("\nError: too few arguments\n");
@@ -69,55 +68,55 @@ namespace Pyrrha.Util.Scripting
             var args = rb.AsArray();
             var typedValue = (TypedValue)args.GetValue(0);
 
-            if (typedValue.TypeCode != RTSTR)
+            if (typedValue.TypeCode != rtstr)
                 return null;
 
-            bool success =
+            var success =
               ExecutePythonScript(Convert.ToString(typedValue.Value));
             return success ? new ResultBuffer(
-                    new TypedValue(RTSTR, typedValue.Value))
+                    new TypedValue(rtstr, typedValue.Value))
                     : null;
         }
 
         private static bool ExecutePythonScript(string file)
         {
-            if (!File.Exists(file)) return false;
+            if (!File.Exists(file))
+            {
+                StaticExtenstions.WriteToActiveDocument( string.Format(
+                    "{0} does not exist", file
+                    ) );
+                return false;
+            }
+
+            var engine = Python.CreateEngine();
+            var scriptSource = engine.CreateScriptSourceFromFile( file );
+            var errorListener = new PythonScriptingErrorListener();
+            var compliedScript = scriptSource.Compile( errorListener );
+
+            if(errorListener.ErrorDataList.Count > 0)
+            {
+                foreach (var error in errorListener.ErrorDataList)
+                
+                    StaticExtenstions.WriteToActiveDocument(
+                        string.Format("{1} Error: {0}",error.Message,error.Severity)
+                        );
+                
+                return false;
+            }
 
             try
             {
-                Python.CreateEngine().ExecuteFile(file);
+                compliedScript.Execute();
             }
-            catch ( Exception e)
+            catch ( Exception e )
             {
-                Application.DocumentManager.MdiActiveDocument.Editor.WriteMessage(e.Message);
+                StaticExtenstions.WriteToActiveDocument(
+                    string.Format("\nMessage: {0}\nSource:{1}", e.Message,e.Source));
                 return false;
             }
             
-            Application.DocumentManager.MdiActiveDocument.Editor.WriteMessage(Path.GetFileName(file) + " Execution Successful.");
+            StaticExtenstions.WriteToActiveDocument(Path.GetFileName(file) + " Execution Successful.");
             return true;
         }
-    }
-
-    public class PythonScriptingErrorListener : ErrorListener
-    {
-        public string Message;
-        public SourceSpan Span;
-        public int ErrorCode;
-        public Severity Severity;
-
-        public override void ErrorReported( 
-            ScriptSource source , 
-            string message , 
-            SourceSpan span , 
-            int errorCode , 
-            Severity severity )
-        {
-            this.Message = message;
-            this.Span = span;
-            this.ErrorCode = errorCode;
-            this.Severity = severity;
-        }
-
-
     }
 }

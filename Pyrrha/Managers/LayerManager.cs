@@ -3,6 +3,8 @@
 using System.Linq;
 using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
+using Pyrrha.Util;
+using AcApp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 #endregion
 
@@ -20,7 +22,7 @@ namespace Pyrrha.Managers
 
         #region Constructor
 
-        public LayerManager( Database database )
+        public LayerManager(Database database)
         {
             this._database = database;
         }
@@ -29,96 +31,109 @@ namespace Pyrrha.Managers
 
         #region CreateNewLayer Methods
 
-        public Layer CreateNewLayer( string layerName )
+        public Layer CreateNewLayer(string layerName)
         {
-            return this._createNewLayer( layerName );
+            return this._createNewLayer(layerName);
         }
 
-        public Layer CreateNewLayer( string layerName , short color )
+        public Layer CreateNewLayer(string layerName, short color)
         {
-            return this._createNewLayer( layerName , StaticExtenstions.GenerateAutoCadColor( color ) );
+            return this._createNewLayer(layerName, StaticExtenstions.GenerateAutoCadColor(color));
         }
 
-        public Layer CreateNewLayer( string layerName , Color color )
+        public Layer CreateNewLayer(string layerName, Color color)
         {
-            return this._createNewLayer( layerName , color );
+            return this._createNewLayer(layerName, color);
         }
 
-        public Layer CreateNewLayer( string layerName , short color , string linetype )
+        public Layer CreateNewLayer(string layerName, short color, string linetype)
         {
-            return this._createNewLayer( layerName , StaticExtenstions.GenerateAutoCadColor( color ) , linetype );
+            return this._createNewLayer(layerName, StaticExtenstions.GenerateAutoCadColor(color), linetype);
         }
 
-        public Layer CreateNewLayer( string layerName , Color color , string linetype )
+        public Layer CreateNewLayer(string layerName, Color color, string linetype)
         {
-            return this._createNewLayer( layerName , color , linetype );
+            return this._createNewLayer(layerName, color, linetype);
         }
 
-        public Layer CreateNewLayer( string layerName , short color , string linetype , LineWeight lineWeight )
+        public Layer CreateNewLayer(string layerName, short color, string linetype, LineWeight lineWeight)
         {
-            return this._createNewLayer( layerName , StaticExtenstions.GenerateAutoCadColor( color ) , linetype , lineWeight );
+            return this._createNewLayer(layerName, StaticExtenstions.GenerateAutoCadColor(color), linetype, lineWeight);
         }
 
-        public Layer CreateNewLayer( string layerName , Color color , string linetype , LineWeight lineWeight )
+        public Layer CreateNewLayer(string layerName, Color color, string linetype, LineWeight lineWeight)
         {
-            return this._createNewLayer( layerName , color , linetype , lineWeight );
-        }
-
-        public Layer CreateNewLayer(
-            string layerName ,
-            short color ,
-            string linetype ,
-            LineWeight lineWeight ,
-            ResultBuffer XData )
-        {
-            return this._createNewLayer( layerName , StaticExtenstions.GenerateAutoCadColor( color ) , linetype , lineWeight ,
-                                         XData );
+            return this._createNewLayer(layerName, color, linetype, lineWeight);
         }
 
         public Layer CreateNewLayer(
-            string layerName ,
-            Color color ,
-            string linetype ,
-            LineWeight lineWeight ,
-            ResultBuffer XData )
+            string layerName,
+            short color,
+            string linetype,
+            LineWeight lineWeight,
+            ResultBuffer XData)
         {
-            return this._createNewLayer( layerName , color , linetype , lineWeight , XData );
+            return this._createNewLayer(layerName, StaticExtenstions.GenerateAutoCadColor(color), linetype, lineWeight,
+                                         XData);
+        }
+
+        public Layer CreateNewLayer(
+            string layerName,
+            Color color,
+            string linetype,
+            LineWeight lineWeight,
+            ResultBuffer XData)
+        {
+            return this._createNewLayer(layerName, color, linetype, lineWeight, XData);
         }
 
         private Layer _createNewLayer(
-            string layerName ,
-            Color color = null ,
-            string linetype = null ,
-            LineWeight? lineWeight = null ,
-            ResultBuffer XData = null )
+            string layerName,
+            Color color = null,
+            string linetype = null,
+            LineWeight? lineWeight = null,
+            ResultBuffer XData = null)
         {
-            var newLayerRecord = new LayerTableRecord
+            Layer rtnLayer = null;
+            using (OpenCloseTransaction trans = this._database.TransactionManager.StartOpenCloseTransaction())
             {
-                Name = layerName ,
-                Color = color ?? StaticExtenstions.GenerateAutoCadColor( 7 ) ,
-                LineWeight = lineWeight ?? LineWeight.ByLineWeightDefault ,
-                XData = XData ,
-            };
-
-            if ( linetype != null )
-                using ( var linetypeTable = (LinetypeTable)
-                                            this._database.LinetypeTableId.Open( OpenMode.ForRead ) )
+                var layerTable = (LayerTable)trans.GetObject(this._database.LayerTableId, OpenMode.ForWrite);
+                if (layerTable.Has(layerName))
                 {
-                    if ( !linetypeTable.Has( linetype ) ) StaticExtenstions.LoadLinetype( linetype );
-
-                    newLayerRecord.LinetypeObjectId = linetypeTable[linetype];
+                    StaticExtenstions.WriteToActiveDocument(
+                        string.Format("\nlayer: {0} exists.", layerName)
+                        );
+                    layerTable.Dispose();
+                    trans.Commit();
+                    trans.Dispose();
+                    return null;
                 }
 
-            var newLayer = new Layer { OriginalRecord = newLayerRecord };
+                var newLayerRecord = new LayerTableRecord
+                {
+                    Name = layerName,
+                    Color = color ?? StaticExtenstions.GenerateAutoCadColor(7),
+                    LineWeight = lineWeight ?? LineWeight.ByLineWeightDefault,
+                    XData = XData,
+                };
 
-            using ( OpenCloseTransaction trans = this._database.TransactionManager.StartOpenCloseTransaction() )
-            {
-                var layerTable = (LayerTable) trans.GetObject( this._database.LayerTableId , OpenMode.ForWrite );
-                layerTable.Add( newLayer.OriginalRecord );
-                trans.AddNewlyCreatedDBObject( newLayer.OriginalRecord , true );
+                if (!string.IsNullOrEmpty(linetype))
+                    using (var linetypeTable = (LinetypeTable)trans.GetObject(
+                                                this._database.LinetypeTableId, OpenMode.ForRead))
+                    {
+                        if (!linetypeTable.Has(linetype))
+                            this._database.LoadLinetype(linetype);
+                        newLayerRecord.LinetypeObjectId = linetypeTable[linetype];
+                    }
+
+                rtnLayer = new Layer { OriginalRecord = newLayerRecord };
+
+                layerTable.Add(rtnLayer.OriginalRecord);
+                trans.AddNewlyCreatedDBObject(rtnLayer.OriginalRecord, true);
+                layerTable.Dispose();
                 trans.Commit();
             }
-            return newLayer;
+            return rtnLayer;
         }
 
         #endregion
@@ -127,18 +142,18 @@ namespace Pyrrha.Managers
 
         public void PurgeLayerTable()
         {
-            using ( OpenCloseTransaction trans = this._database.TransactionManager.StartOpenCloseTransaction() )
+            using (OpenCloseTransaction trans = this._database.TransactionManager.StartOpenCloseTransaction())
             {
-                var layerTable = (LayerTable) trans.GetObject( this._database.LayerTableId , OpenMode.ForRead );
+                var layerTable = (LayerTable)trans.GetObject(this._database.LayerTableId, OpenMode.ForRead);
 
-                var objIdCollection = new ObjectIdCollection( layerTable.Cast<ObjectId>().ToArray() );
+                var objIdCollection = new ObjectIdCollection(layerTable.Cast<ObjectId>().ToArray());
 
-                this._database.Purge( objIdCollection );
+                this._database.Purge(objIdCollection);
 
-                foreach ( ObjectId objectId in objIdCollection )
-                
-                    using ( DBObject layerRecord = objectId.Open( OpenMode.ForWrite ) ) layerRecord.Erase();
-                
+                foreach (ObjectId objectId in objIdCollection)
+
+                    using (DBObject layerRecord = objectId.Open(OpenMode.ForWrite)) layerRecord.Erase();
+
                 trans.Commit();
             }
         }

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Scripting;
 using Microsoft.Scripting.Hosting;
 using Pyrrha.Scripting.Util;
@@ -9,6 +8,7 @@ namespace Pyrrha.Scripting
     public class PythonScriptingErrorListener : ErrorListener
     {
         public IList<ErrorData> ErrorDataList { get; set; }
+        public bool FoundError { get; set; }
 
         public override void ErrorReported(
             ScriptSource source,
@@ -17,6 +17,8 @@ namespace Pyrrha.Scripting
             int errorCode,
             Severity severity)
         {
+            FoundError = true;
+
             this.ErrorDataList.Add(new ErrorData
             {
                 Message = message,

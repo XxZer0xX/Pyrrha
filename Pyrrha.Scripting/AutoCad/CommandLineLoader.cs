@@ -42,7 +42,7 @@ namespace Pyrrha.Scripting.AutoCad
                   "Select Python script to load"
                 )
             {
-                Filter = "Python script (*.py)|*.py",
+                Filter = "Python script (*.py)|*.py" ,
                 PreferCommandLine = (useCmdLine || fd == 0)
             };
 
@@ -74,49 +74,46 @@ namespace Pyrrha.Scripting.AutoCad
             var success =
               ExecutePythonScript(Convert.ToString(typedValue.Value));
             return success ? new ResultBuffer(
-                    new TypedValue(rtstr, typedValue.Value))
+                    new TypedValue(rtstr , typedValue.Value))
                     : null;
         }
 
-        private static bool ExecutePythonScript(string file)
+        private static bool ExecutePythonScript(string filePath)
         {
-            if (!File.Exists(file))
+            if (!File.Exists(filePath))
             {
-                StaticExtenstions.WriteToActiveDocument( string.Format(
-                    "{0} does not exist", file
-                    ) );
+                StaticExtenstions.WriteToActiveDocument(string.Format(
+                    "{0} does not exist" , filePath
+                    ));
                 return false;
             }
 
-            var engine = Python.CreateEngine();
-            var scriptSource = engine.CreateScriptSourceFromFile( file );
+            var scriptSource = Python.CreateEngine().CreateScriptSourceFromFile(filePath);
             var errorListener = new PythonScriptingErrorListener();
-            var compliedScript = scriptSource.Compile( errorListener );
+            var compliedScript = scriptSource.Compile(errorListener);
 
-            if(errorListener.ErrorDataList.Count > 0)
-            {
-                foreach (var error in errorListener.ErrorDataList)
-                
+            if (!errorListener.FoundError)
+
+                try
+                {
+                    compliedScript.Execute();
+                    StaticExtenstions.WriteToActiveDocument(Path.GetFileName(filePath) + " Execution Successful.");
+                    return true;
+
+                } catch (Exception e)
+                {
                     StaticExtenstions.WriteToActiveDocument(
-                        string.Format("{1} Error: {0}",error.Message,error.Severity)
-                        );
-                
-                return false;
-            }
+                        string.Format("\nMessage: {0}\nSource:{1}" , e.Message , e.Source));
+                    return false;
+                }
 
-            try
-            {
-                compliedScript.Execute();
-            }
-            catch ( Exception e )
-            {
+            foreach (var error in errorListener.ErrorDataList)
+
                 StaticExtenstions.WriteToActiveDocument(
-                    string.Format("\nMessage: {0}\nSource:{1}", e.Message,e.Source));
-                return false;
-            }
-            
-            StaticExtenstions.WriteToActiveDocument(Path.GetFileName(file) + " Execution Successful.");
-            return true;
+                    string.Format("{1} Error: {0}" , error.Message , error.Severity)
+                    );
+
+            return false;
         }
     }
 }

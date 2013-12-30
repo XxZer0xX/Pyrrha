@@ -1,33 +1,31 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Pyrrha.SelectionFilter
 {
-    public struct PointOperation
+    public struct PointQuery
     {
-        private string op;
-        private double val;
+        private readonly string _op;
+        private readonly double _val;
 
-        public string Operator { get { return op; } }
-        public double PointValue { get { return val; } }
+        public string Operator { get { return _op; } }
+        public double PointValue { get { return _val; } }
 
-        public PointOperation(string op, double val)
+        public PointQuery(string op , double val)
         {
-            if (op != "*" &&
-                op != "=" &&
-                op != "!=" &&
-                op != "/=" &&
-                op != "<>" &&
-                op != "<" &&
-                op != "<=" &&
-                op != ">" &&
-                op != ">=")
+            if (op == "*" ||
+                op == "=" ||
+                op == "!=" ||
+                op == "/=" ||
+                op == "<>" ||
+                op == "<" ||
+                op == "<=" ||
+                op == ">" ||
+                op == ">=")
+            {
+                this._op = op;
+                this._val = val;
+            } else
                 throw new Exception("Invalid operator string!");
-
-            this.op = op;
-            this.val = val;
         }
 
     }

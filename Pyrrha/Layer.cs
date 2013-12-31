@@ -14,6 +14,7 @@ namespace Pyrrha
     {
         public LayerTableRecord OriginalRecord;
         private string _linetypeName;
+        internal Boolean Edited;
 
         #region Properties
 
@@ -239,9 +240,7 @@ namespace Pyrrha
         #region Constructor
 
         public Layer()
-        {
-            OriginalRecord = new LayerTableRecord();
-        }
+            :this(new LayerTableRecord()){}
 
         public Layer(LayerTableRecord recordParameter)
         {

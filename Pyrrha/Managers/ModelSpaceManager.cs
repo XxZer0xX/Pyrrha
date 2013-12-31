@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
+using System.Runtime.InteropServices;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
@@ -76,19 +78,25 @@ namespace Pyrrha.Managers
             }
         }
 
-        public void CommitChanges<T>( IList<T> entityList ) where T :Entity
+        public void CommitChanges(IEnumerable<Entity> entityList)
         {
-            using (var trans = Database.TransactionManager.StartOpenCloseTransaction())
+            CommitChanges(entityList.ToArray());
+        }
+
+        public void CommitChanges(params Entity[] entities)
+        {
+            using ( var trans = Database.TransactionManager.StartOpenCloseTransaction() )
             {
-                foreach (Entity entity in entityList)
+                foreach ( var entity in entities )
                 {
                     var trueEntity = trans.GetObject(
-                     Database.GetObjectId(false , entity.GetHandle() , 0)
-                     , OpenMode.ForWrite);
+                        Database.GetObjectId( false, entity.GetHandle(), 0 )
+                        , OpenMode.ForWrite );
 
-                    trueEntity.CopyFrom(entity);
+                    trueEntity.CopyFrom( entity );
                     trueEntity.Dispose();
                     entity.Dispose();
+
                 }
                 trans.Commit();
             }
@@ -102,9 +110,9 @@ namespace Pyrrha.Managers
                     Database.GetObjectId(false , ent.GetHandle() , 0)
                     , OpenMode.ForWrite);
 
-                if (trueEntity == null) 
+                if (trueEntity == null)
                     return;
-                
+
                 trueEntity.Erase(true);
                 trueEntity.Dispose();
 

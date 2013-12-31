@@ -2,9 +2,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
@@ -291,6 +293,41 @@ namespace Pyrrha.Util
                 moddedEntity.XData = resBuffer;
             entity.Dispose();
             return moddedEntity;
+        }
+
+        public static bool IsScriptSource( this Thread thread )
+        {
+            var stackFrames = new StackTrace(thread , true).GetFrames();
+            return stackFrames.Any(frame
+                => frame.GetMethod()
+                    .Name.Equals( "ExecutePythonScript",
+                        StringComparison.CurrentCultureIgnoreCase ) );
+        }
+
+        public static AttributeReference GetAttribute( this BlockReference block, string tag )
+        {
+            return
+                block.AttributeCollection.Cast<AttributeReference>()
+                    .FirstOrDefault( attr => attr.Tag.Equals( tag, StringComparison.CurrentCultureIgnoreCase ) );
+        }
+
+        public static IDictionary<string , AttributeReference> AttributeDictionary(this BlockReference block)
+        {
+            return block.AttributeCollection.Cast<AttributeReference>()
+                .ToDictionary(attr => attr.Tag , attr => attr);
+        }
+
+        public static bool HasAttribute( this BlockReference block, string tag )
+        {
+            return
+                block.AttributeCollection.Cast<AttributeReference>()
+                    .Any( attr => attr.Tag.Equals( tag, StringComparison.CurrentCultureIgnoreCase ) );
+        }
+
+        public static void ForEach<T>(this IEnumerable<T> enumeration , Action<T> action)
+        {
+            foreach (T item in enumeration)
+                action(item);
         }
     }
 }

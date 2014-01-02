@@ -85,15 +85,15 @@ namespace Pyrrha.Managers
 
         public void CommitChanges(params Entity[] entities)
         {
-            using ( var trans = Database.TransactionManager.StartOpenCloseTransaction() )
+            using (var trans = Database.TransactionManager.StartOpenCloseTransaction())
             {
-                foreach ( var entity in entities )
+                foreach (var entity in entities)
                 {
                     var trueEntity = trans.GetObject(
-                        Database.GetObjectId( false, entity.GetHandle(), 0 )
-                        , OpenMode.ForWrite );
+                        Database.GetObjectId(false , entity.GetHandle() , 0)
+                        , OpenMode.ForWrite);
 
-                    trueEntity.CopyFrom( entity );
+                    trueEntity.CopyFrom(entity);
                     trueEntity.Dispose();
                     entity.Dispose();
 
@@ -102,20 +102,27 @@ namespace Pyrrha.Managers
             }
         }
 
-        public void EraseEntity(Entity ent)
+        public void EraseEntities( IList<Entity> entityList )
+        {
+            EraseEntity(entityList.ToArray());
+        }
+
+        public void EraseEntity(params Entity[] entities)
         {
             using (var trans = Database.TransactionManager.StartOpenCloseTransaction())
             {
-                var trueEntity = trans.GetObject(
-                    Database.GetObjectId(false , ent.GetHandle() , 0)
-                    , OpenMode.ForWrite);
+                foreach (var ent in entities)
+                {
+                    var trueEntity = trans.GetObject(
+                        Database.GetObjectId(false , ent.GetHandle() , 0)
+                        , OpenMode.ForWrite);
 
-                if (trueEntity == null)
-                    return;
+                    if (trueEntity == null)
+                        return;
 
-                trueEntity.Erase(true);
-                trueEntity.Dispose();
-
+                    trueEntity.Erase(true);
+                    trueEntity.Dispose(); 
+                }
                 trans.Commit();
             }
         }

@@ -8,12 +8,13 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Pyrrha.Managers;
 using Pyrrha.SelectionFilter;
 using Pyrrha.Util;
-using DbTransactionManager = Autodesk.AutoCAD.DatabaseServices.TransactionManager;
+using TransactionManager = Pyrrha.Managers.TransactionManager;
 using AcApp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 #endregion
@@ -23,7 +24,7 @@ namespace Pyrrha
 
     #region Event Delegates
 
-    public delegate void ModifiedEventHandler( object sender, EventArgs eventArgs );
+    public delegate void ModifiedEventHandler(object sender , EventArgs eventArgs);
 
     #endregion
 
@@ -48,20 +49,17 @@ namespace Pyrrha
             get { return OriginalDocument.Database; }
         }
 
+        public Transaction Trans
+        {
+            get { return TransactionManager.MasterTransaction; }
+        }
+
         /// <summary>
         ///     Document Editor.
         /// </summary>
         public Editor Editor
         {
             get { return OriginalDocument.Editor; }
-        }
-
-        /// <summary>
-        ///     Document Editor.
-        /// </summary>
-        public DbTransactionManager TransactionManager
-        {
-            get { return OriginalDocument.TransactionManager; }
         }
 
         /// <summary>
@@ -87,8 +85,8 @@ namespace Pyrrha
         {
             get
             {
-                return _modelSpaceManager ?? ( _modelSpaceManager
-                    = new ModelSpaceManager( OriginalDocument ) );
+                return _modelSpaceManager ?? (_modelSpaceManager
+                    = new ModelSpaceManager(OriginalDocument));
             }
             set { _modelSpaceManager = value; }
         }
@@ -100,8 +98,8 @@ namespace Pyrrha
         {
             get
             {
-                return _layerManager ?? ( _layerManager
-                    = new LayerManager( Database ) );
+                return _layerManager ?? (_layerManager
+                    = new LayerManager(Database));
             }
             set { _layerManager = value; }
         }
@@ -113,15 +111,15 @@ namespace Pyrrha
         {
             get
             {
-                using ( OpenCloseTransaction trans = TransactionManager.StartOpenCloseTransaction() )
-                    return ( (LayerTable) trans.GetObject( OriginalDocument.Database.LayerTableId, OpenMode.ForRead ) )
+                //using (OpenCloseTransaction trans = TransactionManager.StartOpenCloseTransaction())
+                return ((LayerTable)Trans.GetObject(OriginalDocument.Database.LayerTableId , OpenMode.ForRead))
                         .Cast<ObjectId>()
-                        .Select( objId =>
+                        .Select(objId =>
                         {
-                            var newLayer = new Layer( ( (LayerTableRecord) trans.GetObject( objId, OpenMode.ForRead ) ) );
-                            newLayer.WillBeErased += ( sender, args ) => Layers.Remove( ( (Layer) sender ) );
+                            var newLayer = new Layer(((LayerTableRecord)Trans.GetObject(objId , OpenMode.ForRead)));
+                            newLayer.WillBeErased += (sender , args) => Layers.Remove(((Layer)sender));
                             return newLayer;
-                        } ).ToList();
+                        }).ToList();
             }
         }
 
@@ -132,13 +130,13 @@ namespace Pyrrha
         {
             get
             {
-                using ( OpenCloseTransaction trans = TransactionManager.StartOpenCloseTransaction() )
+                //using (OpenCloseTransaction trans = TransactionManager.StartOpenCloseTransaction())
                     return
-                        ( (TextStyleTable) trans.GetObject( OriginalDocument.Database.LayerTableId, OpenMode.ForRead ) )
+                        ((TextStyleTable)Trans.GetObject(OriginalDocument.Database.LayerTableId , OpenMode.ForRead))
                             .Cast<ObjectId>()
                             .Select(
                                 objId =>
-                                    new TextStyle( ( (TextStyleTableRecord) trans.GetObject( objId, OpenMode.ForRead ) ) ) )
+                                    new TextStyle(((TextStyleTableRecord)Trans.GetObject(objId , OpenMode.ForRead))))
                             .ToList();
             }
         }
@@ -150,7 +148,7 @@ namespace Pyrrha
         {
             get
             {
-                return GetEntities( new EntitySelectionFilter( "INSERT" ) )
+                return GetEntities(new EntitySelectionFilter("INSERT"))
                     .Cast<BlockReference>()
                     .ToList();
             }
@@ -161,7 +159,7 @@ namespace Pyrrha
         /// </summary>
         public IList<Entity> DBText
         {
-            get { return GetEntities( new EntitySelectionFilter( "TEXT" ) ); }
+            get { return GetEntities(new EntitySelectionFilter("TEXT")); }
         }
 
 
@@ -170,7 +168,7 @@ namespace Pyrrha
         /// </summary>
         public IList<Entity> MText
         {
-            get { return GetEntities( new EntitySelectionFilter( "MTEXT" ) ); }
+            get { return GetEntities(new EntitySelectionFilter("MTEXT")); }
         }
 
         /// <summary>
@@ -178,7 +176,7 @@ namespace Pyrrha
         /// </summary>
         public IList<Entity> AllText
         {
-            get { return GetEntities( new EntitySelectionFilter( "*TEXT" ) ); }
+            get { return GetEntities(new EntitySelectionFilter("*TEXT")); }
         }
 
         /// <summary>
@@ -194,7 +192,7 @@ namespace Pyrrha
         /// </summary>
         public string Name
         {
-            get { return Path.GetFileName( OriginalDocument.Name ); }
+            get { return Path.GetFileName(OriginalDocument.Name); }
         }
 
         /// <summary>
@@ -207,18 +205,33 @@ namespace Pyrrha
 
         #endregion
 
-        #region Constructor
+        #region Constructor - Deconstructor
 
         public Document()
-            : this( AcApp.DocumentManager.MdiActiveDocument ) {}
+            : this(AcApp.DocumentManager.MdiActiveDocument) { }
 
-        public Document( string path ) : this( AcApp.DocumentManager.Open( path, false ) ) {}
+        public Document(string path) : this(AcApp.DocumentManager.Open(path , false)) { }
 
-        private Document( Autodesk.AutoCAD.ApplicationServices.Document documentParameter )
+        private Document(Autodesk.AutoCAD.ApplicationServices.Document documentParameter)
         {
             var exCon = Thread.CurrentThread.ExecutionContext;
             InvokedFromScripting = Thread.CurrentThread.IsScriptSource();
+
+            OriginalDocument.CloseWillStart += ( s, e ) =>
+            {
+                if ( TransactionManager.CommitOnClose )
+                    TransactionManager.MasterTransaction.Commit();
+            };
+
             OriginalDocument = documentParameter;
+            TransactionManager.MasterTransaction = OriginalDocument.TransactionManager.StartOpenCloseTransaction();
+        }
+
+        ~Document()
+        {
+            if (TransactionManager.MasterTransaction == null) return;
+            TransactionManager.MasterTransaction.Commit();
+            TransactionManager.MasterTransaction.Dispose();
         }
 
         #endregion
@@ -237,32 +250,32 @@ namespace Pyrrha
         ///     Write a message to the editor
         /// </summary>
         /// <param name="message"></param>
-        public void WriteMessage( string message )
+        public void WriteMessage(string message)
         {
-            OriginalDocument.Editor.WriteMessage( message );
+            OriginalDocument.Editor.WriteMessage(message);
         }
 
         /// <summary>
         ///     Execute command or lisp.
         /// </summary>
-        public void SendStringToExecute( string command )
+        public void SendStringToExecute(string command)
         {
-            OriginalDocument.SendStringToExecute( command, true, false, true );
+            OriginalDocument.SendStringToExecute(command , true , false , true);
         }
 
-        public void SendStringToExecute( string command, bool activate )
+        public void SendStringToExecute(string command , bool activate)
         {
-            OriginalDocument.SendStringToExecute( command, activate, false, true );
+            OriginalDocument.SendStringToExecute(command , activate , false , true);
         }
 
-        public void SendStringToExecute( string command, bool activate, bool wrapUpInactiveDoc )
+        public void SendStringToExecute(string command , bool activate , bool wrapUpInactiveDoc)
         {
-            OriginalDocument.SendStringToExecute( command, activate, wrapUpInactiveDoc, true );
+            OriginalDocument.SendStringToExecute(command , activate , wrapUpInactiveDoc , true);
         }
 
-        public void SendStringToExecute( string command, bool activate, bool wrapUpInactiveDoc, bool echoCommand )
+        public void SendStringToExecute(string command , bool activate , bool wrapUpInactiveDoc , bool echoCommand)
         {
-            OriginalDocument.SendStringToExecute( command, activate, wrapUpInactiveDoc, echoCommand );
+            OriginalDocument.SendStringToExecute(command , activate , wrapUpInactiveDoc , echoCommand);
         }
 
         /// <summary>
@@ -274,48 +287,51 @@ namespace Pyrrha
             return OriginalDocument.LockDocument();
         }
 
-        public DocumentLock LockDocument( DocumentLockMode lockMode, string globalCommandName, string localCommandName,
-            bool promptIfFails )
+        public DocumentLock LockDocument(DocumentLockMode lockMode , string globalCommandName , string localCommandName ,
+            bool promptIfFails)
         {
-            return OriginalDocument.LockDocument( lockMode, globalCommandName, localCommandName, promptIfFails );
+            return OriginalDocument.LockDocument(lockMode , globalCommandName , localCommandName , promptIfFails);
         }
 
         /// <summary>
         ///     Send a command to execute synchronously.
         /// </summary>
         /// <param name="command"></param>
-        public void SendCommandSynchronously( string command )
+        public void SendCommandSynchronously(string command)
         {
-            OriginalDocument.SendCommandSynchronously( command );
+            OriginalDocument.SendCommandSynchronously(command);
         }
 
         public void SaveAndCLose()
         {
-            OriginalDocument.CloseAndSave( @"C\debug\text.dwg" );
+            OriginalDocument.CloseAndSave(@"C\debug\text.dwg");
         }
 
-        public IList<Entity> GetEntities( EntitySelectionFilter filter )
+        public IList<Entity> GetEntities(EntitySelectionFilter filter)
         {
-            return _getEntities( new List<EntitySelectionFilter> {filter} );
+            return _getEntities(new List<EntitySelectionFilter> { filter });
         }
 
-        private IList<Entity> _getEntities( IEnumerable<EntitySelectionFilter> filterList = null )
+        private IList<Entity> _getEntities(IEnumerable<EntitySelectionFilter> filterList = null)
         {
             var objIdList = new List<ObjectId>();
-            if ( filterList == null )
+            if (filterList == null)
             {
-                PromptSelectionResult selection = Editor.SelectAll();
-                if ( selection.Status == PromptStatus.Error )
+                PromptSelectionResult selection = Editor.SelectAll(
+                    (new EntitySelectionFilter()).Selection
+                );
+
+                if (selection.Status == PromptStatus.Error)
                     return null;
                 objIdList = selection.Value.GetObjectIds().ToList();
-            }
-
-            else
+            } else
                 foreach (var filter in filterList)
                 {
                     // TODO throwing error here
-                    var PRS = Editor.SelectAll(filter.Selection);
-                    var ss = PRS.Value;
+                    PromptSelectionResult psr = Editor.SelectAll(filter.Selection);
+                    var status = psr.Status;
+                    var ss = psr.Value;
+                    if (ss == null) continue;
                     var objectIds = ss.GetObjectIds();
                     if (objectIds.Count() > 0)
                         objIdList.AddRange(objectIds);
@@ -323,16 +339,18 @@ namespace Pyrrha
 
             var rtnList = new List<Entity>();
             using ( var regAppTable = (RegAppTable) Database.RegAppTableId.Open( OpenMode.ForRead ) )
+            {
                 if ( !regAppTable.Has( "PYRRHA" ) )
-                    using ( OpenCloseTransaction innerTrans = TransactionManager.StartOpenCloseTransaction() )
-                    {
-                        regAppTable.UpgradeOpen();
-                        var newAppRcd = new RegAppTableRecord {Name = "PYRRHA"};
-                        regAppTable.Add( newAppRcd );
-                        innerTrans.AddNewlyCreatedDBObject( newAppRcd, true );
-                        innerTrans.Commit();
-                    }
-            return StaticExtenstions.GetEntityClones( objIdList ) ?? null;
+                    //using (OpenCloseTransaction innerTrans = TransactionManager.StartOpenCloseTransaction())
+                    //{
+                    regAppTable.UpgradeOpen();
+                var newAppRcd = new RegAppTableRecord {Name = "PYRRHA"};
+                regAppTable.Add( newAppRcd );
+                Trans.AddNewlyCreatedDBObject( newAppRcd, true );
+                Trans.Commit();
+                //}
+            }
+            return StaticExtenstions.GetEntityClones(objIdList) ?? null;
         }
 
         #endregion
@@ -342,5 +360,6 @@ namespace Pyrrha
         // TODO 
 
         #endregion
+
     }
 }

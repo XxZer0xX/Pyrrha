@@ -78,33 +78,33 @@ namespace Pyrrha.Util
         /// <summary>
         ///     If document has specified linetype loaded.
         /// </summary>
-        public static void PurgeDataBase( this Document document )
-        {
-            ObjectIdCollection objIdCollection = IterateDb( document.Database );
-            using ( OpenCloseTransaction trans = document.TransactionManager.StartOpenCloseTransaction() )
-            {
-                document.Database.Purge( objIdCollection );
+        //public static void PurgeDataBase( this Document document )
+        //{
+        //    ObjectIdCollection objIdCollection = IterateDb( document.Database );
+        //    using ( OpenCloseTransaction trans = document.TransactionManager.StartOpenCloseTransaction() )
+        //    {
+        //        document.Database.Purge( objIdCollection );
 
-                //
-                //  This is crap and need to find a better way... TODO!
-                //  --------------------------------------------------
+        //        //
+        //        //  This is crap and need to find a better way... TODO!
+        //        //  --------------------------------------------------
 
-                foreach ( ObjectId objId in objIdCollection )
-                    try
-                    {
-                        ( trans.GetObject( objId, OpenMode.ForWrite ) ).Erase();
-                    }
-                    catch ( Exception e )
-                    {
-                        if ( !e.ErrorStatus.Equals( ErrorStatus.WasErased ) &&
-                             !e.ErrorStatus.Equals( ErrorStatus.CannotBeErasedByCaller ) &&
-                             !e.Message.Equals( "eVSIsAcadDefault", StringComparison.CurrentCultureIgnoreCase ) ) throw;
-                    }
-                //  --------------------------------------------------
+        //        foreach ( ObjectId objId in objIdCollection )
+        //            try
+        //            {
+        //                ( trans.GetObject( objId, OpenMode.ForWrite ) ).Erase();
+        //            }
+        //            catch ( Exception e )
+        //            {
+        //                if ( !e.ErrorStatus.Equals( ErrorStatus.WasErased ) &&
+        //                     !e.ErrorStatus.Equals( ErrorStatus.CannotBeErasedByCaller ) &&
+        //                     !e.Message.Equals( "eVSIsAcadDefault", StringComparison.CurrentCultureIgnoreCase ) ) throw;
+        //            }
+        //        //  --------------------------------------------------
 
-                trans.Commit();
-            }
-        }
+        //        trans.Commit();
+        //    }
+        //}
 
         public static void SendCommandSynchronously( this Autodesk.AutoCAD.ApplicationServices.Document document,
             string commandString )
@@ -236,6 +236,7 @@ namespace Pyrrha.Util
                 PromptSelectionResult selection = acEd.SelectAll( filter.Selection );
                 if ( selection.Status == PromptStatus.Error )
                     return null;
+
                 handles = selection.Value.GetObjectIds().Select( objId =>
                 {
                     using ( var ent = (Entity) trans.GetObject( objId, OpenMode.ForRead ) )
@@ -274,7 +275,7 @@ namespace Pyrrha.Util
             var rtnList = new List<Entity>();
             foreach ( var objId in objectIds )
             {
-                using ( DBObject actualEntity = objId.Open( OpenMode.ForRead ) )
+                using ( var actualEntity = objId.Open( OpenMode.ForRead ) )
                 {
                     rtnList.Add(
                         CloneAddXData( (Entity) actualEntity ) );

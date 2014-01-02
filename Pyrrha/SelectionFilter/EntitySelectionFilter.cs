@@ -28,16 +28,16 @@ namespace Pyrrha.SelectionFilter
             }
         }
 
-        public EntitySelectionFilter(string type = null,
+        public EntitySelectionFilter(string type = null ,
             //AnnotativeStates? annotative = null,
-            int? colorindex = null,
-            string layer = null,
-            string linetype = null,
-            double? linetypescale = null,
-            LineWeight? lineweight = null,
+            int? colorindex = null ,
+            string layer = null ,
+            string linetype = null ,
+            double? linetypescale = null ,
+            LineWeight? lineweight = null ,
             //string material = null,
-            string plotstyle= null,
-            Transparency? transparency = null,
+            string plotstyle = null ,
+            Transparency? transparency = null ,
             bool? visible = null)
         {
             //Annotative = annotative;
@@ -57,36 +57,66 @@ namespace Pyrrha.SelectionFilter
         {
             var rtnList = new List<TypedValue>();
             if (Type != null)
-                rtnList.Add(new TypedValue(0, Type));
+                rtnList.Add(new TypedValue(0 , Type));
             if (ColorIndex != null)
-                rtnList.Add(new TypedValue(62, ColorIndex.Value));
+                rtnList.Add(new TypedValue(62 , ColorIndex.Value));
             if (Layer != null)
                 rtnList.Add(new TypedValue(8 , Layer));
             if (Linetype != null)
-                rtnList.Add(new TypedValue(6, Linetype));
+                rtnList.Add(new TypedValue(6 , Linetype));
             if (LinetypeScale != null)
-                rtnList.Add(new TypedValue(48, LinetypeScale.Value));
+                rtnList.Add(new TypedValue(48 , LinetypeScale.Value));
             if (LineWeight != null)
-                rtnList.Add(new TypedValue(370, LineWeight.Value));
+                rtnList.Add(new TypedValue(370 , LineWeight.Value));
             if (PlotStyle != null)
-                rtnList.Add(new TypedValue(380, PlotStyle));
+                rtnList.Add(new TypedValue(380 , PlotStyle));
             if (Transparency != null)
-                rtnList.Add(new TypedValue(440, Transparency.Value.Alpha)); // Maybe?
+                rtnList.Add(new TypedValue(440 , Transparency.Value.Alpha)); // Maybe?
             if (Visible != null)
-                rtnList.Add(new TypedValue(60, Visible.Value));
-            
+                rtnList.Add(new TypedValue(60 , Visible.Value));
+
             return rtnList.Count > 0 ? rtnList : null;
         }
 
-        private IList<TypedValue> _closeFilter(IEnumerable<TypedValue> filterContent)
+        private IEnumerable<TypedValue> _closeFilter(IEnumerable<TypedValue> filterContent)
         {
-            var rtnList = filterContent.ToList();
-            if (rtnList.Count > 1)
+            var rtnList = filterContent != null 
+                ? filterContent.ToList() 
+                : new List<TypedValue>();
+
+            if (rtnList.Count() == 1)
+                return rtnList;
+
+            if (!rtnList.Any())
             {
-                rtnList.Insert(0 , new TypedValue(-4 , "<and"));
-                rtnList.Add(new TypedValue(-4 , "and>"));
+                rtnList.Insert( 0, new TypedValue( -4, "not>" ) );
+                rtnList.Insert( 0, new TypedValue( 0, "VIEWPORT" ) );
+                rtnList.Insert( 0, new TypedValue( -4, "<not" ) );
+                return rtnList;
             }
+
+            //rtnList.Insert( 0, new TypedValue( -4, "<and" ) );
+            //rtnList.Add( new TypedValue( -4, "and>" ) );
             return rtnList;
+
+
+            
+
+            // document.RunQuery("update ('type'='Line' OR 'type'='PolyLine') Set Color='Green'
+
+            // selectall(new typeselectionfilter("polyline OR lwpolyline OR line OR circle WHERE color = 'blue'"))
+            //selectall(new typeselectionfilter(type: "line", color: <blue>, Startx: <0,0,0> )
+            // document.RunQuery("select Line Where color = 'blue' AND Startx = '0,0,0')
+
+            rtnList.Insert(0 , new TypedValue(-4 , "<and"));
+            rtnList.Insert(0 , new TypedValue(0 , "VIEWPORT"));
+            rtnList.Insert(0 , new TypedValue(-4 , "<not"));
+            rtnList.Insert(0 , new TypedValue(-4 , "not>"));
+            rtnList.Insert(0 , new TypedValue(0 , "VIEWPORT"));
+            rtnList.Insert(0 , new TypedValue(-4 , "<not"));
+            rtnList.Insert(0 , new TypedValue(-4 , "not>"));
+            rtnList.Insert(0 , new TypedValue(0 , "VIEWPORT"));
+            rtnList.Insert(0 , new TypedValue(-4 , "and>"));
         }
     }
 }

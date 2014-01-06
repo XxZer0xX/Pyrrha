@@ -6,16 +6,14 @@ using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Runtime;
+using PyrrhaExtenstion.Util;
 
 namespace PyrrhaExtenstion
 {
     public static class Pyrrha
     {
-        internal static Transaction LayerTransaction;
-        internal static Transaction TextStyleTransaction;
-        internal static Transaction EntityTransaction;
         private static IList<Transaction> _transList;
-
+        internal static LanguageType CallerLanguage;
 
         internal static IList<Transaction> TransList
         {
@@ -44,6 +42,16 @@ namespace PyrrhaExtenstion
             trans.Dispose();
         }
 
+        public static IList<TextStyleTableRecord> GetTextStyles(this Document document)
+        {
+            Transaction trans = document.TransactionManager.StartOpenCloseTransaction();
+            TransList.Add(trans);
+            return ((TextStyleTable)trans.GetObject(document.Database.LayerTableId , OpenMode.ForRead))
+                .Cast<ObjectId>()
+                .Select(objId => (TextStyleTableRecord)trans.GetObject(objId , OpenMode.ForWrite))
+                .ToList();
+        }
+
         public static IList<LayerTableRecord> GetLayers(this Document document)
         {
             Transaction trans = document.TransactionManager.StartOpenCloseTransaction();
@@ -62,6 +70,35 @@ namespace PyrrhaExtenstion
                 transaction.Dispose();
                 TransList = null;
             }
+        }
+
+        /// <summary>
+        ///     Loads a linetype into the database.
+        /// </summary>
+        public static void LoadLinetype( this Database database, string value )
+        {
+            using ( OpenCloseTransaction trans = database.TransactionManager.StartOpenCloseTransaction() )
+            {
+                var lineTypeTable = trans.GetObject(
+                    database.LinetypeTableId, OpenMode.ForRead ) as LinetypeTable;
+
+                if ( lineTypeTable == null )
+                    throw new NullReferenceException( "AutoDesk.AutoCad.DatabaseServices.LineTypeTable" );
+
+                if ( !lineTypeTable.Has( value ) )
+                    database.LoadLineTypeFile( value, "acad.lin" );
+
+                trans.Commit();
+            }
+        }
+
+        /// <summary>
+        ///     If document has specified linetype loaded.
+        /// </summary>
+        public static bool LinetypeIsLoaded( this Document document, string linetype )
+        {
+            using ( DBObject lineTypeTable = document.Database.LinetypeTableId.Open( OpenMode.ForRead ) )
+                return ( (LinetypeTable) lineTypeTable ).Has( linetype );
         }
     }
 }

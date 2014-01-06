@@ -12,9 +12,4 @@ namespace Pyrrha.Util
         Static,
         Dynamic
     }
-
-    public class CallerFilePath : Attribute
-    {
-        
-    }
 }

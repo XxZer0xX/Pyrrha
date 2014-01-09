@@ -51,7 +51,7 @@
     <Compile Include="Collections\FamilyCollection.cs" />
     <Compile Include="Collections\IndependantCollection.cs" />
     <Compile Include="Collections\OpenCollection.cs" />
-    <Compile Include="DBObjectLifetimeManager.cs" />
+    <Compile Include="LifetimeManager.cs" />
     <Compile Include="Pyrrha.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Util\LanguageType.cs" />

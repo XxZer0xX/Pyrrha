@@ -5,8 +5,10 @@ using Autodesk.AutoCAD.DatabaseServices;
 
 namespace PyrrhaExtenstion
 {
-    public class DbObjectLifetimeManager
+    public enum LifetimeManager
     {
-        
+        Family,
+        Independant,
+        Open
     }
 }

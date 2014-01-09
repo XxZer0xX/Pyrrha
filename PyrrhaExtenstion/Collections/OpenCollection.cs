@@ -12,7 +12,7 @@ namespace PyrrhaExtenstion.Collections
             : this(objectIds.Select(objid => objid.Open(OpenMode.ForWrite)).ToArray()) { }
 
         public OpenCollection(params DBObject[] objects)
-            : base(objects) { }
+            : base((IEnumerable<T>) objects) { }
 
         [ Obsolete( "Not needed for this collection type." ) ]
         public override void Commit() { }

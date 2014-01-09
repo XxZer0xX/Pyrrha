@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 
 #endregion
@@ -137,7 +138,7 @@ namespace PyrrhaExtenstion.Collections
 
         #endregion
 
-        protected DbObjectCollection() {}
+        protected DbObjectCollection() { }
 
         protected DbObjectCollection( IEnumerable<T> objects )
         {

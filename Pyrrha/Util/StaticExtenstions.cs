@@ -22,7 +22,6 @@ namespace Pyrrha.Util
 {
     public static class StaticExtenstions
     {
-
         internal const string Pyrrha = "PYRRHA";
         /// <summary>
         ///     Loads a linetype into the MdiActiveDocument

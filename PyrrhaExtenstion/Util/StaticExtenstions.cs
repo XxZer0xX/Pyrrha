@@ -193,44 +193,44 @@ namespace PyrrhaExtenstion.Util
             return blkRef;
         }
 
-        public static IList<T> ApplyFilter<T>( this IList<T> entList, EntitySelectionFilter filter ) where T : Entity
-        {
-            Autodesk.AutoCAD.ApplicationServices.Document acDoc = Application.DocumentManager.MdiActiveDocument;
-            Editor acEd = acDoc.Editor;
-            Database acDb = acDoc.Database;
+        //public static IList<T> ApplyFilter<T>( this IList<T> entList, EntitySelectionFilter filter ) where T : Entity
+        //{
+        //    Autodesk.AutoCAD.ApplicationServices.Document acDoc = Application.DocumentManager.MdiActiveDocument;
+        //    Editor acEd = acDoc.Editor;
+        //    Database acDb = acDoc.Database;
 
-            var handles = new List<Handle>();
+        //    var handles = new List<Handle>();
 
-            using ( OpenCloseTransaction trans = acDb.TransactionManager.StartOpenCloseTransaction() )
-            {
-                PromptSelectionResult selection = acEd.SelectAll( filter.Selection );
-                if ( selection.Status == PromptStatus.Error )
-                    return null;
+        //    using ( OpenCloseTransaction trans = acDb.TransactionManager.StartOpenCloseTransaction() )
+        //    {
+        //        PromptSelectionResult selection = acEd.SelectAll( filter.Selection );
+        //        if ( selection.Status == PromptStatus.Error )
+        //            return null;
 
-                handles = selection.Value.GetObjectIds().Select( objId =>
-                {
-                    using ( var ent = (Entity) trans.GetObject( objId, OpenMode.ForRead ) )
-                        return ent.Handle;
-                } ).ToList();
-                trans.Commit();
-            }
+        //        handles = selection.Value.GetObjectIds().Select( objId =>
+        //        {
+        //            using ( var ent = (Entity) trans.GetObject( objId, OpenMode.ForRead ) )
+        //                return ent.Handle;
+        //        } ).ToList();
+        //        trans.Commit();
+        //    }
 
-            var rtnList = new List<T>();
-            for ( int i = entList.Count - 1; i >= 0; i-- )
-            {
-                T entity = entList[i];
-                Handle handle = GetHandle( entity );
-                if ( !handles.Any( han => handle.Equals( han ) ) )
-                {
-                    entity.Dispose();
-                    continue;
-                }
+        //    var rtnList = new List<T>();
+        //    for ( int i = entList.Count - 1; i >= 0; i-- )
+        //    {
+        //        T entity = entList[i];
+        //        Handle handle = GetHandle( entity );
+        //        if ( !handles.Any( han => handle.Equals( han ) ) )
+        //        {
+        //            entity.Dispose();
+        //            continue;
+        //        }
 
-                rtnList.Add( entity );
-                handles.Remove( handle );
-            }
-            return rtnList;
-        }
+        //        rtnList.Add( entity );
+        //        handles.Remove( handle );
+        //    }
+        //    return rtnList;
+        //}
 
         public static Handle GetHandle<T>( this T ent ) where T : Entity
         {

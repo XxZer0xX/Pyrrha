@@ -56,9 +56,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Pyrrha\Pyrrha.csproj">
-      <Project>{b1e4eb83-8ded-4b94-99b5-0cce6bdfe8f0}</Project>
-      <Name>Pyrrha</Name>
+    <ProjectReference Include="..\PyrrhaExtenstion\PyrrhaExtenstion.csproj">
+      <Project>{47653ee2-53bf-4a36-8903-7d1128bdf50c}</Project>
+      <Name>PyrrhaExtenstion</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

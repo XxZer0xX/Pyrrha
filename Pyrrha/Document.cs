@@ -131,13 +131,13 @@ namespace Pyrrha
             get
             {
                 //using (OpenCloseTransaction trans = TransactionManager.StartOpenCloseTransaction())
-                    return
-                        ((TextStyleTable)Trans.GetObject(OriginalDocument.Database.LayerTableId , OpenMode.ForRead))
-                            .Cast<ObjectId>()
-                            .Select(
-                                objId =>
-                                    new TextStyle(((TextStyleTableRecord)Trans.GetObject(objId , OpenMode.ForRead))))
-                            .ToList();
+                return
+                    ((TextStyleTable)Trans.GetObject(OriginalDocument.Database.LayerTableId , OpenMode.ForRead))
+                        .Cast<ObjectId>()
+                        .Select(
+                            objId =>
+                                new TextStyle(((TextStyleTableRecord)Trans.GetObject(objId , OpenMode.ForRead))))
+                        .ToList();
             }
         }
 
@@ -216,22 +216,7 @@ namespace Pyrrha
         {
             var exCon = Thread.CurrentThread.ExecutionContext;
             InvokedFromScripting = Thread.CurrentThread.IsScriptSource();
-
-            OriginalDocument.CloseWillStart += ( s, e ) =>
-            {
-                if ( TransactionManager.CommitOnClose )
-                    TransactionManager.MasterTransaction.Commit();
-            };
-
             OriginalDocument = documentParameter;
-            TransactionManager.MasterTransaction = OriginalDocument.TransactionManager.StartOpenCloseTransaction();
-        }
-
-        ~Document()
-        {
-            if (TransactionManager.MasterTransaction == null) return;
-            TransactionManager.MasterTransaction.Commit();
-            TransactionManager.MasterTransaction.Dispose();
         }
 
         #endregion
@@ -338,17 +323,18 @@ namespace Pyrrha
                 }
 
             var rtnList = new List<Entity>();
-            using ( var regAppTable = (RegAppTable) Database.RegAppTableId.Open( OpenMode.ForRead ) )
+            using (var regAppTable = (RegAppTable)Database.RegAppTableId.Open(OpenMode.ForRead))
             {
-                if ( !regAppTable.Has( "PYRRHA" ) )
+                if (!regAppTable.Has("PYRRHA"))
+                {
                     //using (OpenCloseTransaction innerTrans = TransactionManager.StartOpenCloseTransaction())
                     //{
                     regAppTable.UpgradeOpen();
-                var newAppRcd = new RegAppTableRecord {Name = "PYRRHA"};
-                regAppTable.Add( newAppRcd );
-                Trans.AddNewlyCreatedDBObject( newAppRcd, true );
-                Trans.Commit();
-                //}
+                    var newAppRcd = new RegAppTableRecord { Name = "PYRRHA" };
+                    regAppTable.Add(newAppRcd);
+                    Trans.AddNewlyCreatedDBObject(newAppRcd , true);
+                    Trans.Commit();
+                }
             }
             return StaticExtenstions.GetEntityClones(objIdList) ?? null;
         }

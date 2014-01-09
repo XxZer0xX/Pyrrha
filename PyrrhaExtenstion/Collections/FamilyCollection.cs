@@ -15,10 +15,17 @@ namespace PyrrhaExtenstion.Collections
     {
         private readonly Transaction trans;
 
+        private static IList<Transaction> TransList
+        {
+            get { return Pyrrha.TransList; }
+            set { Pyrrha.TransList = value; }
+        } 
+
         public FamilyCollection(params ObjectId[] objectIds)
         {
             trans = AcApp.DocumentManager.MdiActiveDocument.TransactionManager.StartTransaction();
             AddRange(objectIds.Select(objId => (T)trans.GetObject(objId,OpenMode.ForWrite)));
+            TransList.Add(trans);
         }
 
         public void Add( ObjectId objectId )
@@ -33,10 +40,10 @@ namespace PyrrhaExtenstion.Collections
         }
 
         [Obsolete("Non-Functional. Must Pass ObjectId",true)]
-        public override void Add( T item ) { } 
+        public override void Add( T item ) { base.Add(item); } 
 
         [Obsolete("Non-Functional. Must Pass ObjectId",true)]
-        public override void Insert(int index , T item) { }
+        public override void Insert(int index , T item) { base.Insert(index,item); }
 
         public override void Commit()
         {

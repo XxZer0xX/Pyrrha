@@ -3,13 +3,12 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Runtime;
-using Pyrrha;
-using Pyrrha.SelectionFilter;
-using Pyrrha.Util;
-using Pyrrha.Util.Query;
+using PyrrhaExtenstion;
+using PyrrhaExtenstion.Util;
 
 #endregion
 
@@ -17,19 +16,20 @@ namespace C_Sharp_Testing
 {
     public class TestClass
     {
-        private Transaction MasterTrans;
-
-
-
-        
-
-
-        [CommandMethod( "tst1" )]
+        [CommandMethod("tst1")]
         public void test1()
         {
-            var ActiveDocument = new Document();
-            var MsManager = ActiveDocument.ModelSpaceManager;
+            var ActiveDocument = Application.DocumentManager.MdiActiveDocument;
+            var layers = ActiveDocument.GetLayers(LifetimeManager.Independant);
 
+            foreach (var layerTableRecord in layers)
+            {
+                layerTableRecord.Color = StaticExtenstions.GenerateAutoCadColor(3);
+                if (layerTableRecord.Name != "0")
+                    layerTableRecord.Commit();
+            }
+
+            ActiveDocument.Editor.Regen();
             //ActiveDocument.ExecuteQuery();
 
             //var entities = ActiveDocument.ModelSpaceEntities.Where(ent => ent is Line).ToArray();
@@ -52,8 +52,8 @@ namespace C_Sharp_Testing
             //var lines = ActiveDocument.ModelSpaceEntities.ApplyFilter( lineFilter );
             //var dbText = ActiveDocument.ModelSpaceEntities.ApplyFilter( textFilter );
             //var blocks = ActiveDocument.Blocks;
-            var clouds = ActiveDocument.GetEntities( new EntitySelectionFilter( "lwpolyline" ) );
-            MsManager.EraseEntities(clouds);
+            //var clouds = ActiveDocument.GetEntities( new EntitySelectionFilter( "lwpolyline" ) );
+            //MsManager.EraseEntities(clouds);
 
             //foreach ( var blk in blocks.Where( block => block.HasAttribute( "app#" ) ) )
             //{

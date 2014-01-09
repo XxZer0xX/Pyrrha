@@ -1,15 +1,33 @@
-﻿using System;
+﻿#region Referenceing
+
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Runtime;
+using PyrrhaExtenstion.Collections;
 using PyrrhaExtenstion.Util;
+
+#endregion
 
 namespace PyrrhaExtenstion
 {
+    public class PyrrhaLoad : IExtensionApplication
+    {
+        public void Initialize()
+        {
+            Application.DocumentManager.MdiActiveDocument. +=
+                ( sender, args ) => Debug.WriteLine(((DBObject)sender).GetType().Name);
+        }
+
+        public void Terminate()
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     public static class Pyrrha
     {
         private static IList<Transaction> _transList;
@@ -21,48 +39,60 @@ namespace PyrrhaExtenstion
             set { _transList = value; }
         }
 
-        public static Transaction GetTransaction<T>(this T ent) where T : DBObject
+        public static Transaction GetTransaction<T>( this T ent ) where T : DBObject
         {
-            return TransList.FirstOrDefault(t => t.GetAllObjects().Contains(ent));
+            return TransList.FirstOrDefault( t => t.GetAllObjects().Contains( ent ) );
         }
 
 
-        public static void CommitChanges<T>( this IList<T> entList) where T : DBObject
+        public static void Commit<T>( this T ent ) where T : DBObject
         {
-            if (entList.Count == 0)
-                return;
-
-            var trans = entList[0].GetTransaction();
-
-            if(trans == null) 
-                throw new NullReferenceException();
-
-            trans.Commit();
-            TransList.Remove( trans );
-            trans.Dispose();
+            var trans = ent.GetTransaction();
+            ent.Dispose();
+            if ( trans != null )
+            {
+                TransList.Remove(trans);
+                trans.Commit();
+                trans.Dispose();
+            }
+            
         }
 
-        public static IList<TextStyleTableRecord> GetTextStyles(this Document document)
+        public static DbObjectCollection<TextStyleTableRecord> GetTextStyles( this Document document,
+            LifetimeManager managmentType )
         {
-            Transaction trans = document.TransactionManager.StartOpenCloseTransaction();
-            TransList.Add(trans);
-            return ((TextStyleTable)trans.GetObject(document.Database.LayerTableId , OpenMode.ForRead))
-                .Cast<ObjectId>()
-                .Select(objId => (TextStyleTableRecord)trans.GetObject(objId , OpenMode.ForWrite))
-                .ToList();
+            using ( var textStyleTable = (TextStyleTable) document.Database.TextStyleTableId.Open( OpenMode.ForRead ) )
+                switch ( managmentType )
+                {
+                    case LifetimeManager.Family:
+                        return textStyleTable.ToFamilyCollection<TextStyleTableRecord>();
+                    case LifetimeManager.Independant:
+                        return textStyleTable.ToIndependantCollection<TextStyleTableRecord>();
+                    case LifetimeManager.Open:
+                        return textStyleTable.ToOpenCollection<TextStyleTableRecord>();
+                    default:
+                        throw new ArgumentOutOfRangeException( "managmentType" );
+                }
         }
 
-        public static IList<LayerTableRecord> GetLayers(this Document document)
+        public static DbObjectCollection<LayerTableRecord> GetLayers( this Document document,
+            LifetimeManager managmentType )
         {
-            Transaction trans = document.TransactionManager.StartOpenCloseTransaction();
-            TransList.Add(trans);
-            return ( (LayerTable) trans.GetObject( document.Database.LayerTableId, OpenMode.ForRead ) )
-                .Cast<ObjectId>()
-                .Select( objId => (LayerTableRecord) trans.GetObject( objId, OpenMode.ForWrite ) )
-                .ToList();
+            using ( var layerTable = (LayerTable) document.Database.LayerTableId.Open( OpenMode.ForRead ) )
+                switch ( managmentType )
+                {
+                    case LifetimeManager.Family:
+                        return layerTable.ToFamilyCollection<LayerTableRecord>();
+                    case LifetimeManager.Independant:
+                        return layerTable.ToIndependantCollection<LayerTableRecord>();
+                    case LifetimeManager.Open:
+                        return layerTable.ToOpenCollection<LayerTableRecord>();
+                    default:
+                        throw new ArgumentOutOfRangeException( "managmentType" );
+                }
         }
 
-        public static void CommitChanges(this Document document, bool dispose = false)
+        public static void CommitChanges( this Document document, bool dispose = false )
         {
             foreach ( var transaction in TransList )
             {
@@ -99,6 +129,21 @@ namespace PyrrhaExtenstion
         {
             using ( DBObject lineTypeTable = document.Database.LinetypeTableId.Open( OpenMode.ForRead ) )
                 return ( (LinetypeTable) lineTypeTable ).Has( linetype );
+        }
+
+        public static FamilyCollection<T> ToFamilyCollection<T>( this SymbolTable table ) where T : DBObject
+        {
+            return new FamilyCollection<T>( table.Cast<ObjectId>().ToArray() );
+        }
+
+        public static IndependantCollection<T> ToIndependantCollection<T>( this SymbolTable table ) where T : DBObject
+        {
+            return new IndependantCollection<T>( table.Cast<ObjectId>().ToArray() );
+        }
+
+        public static OpenCollection<T> ToOpenCollection<T>( this SymbolTable table ) where T : DBObject
+        {
+            return new OpenCollection<T>( table.Cast<ObjectId>().ToArray() );
         }
     }
 }

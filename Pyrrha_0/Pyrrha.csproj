@@ -4,13 +4,14 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{AEFA4FF7-052D-40B9-8492-2C6DF7E515FF}</ProjectGuid>
+    <ProjectGuid>{B1E4EB83-8DED-4B94-99B5-0CCE6BDFE8F0}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Pyrrha.Scripting</RootNamespace>
-    <AssemblyName>Pyrrha.Scripting</AssemblyName>
+    <RootNamespace>Pyrrha</RootNamespace>
+    <AssemblyName>Pyrrha</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -20,6 +21,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -28,6 +30,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="AcDbMgd">
@@ -35,20 +38,12 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="AcMgd">
-      <HintPath>..\..\..\..\..\..\ObjectARX\2012\inc\AcMgd.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\ObjectARX\ 2012\inc\AcMgd.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="IronPython">
-      <HintPath>..\..\..\..\..\..\IronPython-2.7.4\IronPython.dll</HintPath>
-    </Reference>
-    <Reference Include="IronPython.Modules">
-      <HintPath>..\..\..\..\..\..\IronPython-2.7.4\IronPython.Modules.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Dynamic">
-      <HintPath>..\..\..\..\..\..\IronPython-2.7.4\Microsoft.Dynamic.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Scripting">
-      <HintPath>..\..\..\..\..\..\IronPython-2.7.4\Microsoft.Scripting.dll</HintPath>
+    <Reference Include="AcMgd">
+      <HintPath>..\..\..\..\..\..\ObjectARX\2012\inc\AcMgd.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -59,11 +54,23 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AutoCad\CommandLineLoader.cs" />
+    <Compile Include="Document.cs" />
+    <Compile Include="Managers\TransactionManager.cs" />
+    <Compile Include="Pyrrha.cs" />
+    <Compile Include="SafeDictionaryEnumerator.cs" />
+    <Compile Include="SelectionFilter\PointQuery.cs" />
+    <Compile Include="SelectionFilter\TextSelectionFilter.cs" />
+    <Compile Include="Util\CallerLanguage.cs" />
+    <Compile Include="Util\Query\EntityQuery.cs" />
+    <Compile Include="Util\StaticExtenstions.cs" />
+    <Compile Include="SelectionFilter\EntitySelectionFilter.cs" />
+    <Compile Include="Layer.cs" />
+    <Compile Include="Managers\LayerManager.cs" />
+    <Compile Include="Managers\ModelSpaceManager.cs" />
+    <Compile Include="ModifiedEventArgs.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ErrorData.cs" />
-    <Compile Include="PythonScriptingErrorListener.cs" />
-    <Compile Include="Util\StaticExtensions.cs" />
+    <Compile Include="SelectionFilter\LineSelectionFilter.cs" />
+    <Compile Include="TextStyle.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -65,6 +65,12 @@
     <Compile Include="PythonScriptingErrorListener.cs" />
     <Compile Include="Util\StaticExtensions.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Pyrrha\Pyrrha.csproj">
+      <Project>{0C1311D2-6FC4-46AD-B1EC-0C3357AE34F4}</Project>
+      <Name>Pyrrha</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

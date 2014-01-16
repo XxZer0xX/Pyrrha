@@ -14,20 +14,6 @@ using PyrrhaExtenstion.Util;
 
 namespace PyrrhaExtenstion
 {
-    public class PyrrhaLoad : IExtensionApplication
-    {
-        public void Initialize()
-        {
-            Application.DocumentManager.MdiActiveDocument. +=
-                ( sender, args ) => Debug.WriteLine(((DBObject)sender).GetType().Name);
-        }
-
-        public void Terminate()
-        {
-            throw new NotImplementedException();
-        }
-    }
-
     public static class Pyrrha
     {
         private static IList<Transaction> _transList;

@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -11,18 +12,72 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.GraphicsSystem;
 using Autodesk.AutoCAD.Runtime;
 using Autodesk.AutoCAD.Windows;
+using Autodesk.AutoCAD.Windows.Data;
 using AcApp = Autodesk.AutoCAD.ApplicationServices.Application;
 using TransactionManager = Pyrrha.OverriddenClasses.TransactionManager;
+using Transaction = Pyrrha.OverriddenClasses.Transaction;
 
 #endregion
 
 namespace Pyrrha
 {
-    public sealed class PyrrhaDocument : DisposableWrapper
+    public class PyrrhaDocument : MarshalByRefObject , IDisposable
     {
         #region Properties
 
         private readonly Document _document;
+
+        private readonly Transaction _innerTransaction;
+
+        public BlockTableRecord ModelSpace
+        {
+            get
+            {
+                return
+                    _innerTransaction.GetOpenObject<BlockTableRecord>(
+                        SymbolUtilityServices.GetBlockModelSpaceId( Database ) );
+            }
+        }
+
+        public BlockTableRecord PaperSpace
+        {
+            get
+            {
+                return
+                    _innerTransaction.GetOpenObject<BlockTableRecord>(
+                        SymbolUtilityServices.GetBlockPaperSpaceId( Database ) );
+            }
+        }
+
+        public LayerTable LayerTable
+        {
+            get { return _innerTransaction.GetOpenObject<LayerTable>(Database.LayerTableId); }
+        }
+
+        public TextStyleTable TextStyleTable
+        {
+            get { return _innerTransaction.GetOpenObject<TextStyleTable>(Database.TextStyleTableId); }
+        }
+
+        public LinetypeTable LinetypeTable
+        {
+            get { return _innerTransaction.GetOpenObject<LinetypeTable>(Database.LinetypeTableId); }
+        }
+
+        public IEnumerable<LayerTableRecord> Layers
+        {
+            get
+            {
+                return
+                    LayerTable.Cast<ObjectId>()
+                        .Select( objId => _innerTransaction.GetOpenObject<LayerTableRecord>( objId ) );
+            }
+        }
+
+        private TransactionManager TransactionManager
+        {
+            get { return new TransactionManager(_document.TransactionManager); }
+        }
 
         #endregion
 
@@ -44,12 +99,22 @@ namespace Pyrrha
         {
             if ( doc == null )
                 throw new NullReferenceException( "Document is null." );
+
+            doc.CloseWillStart += ( sender, args ) =>
+            {
+                _innerTransaction.KeepOpen = false;
+                _innerTransaction.Dispose();
+            };
+
             _document = doc;
+            _innerTransaction = TransactionManager.StartTransaction(true);
         }
 
         #endregion
 
         #region Autocad Document Implementation
+
+        #region Properties
 
         public object AcadDocument
         {
@@ -96,11 +161,6 @@ namespace Pyrrha
             get { return _document.StatusBar; }
         }
 
-        public TransactionManager TransactionManager
-        {
-            get { return new TransactionManager( _document.TransactionManager ); }
-        }
-
         public Hashtable UserData
         {
             get { return _document.UserData; }
@@ -109,6 +169,98 @@ namespace Pyrrha
         public Window Window
         {
             get { return _document.Window; }
+        }
+
+        #endregion
+
+        #region Methods
+
+        public Bitmap CapturePreviewImage( uint width, uint height )
+        {
+            return _document.CapturePreviewImage( width, height );
+        }
+
+        public void CloseAndDiscard()
+        {
+            _document.CloseAndDiscard();
+        }
+
+        public void CloseAndSave( string fileName )
+        {
+            _document.CloseAndSave( fileName );
+        }
+
+        public static Document Create( IntPtr unmanagedPointer )
+        {
+            return Document.Create( unmanagedPointer );
+        }
+
+        public void DowngradeDocOpen( bool bPromptForSave )
+        {
+            _document.DowngradeDocOpen( bPromptForSave );
+        }
+
+        public static Document FromAcadDocument( object acadDocument )
+        {
+            return Document.FromAcadDocument( acadDocument );
+        }
+
+        public DocumentLock LockDocument()
+        {
+            return _document.LockDocument();
+        }
+
+        public DocumentLock LockDocument( DocumentLockMode lockMode, string globalCommandName, string localCommandName,
+            bool promptIfFails )
+        {
+            return _document.LockDocument( lockMode, globalCommandName, localCommandName, promptIfFails );
+        }
+
+        public DocumentLockMode LockMode()
+        {
+            return _document.LockMode();
+        }
+
+        public DocumentLockMode LockMode( bool bIncludeMyLocks )
+        {
+            return _document.LockMode( bIncludeMyLocks );
+        }
+
+        public void PopDbmod()
+        {
+            _document.PopDbmod();
+        }
+
+        public void PushDbmod()
+        {
+            _document.PushDbmod();
+        }
+
+        public void SendStringToExecute( string command, bool activate, bool wrapUpInactiveDoc, bool echoCommand )
+        {
+            _document.SendStringToExecute( command, activate, wrapUpInactiveDoc, echoCommand );
+        }
+
+        public Database TryGetDatabase()
+        {
+            return _document.TryGetDatabase();
+        }
+
+        public void UpgradeDocOpen()
+        {
+            _document.UpgradeDocOpen();
+        }
+
+        #endregion
+
+        #region Events
+
+        private event DisposingEventHandler _beginDocumentDispose;
+        
+        public event DisposingEventHandler BeginDocumentDispose
+        {
+            add { _beginDocumentDispose += value; }
+            remove { _beginDocumentDispose -= value; }
         }
 
         public event DocumentBeginCloseEventHandler BeginDocumentClose
@@ -201,87 +353,35 @@ namespace Pyrrha
             remove { _document.ViewChanged -= value; }
         }
 
-        public Bitmap CapturePreviewImage( uint width, uint height )
-        {
-            return _document.CapturePreviewImage( width, height );
-        }
-
-        public void CloseAndDiscard()
-        {
-            _document.CloseAndDiscard();
-        }
-
-        public void CloseAndSave( string fileName )
-        {
-            _document.CloseAndSave( fileName );
-        }
-
-        public static Document Create( IntPtr unmanagedPointer )
-        {
-            return Document.Create( unmanagedPointer );
-        }
-
-        public void DowngradeDocOpen( bool bPromptForSave )
-        {
-            _document.DowngradeDocOpen( bPromptForSave );
-        }
-
-        public static Document FromAcadDocument( object acadDocument )
-        {
-            return Document.FromAcadDocument( acadDocument );
-        }
-
-        public DocumentLock LockDocument()
-        {
-            return _document.LockDocument();
-        }
-
-        public DocumentLock LockDocument( DocumentLockMode lockMode, string globalCommandName, string localCommandName,
-            bool promptIfFails )
-        {
-            return _document.LockDocument( lockMode, globalCommandName, localCommandName, promptIfFails );
-        }
-
-        public DocumentLockMode LockMode()
-        {
-            return _document.LockMode();
-        }
-
-        public DocumentLockMode LockMode( bool bIncludeMyLocks )
-        {
-            return _document.LockMode( bIncludeMyLocks );
-        }
-
-        public void PopDbmod()
-        {
-            _document.PopDbmod();
-        }
-
-        public void PushDbmod()
-        {
-            _document.PushDbmod();
-        }
-
-        public void SendStringToExecute( string command, bool activate, bool wrapUpInactiveDoc, bool echoCommand )
-        {
-            _document.SendStringToExecute( command, activate, wrapUpInactiveDoc, echoCommand );
-        }
-
-        public Database TryGetDatabase()
-        {
-            return _document.TryGetDatabase();
-        }
-
-        public void UpgradeDocOpen()
-        {
-            _document.UpgradeDocOpen();
-        }
-
         #endregion
 
         #region DisposableWrapper implementation
 
-        protected override void DeleteUnmanagedObject() {}
+        public void Dispose()
+        {
+            if (_beginDocumentDispose != null)
+                _beginDocumentDispose(this , new EventArgs());
+            _document.Dispose();
+        }
+
+        #endregion
+
+        #region IEqualityComparer implementation
+
+        public override bool Equals(object obj)
+        {
+            return ((Document)obj).Name.Equals(Name , StringComparison.CurrentCultureIgnoreCase);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (base.GetHashCode() * 397) ^ (_document != null ? _document.GetHashCode() : 0);
+            }
+        }
+
+        #endregion
 
         #endregion
     }

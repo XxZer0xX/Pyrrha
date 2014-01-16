@@ -31,16 +31,17 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AcDbMgd">
-      <HintPath>..\..\..\..\..\..\ObjectARX\2012\inc\AcDbMgd.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="AcMgd">
-      <HintPath>..\..\..\..\..\..\ObjectARX\ 2012\inc\AcMgd.dll</HintPath>
+    <Reference Include="Acdbmgd">
+      <HintPath>..\..\..\..\..\..\ObjectARX\2012\inc\Acdbmgd.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="AcMgd">
       <HintPath>..\..\..\..\..\..\ObjectARX\2012\inc\AcMgd.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Acmgd, Version=18.2.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\ObjectARX\2012\inc\Acmgd.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />
@@ -56,9 +57,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\PyrrhaExtenstion\PyrrhaExtenstion.csproj">
-      <Project>{47653ee2-53bf-4a36-8903-7d1128bdf50c}</Project>
-      <Name>PyrrhaExtenstion</Name>
+    <ProjectReference Include="..\Pyrrha\Pyrrha.csproj">
+      <Project>{0c1311d2-6fc4-46ad-b1ec-0c3357ae34f4}</Project>
+      <Name>Pyrrha</Name>
+      <Private>True</Private>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

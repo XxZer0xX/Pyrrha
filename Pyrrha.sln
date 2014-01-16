@@ -5,8 +5,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "C_Sharp_Testing", "C_Sharp_
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pyrrha.Scripting", "Pyrrha.Scripting\Pyrrha.Scripting.csproj", "{AEFA4FF7-052D-40B9-8492-2C6DF7E515FF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PyrrhaExtenstion", "PyrrhaExtenstion\PyrrhaExtenstion.csproj", "{47653EE2-53BF-4A36-8903-7D1128BDF50C}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pyrrha", "Pyrrha\Pyrrha.csproj", "{0C1311D2-6FC4-46AD-B1EC-0C3357AE34F4}"
 EndProject
 Global
@@ -23,10 +21,6 @@ Global
 		{AEFA4FF7-052D-40B9-8492-2C6DF7E515FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AEFA4FF7-052D-40B9-8492-2C6DF7E515FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AEFA4FF7-052D-40B9-8492-2C6DF7E515FF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{47653EE2-53BF-4A36-8903-7D1128BDF50C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{47653EE2-53BF-4A36-8903-7D1128BDF50C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{47653EE2-53BF-4A36-8903-7D1128BDF50C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{47653EE2-53BF-4A36-8903-7D1128BDF50C}.Release|Any CPU.Build.0 = Release|Any CPU
 		{0C1311D2-6FC4-46AD-B1EC-0C3357AE34F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{0C1311D2-6FC4-46AD-B1EC-0C3357AE34F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0C1311D2-6FC4-46AD-B1EC-0C3357AE34F4}.Release|Any CPU.ActiveCfg = Release|Any CPU

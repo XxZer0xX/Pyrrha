@@ -11,18 +11,23 @@ using Autodesk.AutoCAD.Runtime;
 
 namespace Pyrrha.OverriddenClasses
 {
-    [Wrapper( "Autodesk.AutoCAD.DatabaseServices.TransactionManager" )]
-    public class TransactionManager : Autodesk.AutoCAD.DatabaseServices.TransactionManager,
+    [Wrapper("Autodesk.AutoCAD.DatabaseServices.TransactionManager")]
+    internal sealed class TransactionManager : Autodesk.AutoCAD.DatabaseServices.TransactionManager ,
         IEnumerable<Transaction>
     {
+        public override Autodesk.AutoCAD.DatabaseServices.Transaction TopTransaction
+        {
+            get { return _transactions[0]; }
+        }
+
         /// <summary>
         ///     Calls - this.AddNewlyCreatedDBObject(obj , true)
         ///     Adds DBObject to the Database and ModelSpace.
         /// </summary>
         /// <param name="obj"></param>
-        public void AddNewlyCreatedDBObject( DBObject obj )
+        public void AddNewlyCreatedDBObject(DBObject obj)
         {
-            AddNewlyCreatedDBObject( obj, true );
+            AddNewlyCreatedDBObject(obj , true);
         }
 
         /// <summary>
@@ -30,35 +35,40 @@ namespace Pyrrha.OverriddenClasses
         /// </summary>
         /// <param name="obj"></param>
         /// <param name="add"></param>
-        public override void AddNewlyCreatedDBObject( DBObject obj, bool add )
+        public override void AddNewlyCreatedDBObject(DBObject obj , bool add)
         {
-            using ( var trans = new OpenCloseTransaction() )
+            using (var trans = new OpenCloseTransaction())
             {
-                trans.AddNewlyCreatedDBObject( obj, add );
-                ObjectId modelSpaceId = SymbolUtilityServices.GetBlockModelSpaceId( obj.Database );
-                using ( DBObject modelSpace = trans.GetObject( modelSpaceId, OpenMode.ForWrite ) )
-                    ( (BlockTableRecord) modelSpace ).AppendEntity( (Entity) obj );
+                trans.AddNewlyCreatedDBObject(obj , add);
+                ObjectId modelSpaceId = SymbolUtilityServices.GetBlockModelSpaceId(obj.Database);
+                using (DBObject modelSpace = trans.GetObject(modelSpaceId , OpenMode.ForWrite))
+                    ((BlockTableRecord)modelSpace).AppendEntity((Entity)obj);
                 trans.Commit();
             }
         }
 
+        public override DBObjectCollection GetAllObjects()
+        {
+            
+        }
+
         /// <returns> NULL </returns>
-        [Obsolete( "Use Transaction.GetObject()", false )]
-        public override DBObject GetObject( ObjectId id, OpenMode mode )
+        [Obsolete("Use Transaction.GetObject()" , false)]
+        public override DBObject GetObject(ObjectId id , OpenMode mode)
         {
             return null;
         }
 
         /// <returns> NULL </returns>
-        [Obsolete( "Use Transaction.GetObject()", false )]
-        public override DBObject GetObject( ObjectId id, OpenMode mode, bool openErased )
+        [Obsolete("Use Transaction.GetObject()" , false)]
+        public override DBObject GetObject(ObjectId id , OpenMode mode , bool openErased)
         {
             return null;
         }
 
         /// <returns> NULL </returns>
-        [Obsolete( "Use Transaction.GetObject()", false )]
-        public override DBObject GetObject( ObjectId id, OpenMode mode, bool openErased, bool forceOpenOnLockedLayer )
+        [Obsolete("Use Transaction.GetObject()" , false)]
+        public override DBObject GetObject(ObjectId id , OpenMode mode , bool openErased , bool forceOpenOnLockedLayer)
         {
             return null;
         }
@@ -67,7 +77,7 @@ namespace Pyrrha.OverriddenClasses
         ///     Useable - calls this.StartTransaction();
         /// </summary>
         /// <returns></returns>
-        [Obsolete( "Use StartTransaction()", false )]
+        [Obsolete("Use StartTransaction()" , false)]
         public new Transaction StartOpenCloseTransaction()
         {
             return StartTransaction();
@@ -79,15 +89,34 @@ namespace Pyrrha.OverriddenClasses
         /// <returns> Transaction </returns>
         public new Transaction StartTransaction()
         {
-            var trans = new Transaction( this );
-            _transactions.Add( trans );
-            return trans;
+            return StartTransaction( false );
+        }
+
+        /// <summary>
+        ///     Starts and loggs new Transaction
+        /// </summary>
+        /// <returns> Transaction </returns>
+        public Transaction StartTransaction(bool keepOpen)
+        {
+            return new Transaction(this , keepOpen);
+        }
+
+        internal bool HasOpenObject(ObjectId id)
+        {
+            return
+                GetAllObjects().Cast<DBObject>().Any(obj => obj.ObjectId.Equals(id));
+        }
+
+        internal DBObject GetOpenObject(ObjectId id)
+        {
+            return
+               base.GetAllObjects().Cast<DBObject>().FirstOrDefault(obj => obj.ObjectId.Equals(id));
         }
 
         #region Constructor
 
-        protected internal TransactionManager( Autodesk.AutoCAD.DatabaseServices.TransactionManager manager )
-            : base( manager.UnmanagedObject, false )
+        protected internal TransactionManager(Autodesk.AutoCAD.DatabaseServices.TransactionManager manager)
+            : base(manager.UnmanagedObject , false)
         {
             _transIds = new List<TransId>();
             _transactions = new List<Transaction>();
@@ -99,10 +128,11 @@ namespace Pyrrha.OverriddenClasses
 
         private readonly IList<TransId> _transIds;
         private readonly IList<Transaction> _transactions;
+        private Autodesk.AutoCAD.DatabaseServices.Transaction _topTransaction;
 
-        public Transaction this[ TransId id ]
+        public Transaction this[TransId id]
         {
-            get { return _transactions[_transIds.IndexOf( id )]; }
+            get { return _transactions[_transIds.IndexOf(id)]; }
         }
 
         public IEnumerator<Transaction> GetEnumerator()
@@ -115,24 +145,10 @@ namespace Pyrrha.OverriddenClasses
             return GetEnumerator();
         }
 
-        protected internal void AddToTransactionList( TransId id, Transaction trans )
+        internal void AddToTransactionList(TransId id , Transaction trans)
         {
-            _transIds.Add( id );
-            _transactions.Add( trans );
-        }
-
-        protected internal DBObject HasOpenObject( ObjectId id )
-        {
-            return
-                _transactions.SelectMany( trans => trans.OpenObjects )
-                    .FirstOrDefault( obj => obj.ObjectId.Equals( id ) );
-        }
-
-        protected internal Boolean HasMultipleInstancesOfObjectOnCommit( Transaction trans, ObjectId id )
-        {
-            return _transactions.Count( listTrans
-                => listTrans.TransactionId != trans.TransactionId
-                   && listTrans.OpenObjectsIds.Contains( id ) ) > 1;
+            _transIds.Add(id);
+            _transactions.Add(trans);
         }
 
         #endregion

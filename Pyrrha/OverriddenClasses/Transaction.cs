@@ -3,62 +3,74 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.Runtime;
+using Exception = System.Exception;
 
 #endregion
 
 namespace Pyrrha.OverriddenClasses
 {
-    public class Transaction : OpenCloseTransaction, IEnumerable<DBObject>
+    internal sealed class Transaction : OpenCloseTransaction , IEnumerable<DBObject>
     {
         public TransId TransactionId;
 
         public new TransactionManager TransactionManager { get; set; }
 
-        public Transaction( TransactionManager manager )
+        public Transaction(TransactionManager manager , bool keepOpen)
         {
+            KeepOpen = keepOpen;
+            TransactionId = new TransId(UnmanagedObject);
             TransactionManager = manager;
-            TransactionId = new TransId( UnmanagedObject );
-            TransactionManager.AddToTransactionList( TransactionId, this );
+            TransactionManager.AddToTransactionList(TransactionId , this);
         }
 
-        public void AddNewlyCreatedDBObject( DBObject obj )
+        public void AddNewlyCreatedDBObject(DBObject obj)
         {
-            AddNewlyCreatedDBObject( obj, true );
+            AddNewlyCreatedDBObject(obj , true);
         }
 
-        public override void AddNewlyCreatedDBObject( DBObject obj, bool add )
+        public override void AddNewlyCreatedDBObject(DBObject obj , bool add)
         {
-            TransactionManager.AddNewlyCreatedDBObject( obj );
+            TransactionManager.AddNewlyCreatedDBObject(obj);
         }
 
-        public override DBObject GetObject( ObjectId id, OpenMode mode = OpenMode.ForWrite, bool openErased = false,
-            bool forceOpenOnLockedLayer = true )
+        public DBObject GetObject(ObjectId id)
         {
-            DBObject dbo = TransactionManager.HasOpenObject( id );
-            if ( dbo != null )
-                return dbo;
-            dbo = base.GetObject( id, mode, openErased, forceOpenOnLockedLayer );
-            appendToCollections( id, dbo );
+            return GetObject(id , OpenMode.ForWrite , false , true);
+        }
+
+        public override DBObject GetObject(ObjectId id , OpenMode mode)
+        {
+            return GetObject(id , mode , false , true);
+        }
+
+        public override DBObject GetObject(ObjectId id , OpenMode mode , bool openErased)
+        {
+            return GetObject(id , mode , openErased , true);
+        }
+
+        public override DBObject GetObject(ObjectId id , OpenMode mode = OpenMode.ForWrite , bool openErased = false ,
+            bool forceOpenOnLockedLayer = true)
+        {
+            if (TransactionManager.HasOpenObject(id))
+                throw new MemberAccessException(string.Format("object with id: {0} is currently in use." , id));
+            var dbo = base.GetObject(id , mode , openErased , forceOpenOnLockedLayer);
+            appendToCollections(id , dbo);
             return dbo;
         }
 
-        public override void Commit()
-        {
-            for ( int i = OpenObjects.Count - 1; i > -1; i-- )
-            {
-                if ( TransactionManager.HasMultipleInstancesOfObjectOnCommit( this, OpenObjects[i].ObjectId ) )
-                {
-                    OpenObjects.RemoveAt( i );
-                    OpenObjects[i].Dispose();
-                }
-            }
-            base.Commit();
-        }
-
-        public IList<DBObject> GetAllObjects()
+        new public IList<DBObject> GetAllObjects()
         {
             return OpenObjects;
+        }
+
+        public T GetOpenObject<T>( ObjectId id ) where T : DBObject
+        {
+            return !TransactionManager.HasOpenObject( id )
+                ? (T) GetObject( id )
+                : (T) TransactionManager.GetOpenObject(id);
         }
 
         #region IEnumerable Implementation
@@ -68,21 +80,19 @@ namespace Pyrrha.OverriddenClasses
 
         internal IList<ObjectId> OpenObjectsIds
         {
-            get { return _openObjectsIds ?? ( _openObjectsIds = new List<ObjectId>() ); }
+            get { return _openObjectsIds ?? (_openObjectsIds = new List<ObjectId>()); }
             set { _openObjectsIds = value; }
         }
 
         internal IList<DBObject> OpenObjects
         {
-            get { return _openObjects ?? ( _openObjects = new List<DBObject>() ); }
+            get { return _openObjects ?? (_openObjects = new List<DBObject>()); }
             set { _openObjects = value; }
         }
 
         public IEnumerator<DBObject> GetEnumerator()
         {
-            IEnumerator<DBObject> i = OpenObjects.GetEnumerator();
-            i.Current.UpgradeOpen();
-            return i;
+            return OpenObjects.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -90,27 +100,36 @@ namespace Pyrrha.OverriddenClasses
             return GetEnumerator();
         }
 
-        private void appendToCollections( ObjectId id, DBObject obj )
+        private void appendToCollections(ObjectId id , DBObject obj)
         {
-            OpenObjectsIds.Add( id );
-            OpenObjects.Add( obj );
+            OpenObjectsIds.Add(id);
+            OpenObjects.Add(obj);
         }
 
         #endregion
 
         #region IDisposable override Implementation
 
-        protected override void Dispose( bool disposing )
-        {
-            if ( disposing && !IsDisposed )
-            {
-                foreach ( var openObject in OpenObjects )
-                    openObject.Dispose();
+        public bool KeepOpen;
 
-                GC.SuppressFinalize( this );
+        new internal void Dispose()
+        {
+            if (KeepOpen)
+                return;
+            Commit();
+            GC.SuppressFinalize(this);
+            Dispose(true);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && !IsDisposed)
+            {
+                foreach (var openObject in OpenObjects)
+                    openObject.Dispose();
             }
 
-            base.Dispose( disposing );
+            base.Dispose(disposing);
         }
 
         #endregion

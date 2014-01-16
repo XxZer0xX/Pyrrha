@@ -3,12 +3,10 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.DatabaseServices;
-using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Runtime;
-using PyrrhaExtenstion;
-using PyrrhaExtenstion.Util;
+using Pyrrha.OverriddenClasses;
+using Pyrrha;
+using Pyrrha.Util;
 
 #endregion
 
@@ -19,17 +17,12 @@ namespace C_Sharp_Testing
         [CommandMethod("tst1")]
         public void test1()
         {
-            var ActiveDocument = Application.DocumentManager.MdiActiveDocument;
-            var layers = ActiveDocument.GetLayers(LifetimeManager.Independant);
-
-            foreach (var layerTableRecord in layers)
+            var activeDocument = new PyrrhaDocument();
+            foreach (var layer in activeDocument.Layers)
             {
-                layerTableRecord.Color = StaticExtenstions.GenerateAutoCadColor(3);
-                if (layerTableRecord.Name != "0")
-                    layerTableRecord.Commit();
+                layer.Color = StaticExtenstions.GenerateAutoCadColor( 3 );
             }
-
-            ActiveDocument.Editor.Regen();
+            
             //ActiveDocument.ExecuteQuery();
 
             //var entities = ActiveDocument.ModelSpaceEntities.Where(ent => ent is Line).ToArray();

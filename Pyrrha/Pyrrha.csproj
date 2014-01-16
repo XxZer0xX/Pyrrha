@@ -54,6 +54,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="OverriddenClasses\TransactionManager.cs" />
     <Compile Include="TransId.cs" />
+    <Compile Include="Util\CallerLanguage.cs" />
+    <Compile Include="Util\Query\EntityQuery.cs" />
+    <Compile Include="Util\StaticExtenstions.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

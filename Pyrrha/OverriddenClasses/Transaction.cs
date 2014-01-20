@@ -1,137 +1,135 @@
-﻿#region Referenceing
+﻿//#region Referenceing
 
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.ComponentModel.Design;
-using Autodesk.AutoCAD.DatabaseServices;
-using Autodesk.AutoCAD.Runtime;
-using Exception = System.Exception;
+//using System;
+//using System.Collections;
+//using System.Collections.Generic;
+//using System.ComponentModel.Design;
+//using Autodesk.AutoCAD.DatabaseServices;
+//using Autodesk.AutoCAD.Runtime;
+//using Exception = System.Exception;
 
-#endregion
+//#endregion
 
-namespace Pyrrha.OverriddenClasses
-{
-    internal sealed class Transaction : OpenCloseTransaction , IEnumerable<DBObject>
-    {
-        public TransId TransactionId;
+//namespace Pyrrha.OverriddenClasses
+//{
+//    internal sealed class Transaction : OpenCloseTransaction , IEnumerable<DBObject>
+//    {
+//        public TransId TransactionId;
 
-        public new TransactionManager TransactionManager { get; set; }
+//        public new TransactionManager TransactionManager { get; set; }
 
-        public Transaction(TransactionManager manager , bool keepOpen)
-        {
-            KeepOpen = keepOpen;
-            TransactionId = new TransId(UnmanagedObject);
-            TransactionManager = manager;
-            TransactionManager.AddToTransactionList(TransactionId , this);
-        }
+//        public Transaction(TransactionManager manager)
+//        {
+//            TransactionId = new TransId(UnmanagedObject);
+//            TransactionManager = manager;
+//            TransactionManager.AddToTransactionList(TransactionId , this);
+//        }
 
-        public void AddNewlyCreatedDBObject(DBObject obj)
-        {
-            AddNewlyCreatedDBObject(obj , true);
-        }
+//        public void AddNewlyCreatedDBObject(DBObject obj)
+//        {
+//            AddNewlyCreatedDBObject(obj , true);
+//        }
 
-        public override void AddNewlyCreatedDBObject(DBObject obj , bool add)
-        {
-            TransactionManager.AddNewlyCreatedDBObject(obj);
-        }
+//        public override void Commit()
+//        {
+//            base.Commit();
+//            this.Dispose();
+//        }
 
-        public DBObject GetObject(ObjectId id)
-        {
-            return GetObject(id , OpenMode.ForWrite , false , true);
-        }
+//        public override void AddNewlyCreatedDBObject(DBObject obj , bool add)
+//        {
+//            TransactionManager.AddNewlyCreatedDBObject(obj);
+//        }
 
-        public override DBObject GetObject(ObjectId id , OpenMode mode)
-        {
-            return GetObject(id , mode , false , true);
-        }
+//        public DBObject GetObject(ObjectId id)
+//        {
+//            return GetObject(id , OpenMode.ForWrite , false , true);
+//        }
 
-        public override DBObject GetObject(ObjectId id , OpenMode mode , bool openErased)
-        {
-            return GetObject(id , mode , openErased , true);
-        }
+//        public override DBObject GetObject(ObjectId id , OpenMode mode)
+//        {
+//            return GetObject(id , mode , false , true);
+//        }
 
-        public override DBObject GetObject(ObjectId id , OpenMode mode = OpenMode.ForWrite , bool openErased = false ,
-            bool forceOpenOnLockedLayer = true)
-        {
-            if (TransactionManager.HasOpenObject(id))
-                throw new MemberAccessException(string.Format("object with id: {0} is currently in use." , id));
-            var dbo = base.GetObject(id , mode , openErased , forceOpenOnLockedLayer);
-            appendToCollections(id , dbo);
-            return dbo;
-        }
+//        public override DBObject GetObject(ObjectId id , OpenMode mode , bool openErased)
+//        {
+//            return GetObject(id , mode , openErased , true);
+//        }
 
-        new public IList<DBObject> GetAllObjects()
-        {
-            return OpenObjects;
-        }
+//        public override DBObject GetObject(ObjectId id , OpenMode mode = OpenMode.ForWrite , bool openErased = false ,
+//            bool forceOpenOnLockedLayer = true)
+//        {
+//            var dbo = base.GetObject(id , mode , openErased , forceOpenOnLockedLayer);
+//            appendToCollections(id , dbo);
+//            return dbo;
+//        }
 
-        public T GetOpenObject<T>( ObjectId id ) where T : DBObject
-        {
-            return !TransactionManager.HasOpenObject( id )
-                ? (T) GetObject( id )
-                : (T) TransactionManager.GetOpenObject(id);
-        }
+//        new public IList<DBObject> GetAllObjects()
+//        {
+//            return OpenObjects;
+//        }
 
-        #region IEnumerable Implementation
+//        public T GetOpenObject<T>( ObjectId id ) where T : DBObject
+//        {
+//            return !TransactionManager.HasOpenObject( id )
+//                ? (T) GetObject( id )
+//                : (T) TransactionManager.GetOpenObject(id);
+//        }
 
-        private IList<ObjectId> _openObjectsIds;
-        private IList<DBObject> _openObjects;
+//        #region IEnumerable Implementation
 
-        internal IList<ObjectId> OpenObjectsIds
-        {
-            get { return _openObjectsIds ?? (_openObjectsIds = new List<ObjectId>()); }
-            set { _openObjectsIds = value; }
-        }
+//        private IList<ObjectId> _openObjectsIds;
+//        private IList<DBObject> _openObjects;
 
-        internal IList<DBObject> OpenObjects
-        {
-            get { return _openObjects ?? (_openObjects = new List<DBObject>()); }
-            set { _openObjects = value; }
-        }
+//        internal IList<ObjectId> OpenObjectsIds
+//        {
+//            get { return _openObjectsIds ?? (_openObjectsIds = new List<ObjectId>()); }
+//            set { _openObjectsIds = value; }
+//        }
 
-        public IEnumerator<DBObject> GetEnumerator()
-        {
-            return OpenObjects.GetEnumerator();
-        }
+//        internal IList<DBObject> OpenObjects
+//        {
+//            get { return _openObjects ?? (_openObjects = new List<DBObject>()); }
+//            set { _openObjects = value; }
+//        }
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+//        public IEnumerator<DBObject> GetEnumerator()
+//        {
+//            return OpenObjects.GetEnumerator();
+//        }
 
-        private void appendToCollections(ObjectId id , DBObject obj)
-        {
-            OpenObjectsIds.Add(id);
-            OpenObjects.Add(obj);
-        }
+//        IEnumerator IEnumerable.GetEnumerator()
+//        {
+//            return GetEnumerator();
+//        }
 
-        #endregion
+//        private void appendToCollections(ObjectId id , DBObject obj)
+//        {
+//            OpenObjectsIds.Add(id);
+//            OpenObjects.Add(obj);
+//        }
 
-        #region IDisposable override Implementation
+//        #endregion
 
-        public bool KeepOpen;
+//        #region IDisposable override Implementation
 
-        new internal void Dispose()
-        {
-            if (KeepOpen)
-                return;
-            Commit();
-            GC.SuppressFinalize(this);
-            Dispose(true);
-        }
+//        new internal void Dispose()
+//        {
+//            GC.SuppressFinalize(this);
+//            Dispose(true);
+//        }
 
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing && !IsDisposed)
-            {
-                foreach (var openObject in OpenObjects)
-                    openObject.Dispose();
-            }
+//        protected override void Dispose(bool disposing)
+//        {
+//            if (disposing && !IsDisposed)
+//            {
+//                foreach (var openObject in OpenObjects)
+//                    openObject.Dispose();
+//            }
 
-            base.Dispose(disposing);
-        }
+//            base.Dispose(disposing);
+//        }
 
-        #endregion
-    }
-}
+//        #endregion
+//    }
+//}

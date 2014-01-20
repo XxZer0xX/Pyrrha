@@ -18,6 +18,7 @@ using TransactionManager = Pyrrha.OverriddenClasses.TransactionManager;
 using Transaction = Pyrrha.OverriddenClasses.Transaction;
 
 #endregion
+#pragma warning disable 612,618
 
 namespace Pyrrha
 {
@@ -27,15 +28,15 @@ namespace Pyrrha
 
         private readonly Document _document;
 
-        private readonly Transaction _innerTransaction;
+        private readonly OpenCloseTransaction _innerTransaction;
 
         public BlockTableRecord ModelSpace
         {
             get
             {
-                return
-                    _innerTransaction.GetOpenObject<BlockTableRecord>(
-                        SymbolUtilityServices.GetBlockModelSpaceId( Database ) );
+                return (BlockTableRecord)SymbolUtilityServices.GetBlockModelSpaceId( 
+                    Database ).Open(OpenMode.ForWrite) ;
+
             }
         }
 
@@ -43,25 +44,24 @@ namespace Pyrrha
         {
             get
             {
-                return
-                    _innerTransaction.GetOpenObject<BlockTableRecord>(
-                        SymbolUtilityServices.GetBlockPaperSpaceId( Database ) );
+                return (BlockTableRecord)SymbolUtilityServices.GetBlockPaperSpaceId(
+                    Database).Open(OpenMode.ForWrite);
             }
         }
 
         public LayerTable LayerTable
         {
-            get { return _innerTransaction.GetOpenObject<LayerTable>(Database.LayerTableId); }
+            get { return (LayerTable) Database.LayerTableId.Open(OpenMode.ForRead); }
         }
 
         public TextStyleTable TextStyleTable
         {
-            get { return _innerTransaction.GetOpenObject<TextStyleTable>(Database.TextStyleTableId); }
+            get { return (TextStyleTable)Database.TextStyleTableId.Open(OpenMode.ForRead); }
         }
 
         public LinetypeTable LinetypeTable
         {
-            get { return _innerTransaction.GetOpenObject<LinetypeTable>(Database.LinetypeTableId); }
+            get { return (LinetypeTable)Database.LinetypeTableId.Open(OpenMode.ForRead); }
         }
 
         public IEnumerable<LayerTableRecord> Layers
@@ -76,7 +76,7 @@ namespace Pyrrha
 
         private TransactionManager TransactionManager
         {
-            get { return new TransactionManager(_document.TransactionManager); }
+            get { return _document.TransactionManager; }
         }
 
         #endregion
@@ -99,15 +99,7 @@ namespace Pyrrha
         {
             if ( doc == null )
                 throw new NullReferenceException( "Document is null." );
-
-            doc.CloseWillStart += ( sender, args ) =>
-            {
-                _innerTransaction.KeepOpen = false;
-                _innerTransaction.Dispose();
-            };
-
             _document = doc;
-            _innerTransaction = TransactionManager.StartTransaction(true);
         }
 
         #endregion

@@ -49,6 +49,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="OpenObjectManager.cs" />
     <Compile Include="OverriddenClasses\Transaction.cs" />
     <Compile Include="PyrrhaDocument.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

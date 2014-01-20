@@ -14,8 +14,6 @@ using Autodesk.AutoCAD.Runtime;
 using Autodesk.AutoCAD.Windows;
 using Autodesk.AutoCAD.Windows.Data;
 using AcApp = Autodesk.AutoCAD.ApplicationServices.Application;
-using TransactionManager = Pyrrha.OverriddenClasses.TransactionManager;
-using Transaction = Pyrrha.OverriddenClasses.Transaction;
 
 #endregion
 #pragma warning disable 612,618
@@ -28,15 +26,23 @@ namespace Pyrrha
 
         private readonly Document _document;
 
-        private readonly OpenCloseTransaction _innerTransaction;
+        private OpenObjectManager<DBObject> _objectManager;
+        public OpenObjectManager<DBObject> ObjectManager
+        {
+            get
+            {
+                return _objectManager ??
+                       (_objectManager = new OpenObjectManager<DBObject>(Database.TransactionManager , this));
+            }
+        } 
+        
 
         public BlockTableRecord ModelSpace
         {
             get
             {
-                return (BlockTableRecord)SymbolUtilityServices.GetBlockModelSpaceId( 
-                    Database ).Open(OpenMode.ForWrite) ;
-
+                return ObjectManager.GetObject<BlockTableRecord>(
+                    SymbolUtilityServices.GetBlockModelSpaceId(Database));
             }
         }
 
@@ -44,39 +50,32 @@ namespace Pyrrha
         {
             get
             {
-                return (BlockTableRecord)SymbolUtilityServices.GetBlockPaperSpaceId(
-                    Database).Open(OpenMode.ForWrite);
+                return ObjectManager.GetObject<BlockTableRecord>(
+                    SymbolUtilityServices.GetBlockPaperSpaceId(Database));     
             }
         }
 
         public LayerTable LayerTable
         {
-            get { return (LayerTable) Database.LayerTableId.Open(OpenMode.ForRead); }
+            get { return ObjectManager.GetObject<LayerTable>(Database.LayerTableId); }
         }
 
         public TextStyleTable TextStyleTable
         {
-            get { return (TextStyleTable)Database.TextStyleTableId.Open(OpenMode.ForRead); }
+            get { return ObjectManager.GetObject<TextStyleTable>(Database.TextStyleTableId); }
         }
 
         public LinetypeTable LinetypeTable
         {
-            get { return (LinetypeTable)Database.LinetypeTableId.Open(OpenMode.ForRead); }
+            get { return ObjectManager.GetObject<LinetypeTable>(Database.LinetypeTableId); }
         }
 
         public IEnumerable<LayerTableRecord> Layers
         {
             get
             {
-                return
-                    LayerTable.Cast<ObjectId>()
-                        .Select( objId => _innerTransaction.GetOpenObject<LayerTableRecord>( objId ) );
+                return ObjectManager.GetAllOfType<LayerTableRecord>();
             }
-        }
-
-        private TransactionManager TransactionManager
-        {
-            get { return _document.TransactionManager; }
         }
 
         #endregion
@@ -100,6 +99,15 @@ namespace Pyrrha
             if ( doc == null )
                 throw new NullReferenceException( "Document is null." );
             _document = doc;
+        }
+
+        #endregion
+
+        #region Methods
+
+        public void ConfirmAllChanges()
+        {
+            ObjectManager.ConfirmAllChanges();
         }
 
         #endregion

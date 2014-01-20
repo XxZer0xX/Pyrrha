@@ -1,28 +1,31 @@
 ﻿#region Referenceing
 
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Runtime;
-using Pyrrha.OverriddenClasses;
 using Pyrrha;
-using Pyrrha.Util;
 
 #endregion
 
-namespace C_Sharp_Testing
+namespace CSharp_Testing
 {
     public class TestClass
     {
         [CommandMethod("tst1")]
         public void test1()
         {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
             var activeDocument = new PyrrhaDocument();
-            foreach (var layer in activeDocument.Layers)
-            {
-                layer.Color = StaticExtenstions.GenerateAutoCadColor( 3 );
-            }
-            activeDocument.AcceptChanges();
+            var col = activeDocument.ObjectManager.GetAllOfType<DBText>();
+            Debug.WriteLine(col.Count());
+            foreach (var text in col)
+                text.TextString = "yessss";
+            activeDocument.ObjectManager.ConfirmAllChanges();
+            stopwatch.Stop();
+            Debug.WriteLine(stopwatch.Elapsed);
+
             //ActiveDocument.ExecuteQuery();
 
             //var entities = ActiveDocument.ModelSpaceEntities.Where(ent => ent is Line).ToArray();

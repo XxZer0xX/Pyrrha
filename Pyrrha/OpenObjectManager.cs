@@ -9,7 +9,8 @@ using Autodesk.AutoCAD.DatabaseServices;
 
 namespace Pyrrha
 {
-    public class OpenObjectManager<TStored> : IEqualityComparer<TStored> , IEnumerable<TStored> where TStored : DBObject
+    public class OpenObjectManager<TStored> : IEqualityComparer<TStored>, IEnumerable<TStored> 
+        where TStored : DBObject
     {
         private readonly IDictionary<ObjectId , TStored> _openObjects;
         private readonly OpenCloseTransaction _transaction;
@@ -61,10 +62,10 @@ namespace Pyrrha
             var modelSpace = GetObject<BlockTableRecord>(SymbolUtilityServices.GetBlockModelSpaceId(_doc.Database));
             
             var idsOfType = new List<ObjectId>();
-            List<ObjectId> idsFromDb =
-                modelSpace.Cast<ObjectId>().Where( id => !_openObjects.ContainsKey( id ) ).ToList();
+            IList<ObjectId> idsFromDb =
+                modelSpace.Cast<ObjectId>().Where(id => !_openObjects.ContainsKey(id)).ToList();
 
-            for ( int i = idsFromDb.Count() - 1; i >= 0; i-- )
+            for ( int i = idsFromDb.Count() ; i >= 0; i-- )
             {
                 using ( var dbObject = _transaction.GetObject(idsFromDb[i], OpenMode.ForRead ) )
                     if (dbObject.GetType() == typeof(TDesired))

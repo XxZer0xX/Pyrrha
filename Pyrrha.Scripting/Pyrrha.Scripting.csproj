@@ -61,8 +61,8 @@
   <ItemGroup>
     <Compile Include="AutoCad\CommandLineLoader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ErrorData.cs" />
-    <Compile Include="PythonScriptingErrorListener.cs" />
+    <Compile Include="Compiler\ErrorData.cs" />
+    <Compile Include="Compiler\ComplieTimeErrorListener.cs" />
     <Compile Include="Util\StaticExtensions.cs" />
   </ItemGroup>
   <ItemGroup>

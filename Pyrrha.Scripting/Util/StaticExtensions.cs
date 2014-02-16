@@ -1,9 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿#region Referencing
+
 using System.Linq;
-using System.Text;
 using Microsoft.Scripting;
 using Microsoft.Scripting.Hosting;
+
+#endregion
 
 namespace Pyrrha.Scripting.Util
 {

@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.SqlClient;
+﻿
+#region Referencing
+
 using System.Linq;
-using System.Text;
-using Autodesk.AutoCAD.DatabaseServices;
+
+#endregion
 
 namespace Pyrrha.Util.Query
 {
@@ -37,7 +37,5 @@ namespace Pyrrha.Util.Query
         {
             return null;
         }  
-
-        
     }
 }

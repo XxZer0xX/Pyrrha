@@ -7,6 +7,7 @@ using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Runtime;
 using IronPython.Hosting;
+using Pyrrha.Scripting.Compiler;
 using Pyrrha.Util;
 using AcApp = Autodesk.AutoCAD.ApplicationServices.Application;
 using Exception = System.Exception;
@@ -89,7 +90,7 @@ namespace Pyrrha.Scripting.AutoCad
             }
 
             var scriptSource = Python.CreateEngine().CreateScriptSourceFromFile(filePath);
-            var errorListener = new PythonScriptingErrorListener();
+            var errorListener = new ComplieTimeErrorListener();
             var compliedScript = scriptSource.Compile(errorListener);
 
             if (!errorListener.FoundError)

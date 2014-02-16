@@ -1,11 +1,16 @@
-﻿using System.Collections.Generic;
+﻿#region Referencing
+
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Scripting;
 using Microsoft.Scripting.Hosting;
 using Pyrrha.Scripting.Util;
 
-namespace Pyrrha.Scripting
+#endregion
+
+namespace Pyrrha.Scripting.Compiler
 {
-    public class PythonScriptingErrorListener : ErrorListener
+    public class ComplieTimeErrorListener : ErrorListener
     {
         public IList<ErrorData> ErrorDataList { get; set; }
         public bool FoundError { get; set; }
@@ -17,7 +22,7 @@ namespace Pyrrha.Scripting
             int errorCode,
             Severity severity)
         {
-            FoundError = true;
+            this.FoundError = true;
 
             this.ErrorDataList.Add(new ErrorData
             {
@@ -29,7 +34,7 @@ namespace Pyrrha.Scripting
             });
         }
 
-        public PythonScriptingErrorListener()
+        public ComplieTimeErrorListener()
         {
             this.ErrorDataList = new List<ErrorData>();
         }

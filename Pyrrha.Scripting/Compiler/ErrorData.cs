@@ -1,7 +1,11 @@
-﻿using System.Linq;
+﻿#region Referencing
+
+using System.Linq;
 using Microsoft.Scripting;
 
-namespace Pyrrha.Scripting
+#endregion
+
+namespace Pyrrha.Scripting.Compiler
 {
     public class ErrorData
     {

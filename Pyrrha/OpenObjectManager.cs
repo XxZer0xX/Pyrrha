@@ -1,5 +1,6 @@
 ﻿#region Referencing
 
+using System;
 using Autodesk.AutoCAD.DatabaseServices;
 using System.Collections;
 using System.Collections.Generic;
@@ -9,7 +10,9 @@ using System.Linq;
 
 namespace Pyrrha
 {
-    public class OpenObjectManager<TStored> : IEqualityComparer<TStored>, IEnumerable<TStored> where TStored : DBObject
+    public delegate void FetchingEvent( object sender , EventArgs args );
+
+    public class OpenObjectManager<TStored> : IDisposable, IEqualityComparer<TStored>, IEnumerable<TStored> where TStored : DBObject
     {
         private readonly IDictionary<ObjectId, TStored> _openObjects;
         private readonly OpenCloseTransaction _transaction;
@@ -33,6 +36,12 @@ namespace Pyrrha
 
         #endregion
 
+        #region Events
+
+        public event FetchingEvent FetchingFromObjectId;
+
+        #endregion
+
         #region Methods
 
         public DBObject GetObject(ObjectId id)
@@ -52,8 +61,7 @@ namespace Pyrrha
 
         public void ConfirmAllChanges()
         {
-            this._transaction.Commit();
-            this._transaction.Dispose();
+            Dispose();
         }
 
         internal void Remove(ObjectId id)
@@ -97,6 +105,28 @@ namespace Pyrrha
         public int GetHashCode(TStored obj)
         {
             return obj.GetHashCode();
+        }
+
+        #endregion
+
+        #region IDisposable Implementation
+
+        private bool _disposed;
+
+        public void Dispose()
+        {
+            this._transaction.Commit();
+            this._transaction.Dispose();
+            _openObjects.Clear();
+            Dispose( true );
+        }
+
+        public void Dispose(bool isDisposing)
+        {
+            if (!isDisposing || _disposed)
+                return;
+            _disposed = true;
+            GC.SuppressFinalize( this );
         }
 
         #endregion

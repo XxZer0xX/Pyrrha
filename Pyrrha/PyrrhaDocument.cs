@@ -26,8 +26,9 @@ namespace Pyrrha
         #region Properties
 
         private readonly Document _document;
-
         private OpenObjectManager<DBObject> _objectManager;
+        public DocumentManager DocumentManager;
+
         public OpenObjectManager<DBObject> ObjectManager
         {
             get
@@ -92,6 +93,7 @@ namespace Pyrrha
                 throw new NullReferenceException( "Document is null." );
             PyrrhaException.IsScriptSource = Thread.CurrentThread.IsScriptSource();
             this._document = doc;
+            DocumentManager.AddDocument( this );
         }
 
         #endregion

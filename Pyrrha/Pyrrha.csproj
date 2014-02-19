@@ -44,6 +44,8 @@
     <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Collections\BaseObjectCollection.cs" />
+    <Compile Include="DocumentManager.cs" />
     <Compile Include="OpenObjectManager.cs" />
     <Compile Include="PyrrhaDocument.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

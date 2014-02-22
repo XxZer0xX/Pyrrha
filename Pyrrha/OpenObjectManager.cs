@@ -12,9 +12,9 @@ namespace Pyrrha
 {
     public delegate void FetchingEvent( object sender , EventArgs args );
 
-    public class OpenObjectManager<TStored> : IDisposable, IEqualityComparer<TStored>, IEnumerable<TStored> where TStored : DBObject
+    public class OpenObjectManager : IDisposable, IEqualityComparer<DBObject>, IEnumerable<DBObject>
     {
-        private readonly IDictionary<ObjectId, TStored> _openObjects;
+        private readonly IDictionary<ObjectId, DBObject> _openObjects;
         private readonly OpenCloseTransaction _transaction;
 
         #region Properties
@@ -31,14 +31,12 @@ namespace Pyrrha
         public OpenObjectManager()
         {
             this._transaction = new OpenCloseTransaction();
-            this._openObjects = new Dictionary<ObjectId, TStored>();
+            this._openObjects = new Dictionary<ObjectId, DBObject>();
         }
 
         #endregion
 
         #region Events
-
-        public event FetchingEvent FetchingFromObjectId;
 
         #endregion
 
@@ -75,7 +73,7 @@ namespace Pyrrha
         private DBObject _getAddObject(ObjectId id)
         {
             var obj = this._transaction.GetObject(id, OpenMode.ForWrite);
-            this._openObjects.Add(id, (TStored)obj);
+            this._openObjects.Add(id, (DBObject)obj);
             return obj;
         }
 
@@ -83,7 +81,7 @@ namespace Pyrrha
 
         #region IEnumerable Implementation
 
-        public IEnumerator<TStored> GetEnumerator()
+        public IEnumerator<DBObject> GetEnumerator()
         {
             return this._openObjects.Values.GetEnumerator();
         }
@@ -97,12 +95,12 @@ namespace Pyrrha
 
         #region IEqualityComparer Implementation
 
-        public bool Equals(TStored x, TStored y)
+        public bool Equals(DBObject x, DBObject y)
         {
             return x.ObjectId.Equals(y.ObjectId);
         }
 
-        public int GetHashCode(TStored obj)
+        public int GetHashCode(DBObject obj)
         {
             return obj.GetHashCode();
         }

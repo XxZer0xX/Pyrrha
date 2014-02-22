@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Autodesk.AutoCAD.DatabaseServices;
 using Pyrrha.Runtime;
+using Pyrrha.Runtime.Exception;
 
 #endregion
 

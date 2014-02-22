@@ -7,6 +7,7 @@ using Autodesk.AutoCAD.GraphicsSystem;
 using Autodesk.AutoCAD.Windows;
 using Autodesk.AutoCAD.Windows.Data;
 using Pyrrha.Runtime;
+using Pyrrha.Runtime.Exception;
 using Pyrrha.Util;
 using System;
 using System.Collections;
@@ -372,7 +373,7 @@ namespace Pyrrha
             return obj.GetType() == this.GetType() && this.Equals( (PyrrhaDocument) obj );
         }
 
-        protected bool Equals(PyrrhaDocument other)
+        public bool Equals(PyrrhaDocument other)
         {
             return Equals(this._document, other._document) 
                 && Equals(this._objectManager, other._objectManager);

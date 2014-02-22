@@ -1,14 +1,13 @@
 ﻿#region Referencing
 
-using System;
 using System.Linq;
-using AcApp = Autodesk.AutoCAD.ApplicationServices.Application;
+using Autodesk.AutoCAD.ApplicationServices;
 
 #endregion
 
-namespace Pyrrha.Runtime
+namespace Pyrrha.Runtime.Exception
 {
-    public abstract class PyrrhaException : Exception
+    public abstract class PyrrhaException : System.Exception
     {
         public static bool IsScriptSource;
 
@@ -27,7 +26,7 @@ namespace Pyrrha.Runtime
         {
             if (!IsScriptSource)
                 throw this;
-            AcApp.DocumentManager.MdiActiveDocument.Editor.WriteMessage(
+            Application.DocumentManager.MdiActiveDocument.Editor.WriteMessage(
                 string.Format("\nMessage: {0}\nSource:{1}", this.Message, this.Source)
                 );
         }

@@ -5,7 +5,7 @@ using System.Linq;
 
 #endregion
 
-namespace Pyrrha.Runtime
+namespace Pyrrha.Runtime.Exception
 {
     public class InvalidAccessException : PyrrhaException
     {

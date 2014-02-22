@@ -5,7 +5,7 @@ using Autodesk.AutoCAD.DatabaseServices;
 
 #endregion
 
-namespace Pyrrha.Runtime
+namespace Pyrrha.Runtime.Exception
 {
     public class NonEnumerableException : PyrrhaException
     {

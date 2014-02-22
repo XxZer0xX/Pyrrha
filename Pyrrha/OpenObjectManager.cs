@@ -12,80 +12,108 @@ namespace Pyrrha
 {
     public delegate void FetchingEvent( object sender , EventArgs args );
 
-    public class OpenObjectManager<TStored> : IDisposable, IEqualityComparer<TStored>, IEnumerable<TStored> where TStored : DBObject
+    public class OpenObjectManager : IDisposable, IEqualityComparer<DBObject>, IEnumerable<DBObject>
     {
-        private readonly IDictionary<ObjectId, TStored> _openObjects;
-        private readonly OpenCloseTransaction _transaction;
+
+        private readonly Database _database;
+
+        public IDictionary<ObjectId, DBObject> OpenObjects { get; internal set; }
+
+        //private readonly LongTransaction _transaction;
+
+        public IList<Transaction> Transactions { get; private set; }
+        public ICollection<Transaction> Tests { get; internal set; }
 
         #region Properties
 
         public int Count
         {
-            get { return this._openObjects.Count; }
+            get { return this.OpenObjects.Count; }
         }
 
         #endregion
 
         #region Constructor
 
-        public OpenObjectManager()
+        // Transaction Collection Members
+        internal Transaction AddTransaction()
         {
-            this._transaction = new OpenCloseTransaction();
-            this._openObjects = new Dictionary<ObjectId, TStored>();
+            var newTrans = _database.TransactionManager.StartTransaction();
+            Transactions.Add(newTrans);
+
+            return newTrans;
+        }
+        internal void RemoveTransaction(Transaction transaction)
+        {
+            Transactions.Remove(transaction);
+        }
+        internal void CommitTransaction(Transaction transaction)
+        {
+            // Check the other transactions for ownership...
+            transaction.Commit();
+            transaction.Dispose();
+        }
+
+
+        public OpenObjectManager(Database database)
+        {
+            _database = database;
+            Transactions = new List<Transaction>();
+            OpenObjects = new Dictionary<ObjectId, DBObject>();
         }
 
         #endregion
 
         #region Events
 
-        public event FetchingEvent FetchingFromObjectId;
+        //public event FetchingEvent FetchingFromObjectId;
 
         #endregion
 
         #region Methods
 
-        public DBObject GetObject(ObjectId id)
-        {
-            return this._openObjects.ContainsKey(id)
-                ? this._openObjects[id]
-                : this._getAddObject(id);
-        }
+        //public IEnumerable<DBObject> GetObjects()
+        //{
+            
+        //}
 
-        public IEnumerable<TDesired> GetAllOfType<TDesired>(IEnumerable source)
-            where TDesired : DBObject
-        {
-            return source.OfType<ObjectId>().Any()
-                ? source.Cast<ObjectId>().Select(this.GetObject).OfType<TDesired>()
-                : source.OfType<TDesired>();
-        }
+
+        //public DBObject GetObject(ObjectId id)
+        //{
+        //    return OpenObjects.ContainsKey(id)
+        //        ? OpenObjects[id]
+        //        : null;
+        //        //: _getAddObject(id);
+        //}
 
         public void ConfirmAllChanges()
         {
+            //_transaction.
             Dispose();
         }
 
         internal void Remove(ObjectId id)
         {
-            var obj = this._openObjects[id];
+            var obj = this.OpenObjects[id];
             if (obj == null) return;
             obj.Dispose();
-            this._openObjects.Remove(id);
+            this.OpenObjects.Remove(id);
         }
 
-        private DBObject _getAddObject(ObjectId id)
-        {
-            var obj = this._transaction.GetObject(id, OpenMode.ForWrite);
-            this._openObjects.Add(id, (TStored)obj);
-            return obj;
-        }
+        //private DBObject _getAddObject(ObjectId id)
+        //{
+        //    var obj = this._transaction.GetObject(id, OpenMode.ForWrite);
+        //    this.OpenObjects.Add(id, obj);
+        //    return obj;
+        //}
 
         #endregion
 
         #region IEnumerable Implementation
 
-        public IEnumerator<TStored> GetEnumerator()
+        public IEnumerator<DBObject> GetEnumerator()
         {
-            return this._openObjects.Values.GetEnumerator();
+            return this.OpenObjects.Values.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -97,12 +125,14 @@ namespace Pyrrha
 
         #region IEqualityComparer Implementation
 
-        public bool Equals(TStored x, TStored y)
+        public bool Equals(DBObject x, DBObject y)
         {
+            
+
             return x.ObjectId.Equals(y.ObjectId);
         }
 
-        public int GetHashCode(TStored obj)
+        public int GetHashCode(DBObject obj)
         {
             return obj.GetHashCode();
         }
@@ -115,9 +145,9 @@ namespace Pyrrha
 
         public void Dispose()
         {
-            this._transaction.Commit();
-            this._transaction.Dispose();
-            _openObjects.Clear();
+            //this._transaction.Commit();
+            //this._transaction.Dispose();
+            OpenObjects.Clear();
             Dispose( true );
         }
 

@@ -20,6 +20,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -30,12 +31,12 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AcDbMgd">
-      <HintPath>..\..\..\..\..\..\ObjectARX\2012\inc\AcDbMgd.dll</HintPath>
+    <Reference Include="acdbmgd">
+      <HintPath>..\..\..\..\..\..\Program Files\Autodesk\AutoCAD 2012 - English\acdbmgd.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="AcMgd">
-      <HintPath>..\..\..\..\..\..\ObjectARX\2012\inc\AcMgd.dll</HintPath>
+    <Reference Include="acmgd">
+      <HintPath>..\..\..\..\..\..\Program Files\Autodesk\AutoCAD 2012 - English\acmgd.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="PresentationCore" />
@@ -44,14 +45,16 @@
     <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Collections\BaseObjectCollection.cs" />
+    <Compile Include="Collections\RecordCollection.cs" />
+    <Compile Include="Collections\LayerCollection.cs" />
+    <Compile Include="Collections\OpenObjectCollection.cs" />
     <Compile Include="DocumentManager.cs" />
     <Compile Include="OpenObjectManager.cs" />
     <Compile Include="PyrrhaDocument.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Runtime\InvalidAccessException.cs" />
-    <Compile Include="Runtime\NonEnumerableException.cs" />
-    <Compile Include="Runtime\PyrrhaExcpetion.cs" />
+    <Compile Include="PyrrhaTransaction.cs" />
+    <Compile Include="Query\SelectionFilter.cs" />
+    <Compile Include="Runtime\PyrrhaException.cs" />
     <Compile Include="Util\Query\EntityQuery.cs" />
     <Compile Include="Util\StaticExtenstions.cs" />
   </ItemGroup>

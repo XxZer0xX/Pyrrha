@@ -6,6 +6,7 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.GraphicsSystem;
 using Autodesk.AutoCAD.Windows;
 using Autodesk.AutoCAD.Windows.Data;
+using Pyrrha.Collections;
 using Pyrrha.Runtime;
 using Pyrrha.Util;
 using System;
@@ -26,24 +27,25 @@ namespace Pyrrha
         #region Properties
 
         private readonly Document _document;
-        private OpenObjectManager<DBObject> _objectManager;
+        
         public DocumentManager DocumentManager;
 
-        public OpenObjectManager<DBObject> ObjectManager
+        public OpenObjectManager ObjectManager
         {
             get
             {
-                return this._objectManager ??
-                       (this._objectManager = new OpenObjectManager<DBObject>());
+                return _objectManager ??
+                       (_objectManager = new OpenObjectManager(Database));
             }
-        } 
+        }
+        private OpenObjectManager _objectManager;
 
         public BlockTableRecord ModelSpace
         {
             get
             {
-                return (BlockTableRecord) this.ObjectManager.GetObject(
-                    SymbolUtilityServices.GetBlockModelSpaceId(this.Database));
+                return null; //(BlockTableRecord) this.ObjectManager.GetObject(
+                //SymbolUtilityServices.GetBlockModelSpaceId(this.Database));
             }
         }
 
@@ -51,24 +53,37 @@ namespace Pyrrha
         {
             get
             {
-                return (BlockTableRecord) this.ObjectManager.GetObject(
-                    SymbolUtilityServices.GetBlockPaperSpaceId(this.Database));     
+                return null;// (BlockTableRecord)this.ObjectManager.GetObject(
+                     //SymbolUtilityServices.GetBlockPaperSpaceId(this.Database));     
             }
         }
 
-        public LayerTable LayerTable
+        public LayerCollection Layers
         {
-            get { return (LayerTable) this.ObjectManager.GetObject(this.Database.LayerTableId); }
+            get { return _layers ?? (_layers = new LayerCollection(this, OpenMode.ForWrite)); }
+
+            set
+            {
+                _layers = value;
+            }
         }
+
+        private LayerCollection _layers;
 
         public TextStyleTable TextStyleTable
         {
-            get { return (TextStyleTable) this.ObjectManager.GetObject(this.Database.TextStyleTableId); }
+            get
+            {
+                return null;// (TextStyleTable)this.ObjectManager.GetObject(this.Database.TextStyleTableId);
+            }
         }
 
         public LinetypeTable LinetypeTable
         {
-            get { return (LinetypeTable) this.ObjectManager.GetObject(this.Database.LinetypeTableId); }
+            get
+            { 
+                return null; //(LinetypeTable) this.ObjectManager.GetObject(this.Database.LinetypeTableId);
+            }
         }
 
         #endregion
@@ -91,7 +106,7 @@ namespace Pyrrha
         {
             if ( doc == null )
                 throw new NullReferenceException( "Document is null." );
-            PyrrhaException.IsScriptSource = Thread.CurrentThread.IsScriptSource();
+            //PyrrhaException.IsScriptSource = Thread.CurrentThread.IsScriptSource();
             this._document = doc;
             DocumentManager.AddDocument( this );
         }
@@ -372,7 +387,7 @@ namespace Pyrrha
             return obj.GetType() == this.GetType() && this.Equals( (PyrrhaDocument) obj );
         }
 
-        protected bool Equals(PyrrhaDocument other)
+        internal bool Equals(PyrrhaDocument other)
         {
             return Equals(this._document, other._document) 
                 && Equals(this._objectManager, other._objectManager);

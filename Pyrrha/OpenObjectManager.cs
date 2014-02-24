@@ -15,9 +15,14 @@ namespace Pyrrha
     public class OpenObjectManager : IDisposable, IEqualityComparer<DBObject>, IEnumerable<DBObject>
     {
 
-        private readonly Database _database;
+        public Database Database {get; private set;}
 
-        public IDictionary<ObjectId, DBObject> OpenObjects { get; internal set; }
+        public IDictionary<ObjectId, DBObject> OpenObjects
+        {
+            get { return _openObjects ?? (_openObjects = GetOpenObjects()); }
+            private set { _openObjects = value;}
+        }
+        private IDictionary<ObjectId, DBObject> _openObjects;
 
         //private readonly LongTransaction _transaction;
 
@@ -38,7 +43,7 @@ namespace Pyrrha
         // Transaction Collection Members
         internal Transaction AddTransaction()
         {
-            var newTrans = _database.TransactionManager.StartTransaction();
+            var newTrans = Database.TransactionManager.StartTransaction();
             Transactions.Add(newTrans);
 
             return newTrans;
@@ -57,9 +62,16 @@ namespace Pyrrha
 
         public OpenObjectManager(Database database)
         {
-            _database = database;
+            Database = database;
             Transactions = new List<Transaction>();
             OpenObjects = new Dictionary<ObjectId, DBObject>();
+
+            Database.ObjectOpenedForModify += Database_ObjectOpenedForModify;
+        }
+
+        private void Database_ObjectOpenedForModify(object sender, ObjectEventArgs e)
+        {
+            throw new NotImplementedException();
         }
 
         #endregion
@@ -71,6 +83,12 @@ namespace Pyrrha
         #endregion
 
         #region Methods
+
+        public IDictionary<ObjectId, DBObject> GetOpenObjects()
+        {
+            var returnObjects = new Dictionary<ObjectId, DBObject>();
+            return returnObjects;
+        }
 
         //public IEnumerable<DBObject> GetObjects()
         //{

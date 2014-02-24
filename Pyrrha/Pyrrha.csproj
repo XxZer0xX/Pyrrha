@@ -42,12 +42,16 @@
     <Reference Include="PresentationCore" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Collections\LinetypeCollection.cs" />
     <Compile Include="Collections\RecordCollection.cs" />
     <Compile Include="Collections\LayerCollection.cs" />
     <Compile Include="Collections\OpenObjectCollection.cs" />
+    <Compile Include="Collections\TextStyleCollection.cs" />
     <Compile Include="DocumentManager.cs" />
     <Compile Include="OpenObjectManager.cs" />
     <Compile Include="PyrrhaDocument.cs" />
@@ -55,6 +59,7 @@
     <Compile Include="PyrrhaTransaction.cs" />
     <Compile Include="Query\SelectionFilter.cs" />
     <Compile Include="Runtime\PyrrhaException.cs" />
+    <Compile Include="TransactionEventArgs.cs" />
     <Compile Include="Util\Query\EntityQuery.cs" />
     <Compile Include="Util\StaticExtenstions.cs" />
   </ItemGroup>

@@ -25,13 +25,18 @@ namespace Pyrrha.Util
         /// <summary>
         ///     Loads a linetype into the database.
         /// </summary>
-        public static void LoadLinetype(this Database database, string value)
-        {
-            using (var lineTypeTable = (LinetypeTable)database.LinetypeTableId.Open(OpenMode.ForRead))
-                if (lineTypeTable.Has(value))
-                    return;
+        //public static void LoadLinetype(this Database database, string value)
+        //{
+        //    using (var lineTypeTable = (LinetypeTable)database.LinetypeTableId.Open(OpenMode.ForRead))
+        //        if (lineTypeTable.Has(value))
+        //            return;
 
-            database.LoadLineTypeFile(value, "acad.lin");
+        //    database.LoadLineTypeFile(value, "acad.lin");
+        //}
+
+        public static string ToString(this SymbolTableRecord record)
+        {
+            return record.Name;
         }
 
         public static void SendCommandSynchronously(this Document document,

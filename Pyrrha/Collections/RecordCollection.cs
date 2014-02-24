@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Autodesk.AutoCAD.DatabaseServices;
 using Pyrrha.Runtime;
@@ -7,8 +8,9 @@ namespace Pyrrha.Collections
 {
     public abstract class RecordCollection<T> : ICollection<T> where T : SymbolTableRecord
     {
-        private readonly SymbolTable _symbolTable;
         private readonly IList<T> _innerList;
+
+        public System.Data.DataTable TestTable;
 
         internal Transaction Transaction
         {
@@ -18,6 +20,7 @@ namespace Pyrrha.Collections
         private Transaction _transaction;
 
         protected OpenObjectManager Manager { get; private set; }
+        protected SymbolTable Table { get; private set; }
         protected ObjectId TableId { get; private set; }
 
         public OpenMode OpenMode
@@ -72,7 +75,7 @@ namespace Pyrrha.Collections
 
             _openMode = openMode;
             _innerList = new List<T>();
-            _symbolTable = (SymbolTable)Transaction.GetObject(TableId, OpenMode);
+            Table = (SymbolTable)Transaction.GetObject(TableId, OpenMode);
 
             Refresh();
         }
@@ -84,21 +87,21 @@ namespace Pyrrha.Collections
 
         public void Refresh()
         {
-            foreach (var record in _symbolTable)
+            foreach (var record in Table)
                 _innerList.Add((T)Transaction.GetObject(record, OpenMode));
         }
 
-        public void Add(T item)
+        public virtual void Add(T item)
         {
             if (Contains(item))
                 throw new PyrrhaException("This {0} already exists in the collection", item.GetType().Name);
 
-            _symbolTable.Add(item);
+            Table.Add(item);
             Transaction.AddNewlyCreatedDBObject(item, true);
             _innerList.Add(item);
         }
 
-        public void Clear()
+        public virtual void Clear()
         {
             foreach (var item in _innerList)
                 item.Erase();
@@ -125,7 +128,15 @@ namespace Pyrrha.Collections
             get { return false; }
         }
 
-        public bool Remove(T item)
+        public override string ToString()
+        {
+            var sb = new System.Text.StringBuilder();
+            foreach (var item in _innerList)
+                sb.AppendFormat("{0};", item.Name);
+            return sb.ToString();
+        }
+
+        public virtual bool Remove(T item)
         {
             if (!Contains(item))
                 throw new PyrrhaException("The {0} does not exist in the collection", item.GetType().Name);

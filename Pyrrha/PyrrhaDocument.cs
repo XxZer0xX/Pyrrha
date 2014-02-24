@@ -18,7 +18,7 @@ using System.Threading;
 using AcApp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 #endregion
-#pragma warning disable 612,618
+//#pragma warning disable 612,618
 
 namespace Pyrrha
 {
@@ -61,34 +61,27 @@ namespace Pyrrha
         public LayerCollection Layers
         {
             get { return _layers ?? (_layers = new LayerCollection(this, OpenMode.ForWrite)); }
-
-            set
-            {
-                _layers = value;
-            }
+            set { _layers = value; }
         }
-
         private LayerCollection _layers;
 
-        public TextStyleTable TextStyleTable
+        public TextStyleCollection TextStyles
         {
-            get
-            {
-                return null;// (TextStyleTable)this.ObjectManager.GetObject(this.Database.TextStyleTableId);
-            }
+            get { return _textstyles ?? (_textstyles = new TextStyleCollection(this, OpenMode.ForWrite)); }
+            set { _textstyles = value; }
         }
+        private TextStyleCollection _textstyles;
 
-        public LinetypeTable LinetypeTable
+        public LinetypeCollection Linetypes
         {
-            get
-            { 
-                return null; //(LinetypeTable) this.ObjectManager.GetObject(this.Database.LinetypeTableId);
-            }
+            get { return _linetypes ?? (_linetypes = new LinetypeCollection(this, OpenMode.ForWrite)); }
+            set { _linetypes = value; }
         }
+        private LinetypeCollection _linetypes;
 
         #endregion
 
-        #region Construcotrs
+        #region Constructors
 
         public PyrrhaDocument()
             : this( AcApp.DocumentManager.MdiActiveDocument ) {}
@@ -265,13 +258,12 @@ namespace Pyrrha
 
         #region Events
 
-        private event DisposingEventHandler _beginDocumentDispose;
-        
         public event DisposingEventHandler BeginDocumentDispose
         {
             add { this._beginDocumentDispose += value; }
             remove { this._beginDocumentDispose -= value; }
         }
+        private event DisposingEventHandler _beginDocumentDispose;
 
         public event DocumentBeginCloseEventHandler BeginDocumentClose
         {

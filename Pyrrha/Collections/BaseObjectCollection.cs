@@ -16,7 +16,7 @@ namespace Pyrrha.Collections
         private bool isReadOnly;
         private readonly IList<T> _innerList;
         private OpenMode openMode;
-        public OpenObjectManager<T> ObjectManager;
+        public OpenObjectManager ObjectManager;
 
         #region Properties
 
@@ -55,14 +55,14 @@ namespace Pyrrha.Collections
 
         #region Constructors
 
-        protected BaseObjectCollection(OpenMode openmode, OpenObjectManager<T> manager)
+        protected BaseObjectCollection(OpenMode openmode, OpenObjectManager manager)
         {
             this.openMode = openmode;
             this._innerList = new List<T>();
             ObjectManager = manager;
         }
 
-        protected BaseObjectCollection(IEnumerable<ObjectId> ids, OpenObjectManager<T> manager, OpenMode openmode = OpenMode.ForRead)
+        protected BaseObjectCollection(IEnumerable<ObjectId> ids, OpenObjectManager manager, OpenMode openmode = OpenMode.ForRead)
             : this(openmode, manager)
         {
             foreach (var id in ids)

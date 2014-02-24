@@ -27,15 +27,15 @@ namespace Pyrrha
         #region Properties
 
         private readonly Document _document;
-        private OpenObjectManager<DBObject> _objectManager;
+        private OpenObjectManager _objectManager;
         public DocumentManager DocumentManager;
 
-        public OpenObjectManager<DBObject> ObjectManager
+        public OpenObjectManager ObjectManager
         {
             get
             {
                 return this._objectManager ??
-                       (this._objectManager = new OpenObjectManager<DBObject>());
+                       (this._objectManager = new OpenObjectManager());
             }
         } 
 

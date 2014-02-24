@@ -71,6 +71,9 @@
     <Compile Include="AutoCad\UI\PyAppLoad.xaml.cs">
       <DependentUpon>PyAppLoad.xaml</DependentUpon>
     </Compile>
+    <Compile Include="AutoCad\UI\UserControls\SearchBox.xaml.cs">
+      <DependentUpon>SearchBox.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Compiler\ErrorData.cs" />
     <Compile Include="Compiler\ComplieTimeErrorListener.cs" />
@@ -84,6 +87,10 @@
   </ItemGroup>
   <ItemGroup>
     <Page Include="AutoCad\UI\PyAppLoad.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="AutoCad\UI\UserControls\SearchBox.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -1,203 +1,140 @@
 ﻿#region Referencing
 
 using System;
-using Autodesk.AutoCAD.DatabaseServices;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Autodesk.AutoCAD.DatabaseServices;
 using Pyrrha.Collections;
-using Pyrrha.Runtime;
 
 #endregion
 
 namespace Pyrrha
 {
-    public delegate void FetchingEvent( object sender , EventArgs args );
-
     public class OpenObjectManager : IDisposable, IEqualityComparer<DBObject>, IEnumerable<DBObject>
     {
+        #region Properties
+
+        public int Count
+        {
+            get { return OpenObjects.Count; }
+        }
 
         public Database Database {get; private set;}
 
         public IDictionary<ObjectId, DBObject> OpenObjects
         {
-            get { return _openObjects ?? (_openObjects = CreateOpenObjects()); }
+            get { return _openObjects ?? (_openObjects = new Dictionary<ObjectId, DBObject>()); }
             private set { _openObjects = value;}
         }
         private IDictionary<ObjectId, DBObject> _openObjects;
 
         public IList<Transaction> Transactions { get; private set; }
-        public ICollection<Transaction> Tests { get; internal set; }
-
-        #region Properties
-
-        public int Count
-        {
-            get { return this.OpenObjects.Count; }
-        }
 
         #endregion
 
         #region Constructor
 
-        // Transaction Collection Members
-        internal Transaction AddTransaction()
-        {
-            var newTrans = Database.TransactionManager.StartTransaction();
-            Transactions.Add(newTrans);
-
-            return newTrans;
-        }
-        internal void RemoveTransaction(Transaction transaction)
-        {
-            Transactions.Remove(transaction);
-        }
-        internal void CommitTransaction(Transaction transaction)
-        {
-            // Check the other transactions for ownership...
-            transaction.Commit();
-            transaction.Dispose();
-        }
-
-
         public OpenObjectManager(Database database)
         {
             Database = database;
             Transactions = new List<Transaction>();
-            OpenObjects = new Dictionary<ObjectId, DBObject>();
-
-            Database.ObjectOpenedForModify += Database_ObjectOpenedForModify;
         }
-
-        private void Database_ObjectOpenedForModify(object sender, ObjectEventArgs e)
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion
-
-        #region Events
-
-        //public event FetchingEvent FetchingFromObjectId;
 
         #endregion
 
         #region Methods
 
-        private IDictionary<ObjectId, DBObject> CreateOpenObjects()
+        private DBObject AddObject(ObjectId id, Transaction trans, OpenMode mode)
         {
-            var returnObjects = new Dictionary<ObjectId, DBObject>();
-            return returnObjects;
+            var obj = trans.GetObject(id, mode);
+            if (OpenObjects.ContainsKey(id))
+                OpenObjects[id] = obj;
+            else
+                OpenObjects.Add(id, obj);
+            return obj;
         }
 
-        public T GetObject<T>(ObjectId id, RecordCollection<T> collection) where T : SymbolTableRecord
+        public void AbortAll()
         {
-            bool inCollection;
-            bool inManager;
-            bool isNull;
-            bool isOpen;
-            DBObject returnObj;
+            foreach (var trans in Transactions)
+                trans.Abort();
+            OpenObjects = null;
+        }
 
-            inCollection = collection.Contains(id);
-            inManager = OpenObjects.ContainsKey(id);
+        public Transaction AddTransaction()
+        {
+            var newTrans = Database.TransactionManager.StartOpenCloseTransaction();
+            Transactions.Add(newTrans);
+
+            return newTrans;
+        }
+
+        public void CommitTransaction(Transaction transaction)
+        {
+            transaction.Commit();
+            transaction.Dispose();
+        }
+
+        public void ConfirmAllChanges(bool clearobjects = true)
+        {
+            foreach (var trans in Transactions)
+                CommitTransaction(trans);
+            Transactions.Clear();
+        }
+
+        public T GetRecord<T>(ObjectId id, RecordCollection<T> collection) where T : SymbolTableRecord
+        {
+            bool inCollection = collection.Contains(id);
+            bool inManager = OpenObjects.ContainsKey(id);
 
             // Check the object for a value;
-            returnObj = inManager ? OpenObjects[id] : null;
+            var returnObj = inManager ? OpenObjects[id] : null;
 
-            isNull = returnObj == null;
-            isOpen = !isNull ? OpenObjects[id].IsReadEnabled : false;
-
-            // The DBObject is NOT managed or owned
-            if (!inCollection && !inManager)
-                return (T)AddObject(id, collection.Transaction, collection.OpenMode);
+            bool isNull = returnObj == null;
+            bool isOpen = !isNull && (OpenObjects[id].IsReadEnabled || OpenObjects[id].IsWriteEnabled);
 
             // The DBObject is managed, owned and already open
             if (inManager && inCollection && isOpen)
-                return (T)OpenObjects[id];
-
-            // The DBObject is owned and NOT managed
-            if (!inManager && inCollection)
-                return (T)AddObject(id, collection.Transaction, collection.OpenMode);
-
-            // The DbObject is managed, owned but Null
-            if(inManager && inCollection && isNull)
-                return (T)AddObject(id, collection.Transaction, collection.OpenMode);
-
-            // The DBObject is managed and NOT owned
-            if (inManager && !inCollection)
             {
-                if (isOpen)
-                    returnObj.Close();
-
-                return (T)AddObject(id, collection.Transaction, collection.OpenMode);
+                if (!returnObj.IsReadEnabled && collection.OpenMode != OpenMode.ForRead)
+                    returnObj.DowngradeOpen();
+                else if (returnObj.IsWriteEnabled && collection.OpenMode != OpenMode.ForWrite)
+                    return (T)OpenObjects[id];
             }
 
-            throw new PyrrhaException("How the hell did you achieve this?");
+            // The DBObject is NOT owned
+            if (!inCollection && isOpen)
+                returnObj.Close();
+
+            // Add the object to the transaction owned by the collection
+            return (T)AddObject(id, collection.Transaction, collection.OpenMode);
         }
 
-        private DBObject AddObject(ObjectId id, Transaction trans, OpenMode mode)
+        internal void RemoveObject(ObjectId id, bool erase = false)
         {
-            try 
-	        {
-                var obj = trans.GetObject(id, mode);
-                if (OpenObjects.ContainsKey(id))
-                    OpenObjects[id] = obj;
-                else
-                    OpenObjects.Add(id, obj);
-                return obj;
-	        }
-	        catch (Exception ex)
-	        {
-		        
-		        throw;
-	        }
-            
+            if (!OpenObjects.ContainsKey(id))
+                return;
+
+            var obj = OpenObjects[id];
+            if (obj != null)
+            {
+                if (erase)
+                    obj.Erase();
+                obj.Close();                  
+            }
+                
+            OpenObjects.Remove(id);
         }
 
-
-        public bool UpgradeOpen(ObjectId id)
+        public void RemoveTransaction(Transaction trans, bool commit = false)
         {
-            return false;
+            if (commit)
+                trans.Commit();
+
+            Transactions.Remove(trans);
+            trans.Dispose();
         }
-        public bool DowngradeClose(ObjectId id)
-        {
-            return false;
-        }
-
-        //public IEnumerable<DBObject> GetObjects()
-        //{
-            
-        //}
-
-
-        //public DBObject GetObject(ObjectId id)
-        //{
-        //    return OpenObjects.ContainsKey(id)
-        //        ? OpenObjects[id]
-        //        : null;
-        //        //: _getAddObject(id);
-        //}
-
-        public void ConfirmAllChanges()
-        {
-            //_transaction.
-            Dispose();
-        }
-
-        internal void Remove(ObjectId id)
-        {
-            var obj = this.OpenObjects[id];
-            if (obj == null) return;
-            obj.Dispose();
-            this.OpenObjects.Remove(id);
-        }
-
-        //private DBObject _getAddObject(ObjectId id)
-        //{
-        //    var obj = this._transaction.GetObject(id, OpenMode.ForWrite);
-        //    this.OpenObjects.Add(id, obj);
-        //    return obj;
-        //}
 
         #endregion
 
@@ -205,12 +142,12 @@ namespace Pyrrha
 
         public IEnumerator<DBObject> GetEnumerator()
         {
-            return this.OpenObjects.Values.GetEnumerator();
+            return OpenObjects.Values.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return this.GetEnumerator();
+            return GetEnumerator();
         }
 
         #endregion
@@ -219,14 +156,13 @@ namespace Pyrrha
 
         public bool Equals(DBObject x, DBObject y)
         {
-            
-
             return x.ObjectId.Equals(y.ObjectId);
         }
 
         public int GetHashCode(DBObject obj)
         {
-            return obj.GetHashCode();
+            // Hashing off the (Long) handle might be better
+            return obj.Handle.GetHashCode();
         }
 
         #endregion
@@ -237,18 +173,22 @@ namespace Pyrrha
 
         public void Dispose()
         {
-            //this._transaction.Commit();
-            //this._transaction.Dispose();
-            OpenObjects.Clear();
-            Dispose( true );
+            Dispose(true);
         }
 
-        public void Dispose(bool isDisposing)
+        protected void Dispose(bool isDisposing)
         {
             if (!isDisposing || _disposed)
                 return;
+
+            foreach (var trans in Transactions)
+                trans.Dispose();
+
+            foreach (var obj in OpenObjects.Values.Where(obj => obj != null))
+                obj.Close();
+                
             _disposed = true;
-            GC.SuppressFinalize( this );
+            GC.SuppressFinalize(this);
         }
 
         #endregion

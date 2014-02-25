@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using Autodesk.AutoCAD.DatabaseServices;
 using Pyrrha.Runtime;
@@ -8,6 +8,8 @@ namespace Pyrrha.Collections
 {
     public abstract class RecordCollection<T> : ICollection<T> where T : SymbolTableRecord
     {
+        #region Properties
+
         private readonly IList<ObjectId> _innerList;
 
         internal Transaction Transaction
@@ -26,20 +28,9 @@ namespace Pyrrha.Collections
             get { return _openMode; }
             set
             {
-                
-                switch (value)
-                {
-                    case OpenMode.ForWrite:
-                        foreach (var id in _innerList)
-                            Manager.UpgradeOpen(id);
-                        break;
-                    case OpenMode.ForRead:
-                        foreach (var id in _innerList)
-                            Manager.DowngradeClose(id);
-                        break;
-                }
-
                 _openMode = value;
+                foreach (var id in _innerList)
+                    GetManagedRecord(id);
             }
         }
         private OpenMode _openMode;
@@ -48,7 +39,7 @@ namespace Pyrrha.Collections
         {
             get
             { 
-                return (T)GetManagedObject(_innerList[index]);
+                return (T)GetManagedRecord(_innerList[index]);
             }
             set
             {
@@ -58,17 +49,10 @@ namespace Pyrrha.Collections
                 Manager.OpenObjects[_innerList[index]] = value;
             }
         }
-        //public T this[string name]
-        //{
-        //    get { return (T)GetManagedObject(_innerList.First(o => o.Name == name)); }
-        //    set
-        //    {
-        //        if (value == null)
-        //            throw new PyrrhaException("Item cannot be null.");
 
-        //        this[name] = value;
-        //    }
-        //}
+        #endregion
+
+        #region Constructor
 
         protected RecordCollection(PyrrhaDocument document, ObjectId tableid, OpenMode openMode = OpenMode.ForRead)
         {
@@ -82,40 +66,16 @@ namespace Pyrrha.Collections
             Refresh();
         }
 
-        public void CommitChanges()
-        {
-            Manager.CommitTransaction(Transaction);
-        }
+        #endregion
 
-        public void Refresh()
-        {
-            foreach (var id in Table)
-                _innerList.Add(id);
-        }
+        #region Methods
 
-        private DBObject GetManagedObject(ObjectId id)
+        private T GetManagedRecord(ObjectId id)
         {
             if (Manager == null)
                 throw new PyrrhaException("ObjectManager is null");
 
-            return Manager.GetObject(id, this);
-        }
-
-        private IEnumerable<T> GetAllObjects()
-        {
-            if (Manager == null)
-                throw new PyrrhaException("ObjectManager is null");
-
-            // Return all objects in the Manager that match the collection Ids
-            var returnObjects = new List<T>();
-            foreach (var id in _innerList)
-            {
-                var obj = Manager.GetObject(id, this);
-                if (obj != null)
-                    returnObjects.Add((T)obj);
-            }
-
-            return returnObjects;
+            return Manager.GetRecord(id, this);
         }
 
         public virtual void Add(T item)
@@ -123,16 +83,26 @@ namespace Pyrrha.Collections
             if (Contains(item))
                 throw new PyrrhaException("This {0} already exists in the collection", item.GetType().Name);
 
+            if (item == null)
+                throw new PyrrhaException("Item cannot be null.");
+
             Table.Add(item);
             Transaction.AddNewlyCreatedDBObject(item, true);
+            GetManagedRecord(item.Id);
             _innerList.Add(item.Id);
         }
 
         public virtual void Clear()
         {
             foreach (var item in _innerList)
-                //item.Erase();
+
             _innerList.Clear();
+        }
+
+        public void CommitChanges()
+        {
+            Manager.CommitTransaction(Transaction);
+            Refresh();
         }
 
         public bool Contains(T item)
@@ -156,37 +126,55 @@ namespace Pyrrha.Collections
             get { return _innerList.Count; }
         }
 
+        public IEnumerable<T> GetAllObjects()
+        {
+            if (Manager == null)
+                throw new PyrrhaException("ObjectManager is null");
+
+            // Return all objects in the Manager that match the collection Ids
+            return _innerList.Select(id => Manager.GetRecord(id, this))
+                             .Where(obj => obj != null);
+        }
+
         public bool IsReadOnly
         {
             get { return false; }
         }
 
-        //public override string ToString()
-        //{
-        //    var sb = new System.Text.StringBuilder();
-        //    foreach (var item in _innerList)
-        //        sb.AppendFormat("{0};", item.Name);
-        //    return sb.ToString();
-        //}
+        public void Refresh()
+        {
+            foreach (var id in Table)
+            {
+                GetManagedRecord(id);
+                _innerList.Add(id);
+            }
+        }
 
         public virtual bool Remove(T item)
         {
             if (!Contains(item))
                 throw new PyrrhaException("The {0} does not exist in the collection", item.GetType().Name);
 
-            //item.Erase();
-            //return _innerList.Remove(item);
-            return false;
+            Manager.RemoveObject(item.Id, true);
+            return _innerList.Remove(item.Id);
         }
+
+        #region IEnumerable Implementation
 
         public IEnumerator<T> GetEnumerator()
         {
             return GetAllObjects().GetEnumerator();
         }
 
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
         }
+
+        #endregion
+
+        #endregion
+
+        
     }
 }

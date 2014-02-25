@@ -56,7 +56,6 @@
     <Compile Include="OpenObjectManager.cs" />
     <Compile Include="PyrrhaDocument.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="PyrrhaTransaction.cs" />
     <Compile Include="Query\SelectionFilter.cs" />
     <Compile Include="Runtime\PyrrhaException.cs" />
     <Compile Include="TransactionEventArgs.cs" />

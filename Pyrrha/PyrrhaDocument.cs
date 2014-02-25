@@ -1,5 +1,10 @@
 ﻿#region Referencing
 
+using System;
+using System.Collections;
+using System.Drawing;
+using System.IO;
+using System.Linq;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
@@ -7,14 +12,6 @@ using Autodesk.AutoCAD.GraphicsSystem;
 using Autodesk.AutoCAD.Windows;
 using Autodesk.AutoCAD.Windows.Data;
 using Pyrrha.Collections;
-using Pyrrha.Runtime;
-using Pyrrha.Util;
-using System;
-using System.Collections;
-using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Threading;
 using AcApp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 #endregion
@@ -48,7 +45,6 @@ namespace Pyrrha
                 //SymbolUtilityServices.GetBlockModelSpaceId(this.Database));
             }
         }
-
         public BlockTableRecord PaperSpace
         {
             get
@@ -110,7 +106,7 @@ namespace Pyrrha
 
         public void ConfirmAllChanges()
         {
-            this.ObjectManager.ConfirmAllChanges();
+            ObjectManager.ConfirmAllChanges();
         }
 
         #endregion

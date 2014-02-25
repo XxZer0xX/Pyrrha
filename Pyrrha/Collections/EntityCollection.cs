@@ -11,7 +11,7 @@ using Pyrrha.Runtime;
 
 namespace Pyrrha.Collections
 {
-    public abstract class OpenObjectCollection<T> : ICollection<T>, IDisposable where T : DBObject
+    public abstract class EntityCollection<T> : ICollection<T> where T : Entity
     {
                
         #region Properties
@@ -54,7 +54,7 @@ namespace Pyrrha.Collections
 
         #region Constructors
 
-        protected OpenObjectCollection(OpenObjectManager manager, OpenMode openmode)
+        protected EntityCollection(OpenObjectManager manager, OpenMode openmode)
         {
             IsReadOnly = false;
             ObjectManager = manager;
@@ -63,7 +63,7 @@ namespace Pyrrha.Collections
             _innerList = new List<T>();
         }
 
-        protected OpenObjectCollection(OpenObjectManager manager, IEnumerable<ObjectId> ids, OpenMode openmode = OpenMode.ForRead)
+        protected EntityCollection(OpenObjectManager manager, IEnumerable<ObjectId> ids, OpenMode openmode = OpenMode.ForRead)
             : this(manager, openmode)
         {
             foreach (var id in ids)
@@ -104,7 +104,7 @@ namespace Pyrrha.Collections
 
         #region IDisposable Implementation
 
-        ~OpenObjectCollection()
+        ~EntityCollection()
         {
             Dispose(false);
         }

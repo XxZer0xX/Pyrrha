@@ -106,7 +106,7 @@ namespace Pyrrha
 
         public void ConfirmAllChanges()
         {
-            ObjectManager.ConfirmAllChanges();
+            ObjectManager.CommitAll();
         }
 
         #endregion

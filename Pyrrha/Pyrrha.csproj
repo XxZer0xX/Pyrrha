@@ -50,7 +50,7 @@
     <Compile Include="Collections\LinetypeCollection.cs" />
     <Compile Include="Collections\RecordCollection.cs" />
     <Compile Include="Collections\LayerCollection.cs" />
-    <Compile Include="Collections\OpenObjectCollection.cs" />
+    <Compile Include="Collections\EntityCollection.cs" />
     <Compile Include="Collections\TextStyleCollection.cs" />
     <Compile Include="DocumentManager.cs" />
     <Compile Include="OpenObjectManager.cs" />

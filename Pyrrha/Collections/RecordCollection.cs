@@ -3,14 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using Autodesk.AutoCAD.DatabaseServices;
 using Pyrrha.Runtime;
+using System;
 
 namespace Pyrrha.Collections
 {
-    public abstract class RecordCollection<T> : ICollection<T> where T : SymbolTableRecord
+    public abstract class RecordCollection<T,R> : ICollection<R>, IDisposable
+        where T : SymbolTable
+        where R : SymbolTableRecord
     {
         #region Properties
-
-        private readonly IList<ObjectId> _innerList;
+        
+        private bool _disposed;
+        //private readonly IList<ObjectId> _idList;
 
         internal Transaction Transaction
         {
@@ -20,34 +24,29 @@ namespace Pyrrha.Collections
         private Transaction _transaction;
 
         protected OpenObjectManager Manager { get; private set; }
-        protected SymbolTable Table { get; private set; }
-        protected ObjectId TableId { get; private set; }
+        protected T RecordTable { get; set; }
 
-        public OpenMode OpenMode
+        public int Count
         {
-            get { return _openMode; }
+            get { return GetCount(); }
+        }
+
+        public OpenMode Mode
+        {
+            get { return _mode; }
             set
             {
-                _openMode = value;
-                foreach (var id in _innerList)
-                    GetManagedRecord(id);
+                _mode = value;
+                foreach (var id in RecordTable)
+                    GetRecord(id);
             }
         }
-        private OpenMode _openMode;
+        private OpenMode _mode;
 
-        public T this[int index]
+        public R this[int index]
         {
-            get
-            { 
-                return (T)GetManagedRecord(_innerList[index]);
-            }
-            set
-            {
-                if (value == null)
-                    throw new PyrrhaException("Item cannot be null.");
-
-                Manager.OpenObjects[_innerList[index]] = value;
-            }
+            get { return Indexer(index); }
+            set { this[index] = value; }
         }
 
         #endregion
@@ -57,12 +56,9 @@ namespace Pyrrha.Collections
         protected RecordCollection(PyrrhaDocument document, ObjectId tableid, OpenMode openMode = OpenMode.ForRead)
         {
             Manager = document.ObjectManager;
-            TableId = tableid;
+            _mode = openMode;
 
-            _openMode = openMode;
-            _innerList = new List<ObjectId>();
-            Table = (SymbolTable)Transaction.GetObject(TableId, OpenMode);
-
+            RecordTable = (T)Transaction.GetObject(tableid, Mode);
             Refresh();
         }
 
@@ -70,15 +66,40 @@ namespace Pyrrha.Collections
 
         #region Methods
 
-        private T GetManagedRecord(ObjectId id)
+        private R Indexer(int index)
         {
+            using (var iter = RecordTable.GetEnumerator())
+            {
+                int i = 0;
+                while (i++ != index)
+                    iter.MoveNext();
+
+                return GetRecord(iter.Current);
+            }
+        }
+        private int GetCount()
+        {
+            int result = 0;
+            using (var iter = RecordTable.GetEnumerator())
+            {
+                while (iter.MoveNext())
+                    result++;
+            }
+
+            return result;
+        }
+        protected R GetRecord(ObjectId id)
+        {
+            if (id == null)
+                throw new PyrrhaException("ObjectId cannot be null");
+
             if (Manager == null)
                 throw new PyrrhaException("ObjectManager is null");
 
-            return Manager.GetRecord(id, this);
+            return (R)Manager.GetRecord(id, Transaction, Mode);
         }
 
-        public virtual void Add(T item)
+        public virtual void Add(R item)
         {
             if (Contains(item))
                 throw new PyrrhaException("This {0} already exists in the collection", item.GetType().Name);
@@ -86,54 +107,37 @@ namespace Pyrrha.Collections
             if (item == null)
                 throw new PyrrhaException("Item cannot be null.");
 
-            Table.Add(item);
+            RecordTable.Add(item); // Add to the Record Table
             Transaction.AddNewlyCreatedDBObject(item, true);
-            GetManagedRecord(item.Id);
-            _innerList.Add(item.Id);
+            GetRecord(item.Id); // Make sure its managed
         }
 
         public virtual void Clear()
         {
-            foreach (var item in _innerList)
-
-            _innerList.Clear();
+            foreach (var obj in this)
+                Remove(obj);
         }
 
-        public void CommitChanges()
+        public void Commit()
         {
-            Manager.CommitTransaction(Transaction);
-            Refresh();
+            Transaction.Commit();
+            Transaction.Dispose();
         }
 
-        public bool Contains(T item)
+        public bool Contains(R item)
         {
-            return _innerList.Contains(item.Id);
+            return RecordTable.Has(item.Id);
         }
 
         public bool Contains(ObjectId id)
         {
-            return _innerList.Contains(id);
+            return RecordTable.Has(id);
         }
 
-        public void CopyTo(T[] array, int arrayIndex)
+        public void CopyTo(R[] array, int arrayIndex)
         {
-            var currentObjects = GetAllObjects().ToArray();
+            var currentObjects = this.ToArray();
             currentObjects.CopyTo(array, arrayIndex);
-        }
-
-        public int Count
-        {
-            get { return _innerList.Count; }
-        }
-
-        public IEnumerable<T> GetAllObjects()
-        {
-            if (Manager == null)
-                throw new PyrrhaException("ObjectManager is null");
-
-            // Return all objects in the Manager that match the collection Ids
-            return _innerList.Select(id => Manager.GetRecord(id, this))
-                             .Where(obj => obj != null);
         }
 
         public bool IsReadOnly
@@ -143,27 +147,33 @@ namespace Pyrrha.Collections
 
         public void Refresh()
         {
-            foreach (var id in Table)
-            {
-                GetManagedRecord(id);
-                _innerList.Add(id);
-            }
+            foreach (var id in RecordTable)
+                GetRecord(id);
         }
 
-        public virtual bool Remove(T item)
+        public virtual bool Remove(R item)
         {
             if (!Contains(item))
                 throw new PyrrhaException("The {0} does not exist in the collection", item.GetType().Name);
 
-            Manager.RemoveObject(item.Id, true);
-            return _innerList.Remove(item.Id);
+            if (RecordTable.Has(item.Id))
+                item.Erase();
+
+            return true;
         }
 
         #region IEnumerable Implementation
 
-        public IEnumerator<T> GetEnumerator()
+        public IEnumerator<R> GetEnumerator()
         {
-            return GetAllObjects().GetEnumerator();
+            if (Manager == null)
+                throw new PyrrhaException("ObjectManager is null");
+
+            using (var iter = RecordTable.GetEnumerator())
+            {
+                while (iter.MoveNext())
+                    yield return GetRecord(iter.Current);
+            }
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -173,8 +183,30 @@ namespace Pyrrha.Collections
 
         #endregion
 
+        #region IDisposable Implementation
+
+        ~RecordCollection()
+        {
+            Dispose(false);
+        }
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed)
+                return;
+
+            if (disposing)
+                Transaction.Dispose();
+
+            _disposed = true;
+        }
+
         #endregion
 
-        
+        #endregion
     }
 }

@@ -70,22 +70,19 @@ namespace Pyrrha
             return newTrans;
         }
 
-        public void CommitTransaction(Transaction transaction)
-        {
-            transaction.Commit();
-            transaction.Dispose();
-        }
-
-        public void ConfirmAllChanges(bool clearobjects = true)
+        public void CommitAll(bool clearobjects = true)
         {
             foreach (var trans in Transactions)
-                CommitTransaction(trans);
+            {
+                trans.Commit();
+                trans.Dispose();
+            }
             Transactions.Clear();
         }
 
-        public T GetRecord<T>(ObjectId id, RecordCollection<T> collection) where T : SymbolTableRecord
+        public DBObject GetRecord(ObjectId id, Transaction trans, OpenMode mode)
         {
-            bool inCollection = collection.Contains(id);
+            //bool inCollection = collection.Contains(id);
             bool inManager = OpenObjects.ContainsKey(id);
 
             // Check the object for a value;
@@ -94,21 +91,17 @@ namespace Pyrrha
             bool isNull = returnObj == null;
             bool isOpen = !isNull && (OpenObjects[id].IsReadEnabled || OpenObjects[id].IsWriteEnabled);
 
-            // The DBObject is managed, owned and already open
-            if (inManager && inCollection && isOpen)
+            // The DBObject is managed and already open
+            if (inManager && isOpen)
             {
-                if (!returnObj.IsReadEnabled && collection.OpenMode != OpenMode.ForRead)
+                if (!returnObj.IsReadEnabled && mode != OpenMode.ForRead)
                     returnObj.DowngradeOpen();
-                else if (returnObj.IsWriteEnabled && collection.OpenMode != OpenMode.ForWrite)
-                    return (T)OpenObjects[id];
+                else if (returnObj.IsWriteEnabled && mode != OpenMode.ForWrite)
+                    return OpenObjects[id];
             }
 
-            // The DBObject is NOT owned
-            if (!inCollection && isOpen)
-                returnObj.Close();
-
             // Add the object to the transaction owned by the collection
-            return (T)AddObject(id, collection.Transaction, collection.OpenMode);
+            return AddObject(id, trans, mode);
         }
 
         internal void RemoveObject(ObjectId id, bool erase = false)

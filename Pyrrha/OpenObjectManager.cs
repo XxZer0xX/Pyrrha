@@ -5,6 +5,8 @@ using Autodesk.AutoCAD.DatabaseServices;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Pyrrha.Collections;
+using Pyrrha.Runtime;
 
 #endregion
 
@@ -19,12 +21,10 @@ namespace Pyrrha
 
         public IDictionary<ObjectId, DBObject> OpenObjects
         {
-            get { return _openObjects ?? (_openObjects = GetOpenObjects()); }
+            get { return _openObjects ?? (_openObjects = CreateOpenObjects()); }
             private set { _openObjects = value;}
         }
         private IDictionary<ObjectId, DBObject> _openObjects;
-
-        //private readonly LongTransaction _transaction;
 
         public IList<Transaction> Transactions { get; private set; }
         public ICollection<Transaction> Tests { get; internal set; }
@@ -84,10 +84,84 @@ namespace Pyrrha
 
         #region Methods
 
-        public IDictionary<ObjectId, DBObject> GetOpenObjects()
+        private IDictionary<ObjectId, DBObject> CreateOpenObjects()
         {
             var returnObjects = new Dictionary<ObjectId, DBObject>();
             return returnObjects;
+        }
+
+        public T GetObject<T>(ObjectId id, RecordCollection<T> collection) where T : SymbolTableRecord
+        {
+            bool inCollection;
+            bool inManager;
+            bool isNull;
+            bool isOpen;
+            DBObject returnObj;
+
+            inCollection = collection.Contains(id);
+            inManager = OpenObjects.ContainsKey(id);
+
+            // Check the object for a value;
+            returnObj = inManager ? OpenObjects[id] : null;
+
+            isNull = returnObj == null;
+            isOpen = !isNull ? OpenObjects[id].IsReadEnabled : false;
+
+            // The DBObject is NOT managed or owned
+            if (!inCollection && !inManager)
+                return (T)AddObject(id, collection.Transaction, collection.OpenMode);
+
+            // The DBObject is managed, owned and already open
+            if (inManager && inCollection && isOpen)
+                return (T)OpenObjects[id];
+
+            // The DBObject is owned and NOT managed
+            if (!inManager && inCollection)
+                return (T)AddObject(id, collection.Transaction, collection.OpenMode);
+
+            // The DbObject is managed, owned but Null
+            if(inManager && inCollection && isNull)
+                return (T)AddObject(id, collection.Transaction, collection.OpenMode);
+
+            // The DBObject is managed and NOT owned
+            if (inManager && !inCollection)
+            {
+                if (isOpen)
+                    returnObj.Close();
+
+                return (T)AddObject(id, collection.Transaction, collection.OpenMode);
+            }
+
+            throw new PyrrhaException("How the hell did you achieve this?");
+        }
+
+        private DBObject AddObject(ObjectId id, Transaction trans, OpenMode mode)
+        {
+            try 
+	        {
+                var obj = trans.GetObject(id, mode);
+                if (OpenObjects.ContainsKey(id))
+                    OpenObjects[id] = obj;
+                else
+                    OpenObjects.Add(id, obj);
+                return obj;
+	        }
+	        catch (Exception ex)
+	        {
+		        
+		        throw;
+	        }
+            
+        }
+
+
+        public bool UpgradeOpen(ObjectId id)
+        {
+            return false;
+        }
+        public bool DowngradeClose(ObjectId id)
+        {
+            return false;
         }
 
         //public IEnumerable<DBObject> GetObjects()

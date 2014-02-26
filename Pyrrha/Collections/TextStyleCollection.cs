@@ -1,6 +1,5 @@
 ﻿
 using Autodesk.AutoCAD.DatabaseServices;
-using Pyrrha.Runtime;
 using Utils = Autodesk.AutoCAD.DatabaseServices.SymbolUtilityServices;
 
 namespace Pyrrha.Collections
@@ -12,7 +11,7 @@ namespace Pyrrha.Collections
             get
             {
                 return _standard ??
-                    (_standard = GetRecord(Utils.GetTextStyleStandardId(Manager.Database)));
+                    (_standard = GetRecord(Utils.GetTextStyleStandardId(ObjectManager.Database)));
             }
         }
         private TextStyleTableRecord _standard;

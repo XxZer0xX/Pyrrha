@@ -5,7 +5,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Autodesk.AutoCAD.DatabaseServices;
-using Pyrrha.Collections;
 
 #endregion
 
@@ -47,12 +46,28 @@ namespace Pyrrha
 
         private DBObject AddObject(ObjectId id, Transaction trans, OpenMode mode)
         {
-            var obj = trans.GetObject(id, mode);
+            DBObject returnObj = null;
+
+            try
+            {
+                returnObj = trans.GetObject(id, mode);
+            }
+            catch (Autodesk.AutoCAD.Runtime.Exception ex)
+            {
+                if (ex.ErrorStatus == Autodesk.AutoCAD.Runtime.ErrorStatus.NotOpenForWrite)
+                    AddObject(id, trans, OpenMode.ForRead).Close();
+                
+                id.GetObject(OpenMode.ForRead).Close();
+                AddObject(id, trans, mode);
+
+                throw;
+            }
+
             if (OpenObjects.ContainsKey(id))
-                OpenObjects[id] = obj;
+                OpenObjects[id] = returnObj;
             else
-                OpenObjects.Add(id, obj);
-            return obj;
+                OpenObjects.Add(id, returnObj);
+            return returnObj;
         }
 
         public void AbortAll()
@@ -97,7 +112,9 @@ namespace Pyrrha
                 if (!returnObj.IsReadEnabled && mode != OpenMode.ForRead)
                     returnObj.DowngradeOpen();
                 else if (returnObj.IsWriteEnabled && mode != OpenMode.ForWrite)
-                    return OpenObjects[id];
+                    returnObj.UpgradeOpen();
+
+                return OpenObjects[id];
             }
 
             // Add the object to the transaction owned by the collection

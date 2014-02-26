@@ -28,7 +28,7 @@ namespace Pyrrha.Util.Query
         ///          SET value="anotherValue" 
         ///          WHERE value='string'"</code>
         /// 
-        ///          <code>"DELETE 'LINE' WHERE (start.x > '10' OR end.y < 4.8) </code>
+        ///          <code>"DELETE 'LINE' WHERE (start.x > '10' OR end.y > '4') </code>
         /// </summary>
         /// <param name="doc"></param>
         /// <param name="query"></param>

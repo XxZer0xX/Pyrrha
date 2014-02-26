@@ -1,5 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using Autodesk.AutoCAD.ApplicationServices;
+
+using AcApp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace Pyrrha
 {
@@ -13,13 +17,13 @@ namespace Pyrrha
 
         public static PyrrhaDocument ActiveDocument
         {
-            get { return Documents[0]; }
+            get { return GetActiveDocument(); }
         }
 
-        public static void AddDocument(PyrrhaDocument docParameter)
+        public static void AddDocument(PyrrhaDocument document)
         {
-            if (!Documents.Contains(docParameter))
-                Documents.Add( docParameter );
+            if (!Documents.Contains(document))
+                Documents.Add(document);
         }
 
         public static void SaveAndCloseAll()
@@ -27,7 +31,11 @@ namespace Pyrrha
             foreach (var doc in _documents)
             {
                 doc.ConfirmAllChanges();
-                doc.CloseAndSave( doc.Name );
+
+                // This might not save to the right location.
+                // I think we should add extensions for 
+                // Save() and Close() from the AcadDocument.
+                doc.CloseAndSave(doc.Name);
             }
         }
 
@@ -36,6 +44,12 @@ namespace Pyrrha
             foreach (var doc in _documents)
                 doc.Dispose();
             GC.SuppressFinalize( this );
+        }
+
+        private static PyrrhaDocument GetActiveDocument()
+        {
+            return Documents.FirstOrDefault(doc => doc.BaseDocument
+                            .Equals(AcApp.DocumentManager.MdiActiveDocument));
         }
     }
 }

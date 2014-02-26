@@ -1,20 +1,16 @@
 ﻿#region Referenceing
 
-using System.Collections.Generic;
+using System;
+using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using Pyrrha;
-
-using AcApp = Autodesk.AutoCAD.ApplicationServices.Application;
 using Exception = System.Exception;
-using System.Diagnostics;
-using System;
-using Autodesk.AutoCAD.EditorInput;
-using System.Reflection;
-using Autodesk.AutoCAD.Colors;
 
 #endregion
 
@@ -22,14 +18,42 @@ namespace CSharp_Testing
 {
     public class TestClass
     {
+        [CommandMethod("DocTest")]
+        public void DocTest()
+        {
+            using (var pyDoc = new PyrrhaDocument())
+            {
+                pyDoc.Editor.WriteMessage("\nLayers:\n");
+                foreach (var layer in pyDoc.Layers)
+                {
+                    pyDoc.Editor.WriteMessage("{0} - {1}\n", layer.Name, layer.Color);
+                    if (layer.Name != "0")
+                        layer.Name += "_TEST";
+                }
+
+                pyDoc.Editor.WriteMessage("\nLinetypes:\n");
+                foreach (var linetype in pyDoc.Linetypes)
+                    pyDoc.Editor.WriteMessage("{0} - {1}\n", linetype.Name, linetype.AsciiDescription);
+
+                pyDoc.Editor.WriteMessage("\nTextStyles:\n");
+                foreach (var textstyle in pyDoc.TextStyles)
+                    pyDoc.Editor.WriteMessage("{0} - {1}\n", textstyle.Name, textstyle.FileName);
+
+                pyDoc.ConfirmAllChanges();
+                pyDoc.Dispose();
+            }   
+        
+            // Disposing isn't working yet.
+            // You can test this by running this routine twice.
+
+        }
+
         [CommandMethod("pyTest")]
-        public void pyTest()
+        public void PyTest()
         {
             var pyDoc = new PyrrhaDocument();
 
             pyDoc.Editor.WriteMessage("\nLayers:\n");
-            pyDoc.Layers.Clear();
-            
             foreach (var layer in pyDoc.Layers)
             {
                 pyDoc.Editor.WriteMessage("{0} - {1}\n", layer.Name, layer.Color);
@@ -48,52 +72,18 @@ namespace CSharp_Testing
             pyDoc.ConfirmAllChanges();
         }
 
-        [CommandMethod("TransTest")]
-        public void transTest()
-        {
-            var acDoc = Application.DocumentManager.MdiActiveDocument;
-            var acTrans = acDoc.TransactionManager.StartOpenCloseTransaction();
-
-            try
-            {
-                var mSpaceId = SymbolUtilityServices.GetBlockModelSpaceId(acDoc.Database);
-                var mSpace = (BlockTableRecord)acTrans.GetObject(mSpaceId, OpenMode.ForRead);
-
-                var oldId = mSpace.Id;
-                foreach (var id in mSpace)
-                {
-                    var line = acTrans.GetObject(id, OpenMode.ForRead) as Line;
-                    if (line == null)
-                        continue;
-
-                    line.UpgradeOpen();
-                    line.ColorIndex = 34;
-                    oldId = line.Id;
-                    break;
-                }
-
-                //var TestLine = acDoc.TransactionManager.GetObject(oldId, OpenMode.ForWrite);
-                var TestLine = oldId.GetObject(OpenMode.ForWrite);
-            }
-            catch (Exception ex)
-            {
-                acDoc.Editor.WriteMessage(ex.Message);
-            }
-
-            acTrans.Commit();
-            acTrans.Dispose();
-        }
-
         [CommandMethod("LineTest")]
         public void LineTest()
         {
             var acDoc = Application.DocumentManager.MdiActiveDocument;
             var acEd = acDoc.Editor;
 
-            var pOptions = new PromptStringOptions("Enter the matrix size of the test: \n");
-            pOptions.AllowSpaces = false;
-            pOptions.DefaultValue = "10";
-            pOptions.UseDefaultValue = true;
+            var pOptions = new PromptStringOptions("Enter the matrix size of the test: \n")
+            {
+                AllowSpaces = false,
+                DefaultValue = "10",
+                UseDefaultValue = true
+            };
 
             var sizePrompt = acEd.GetString(pOptions);
             if (sizePrompt.Status != PromptStatus.OK)
@@ -105,7 +95,7 @@ namespace CSharp_Testing
             CalculateScore();
 
             // COM Zoom? Really?  That's weak Autodesk... Fucking weak.
-            Object acadObject = Application.AcadApplication;
+            var acadObject = Application.AcadApplication;
             acadObject.GetType().InvokeMember("ZoomExtents",
                         BindingFlags.InvokeMethod, null, acadObject, null);
         }
@@ -121,8 +111,8 @@ namespace CSharp_Testing
             //var width = Math.Floor(Math.Sqrt(size));
             //var height = width;
 
-            double len = 1.0;
-            double leg = (0.5 * ((len / 2) * Math.Sqrt(2.0))); // for angular lines
+            const double len = 1.0;
+            var leg = (0.5 * ((len / 2) * Math.Sqrt(2.0))); // for angular lines
             var rand = new Random();
             try
             {
@@ -136,9 +126,8 @@ namespace CSharp_Testing
                     var ssAll = selectPrompt.Value;
                     if (ssAll != null)
                     {
-                        foreach (ObjectId id in ssAll.GetObjectIds())
+                        foreach (var obj in ssAll.GetObjectIds().Select(id => acTrans.GetObject(id, OpenMode.ForWrite)))
                         {
-                            var obj = acTrans.GetObject(id, OpenMode.ForWrite);
                             obj.Erase();
                         }
                     }
@@ -152,17 +141,26 @@ namespace CSharp_Testing
                             // Line rotation
                             Vector3d offset;
                             var randPosition = rand.Next(4);
-                            if (randPosition == 1)
-                                offset = new Vector3d(0, len / 2, 0);// | Vertical
-                            else if (randPosition == 2)
-                                offset = new Vector3d(len / 2, 0, 0);// -- Horizontal
-                            else if (randPosition == 3)
-                                offset = new Vector3d(leg, leg, 0);//   / Forward angular
-                            else
-                                offset = new Vector3d(leg, -leg, 0);//  \ Backward angular
+                            switch (randPosition)
+                            {
+                                case 1:
+                                    offset = new Vector3d(0, len / 2, 0);// | Vertical
+                                    break;
+                                case 2:
+                                    offset = new Vector3d(len / 2, 0, 0);// -- Horizontal
+                                    break;
+                                case 3:
+                                    offset = new Vector3d(leg, leg, 0);//   / Forward angular
+                                    break;
+                                default:
+                                    offset = new Vector3d(leg, -leg, 0);//  \ Backward angular
+                                    break;
+                            }
 
-                            var line = new Line(startPoint.Add(offset), startPoint.Subtract(offset));
-                            line.ColorIndex = rand.Next(1, 6);
+                            var line = new Line(startPoint.Add(offset), startPoint.Subtract(offset))
+                            {
+                                ColorIndex = rand.Next(1, 6)
+                            };
 
                             mSpace.AppendEntity(line);
                             acTrans.AddNewlyCreatedDBObject(line, true);
@@ -213,21 +211,17 @@ namespace CSharp_Testing
                         layers.Add(hLayer);
                         acTrans.AddNewlyCreatedDBObject(hLayer, true);
                     }
-                        
-                    var horizontalId = layers["Horizontals"];
 
-                    foreach(ObjectId id in mSpace)
+                    foreach (var line in (from ObjectId id in mSpace
+                                          select acTrans.GetObject(id, OpenMode.ForRead)).OfType<Line>())
                     {
-                        var line = acTrans.GetObject(id, OpenMode.ForRead) as Line;
-                        if (line == null)
-                            continue;
-
                         // Add line color to score
                         score += line.ColorIndex;
 
                         line.UpgradeOpen();
-                        if (line.StartPoint.Y == line.EndPoint.Y)
+                        if (Math.Abs(line.StartPoint.Y - line.EndPoint.Y) < 0.0001)
                             line.SetLayerId(layers["Horizontals"], false);
+                        
                         line.Close();
                     }
                 }
@@ -242,36 +236,6 @@ namespace CSharp_Testing
                 acEd.WriteMessage("Final score is: {0}", score);
             }
 
-        }
-
-        private List<DBObject> GetHorizontals(Transaction trans)
-        {
-            var acDoc = Application.DocumentManager.MdiActiveDocument;
-            var layers = trans.GetObject(acDoc.Database.LayerTableId, OpenMode.ForWrite) as LayerTable;
-
-            if (layers == null)
-                return null;
-
-            if (!layers.Has("Horizontals"))
-                layers.Add(new LayerTableRecord { Name = "Horizontals" });
-            var layerId = layers["Horizontals"];
-            layers.Close();
-            
-            var objects = trans.GetAllObjects();
-            for (int i = 0; i < objects.Count; i++)
-			{
-                var line = objects[i] as Line;
-                if (line == null)
-                    continue;
-
-                if (line.StartPoint.Y == line.EndPoint.Y)
-                {
-                    line.SetLayerId(layerId, false);
-                }
-                    
-			}
-
-            return null;
         }
     }
 }

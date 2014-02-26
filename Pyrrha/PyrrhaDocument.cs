@@ -9,9 +9,11 @@ using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.GraphicsSystem;
+using Autodesk.AutoCAD.Runtime;
 using Autodesk.AutoCAD.Windows;
 using Autodesk.AutoCAD.Windows.Data;
 using Pyrrha.Collections;
+
 using AcApp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 #endregion
@@ -23,9 +25,13 @@ namespace Pyrrha
     {
         #region Properties
 
-        private readonly Document _document;
-        
-        public DocumentManager DocumentManager;
+        internal readonly Document BaseDocument;
+
+        public DocumentManager DocumentManager
+        {
+            get { return _documentManager ?? (_documentManager = new DocumentManager()); }
+        }
+        private DocumentManager _documentManager;
 
         public OpenObjectManager ObjectManager
         {
@@ -41,16 +47,16 @@ namespace Pyrrha
         {
             get
             {
-                return null; //(BlockTableRecord) this.ObjectManager.GetObject(
-                //SymbolUtilityServices.GetBlockModelSpaceId(this.Database));
+                return null; //(BlockTableRecord) ObjectManager.GetObject(
+                //SymbolUtilityServices.GetBlockModelSpaceId(Database));
             }
         }
         public BlockTableRecord PaperSpace
         {
             get
             {
-                return null;// (BlockTableRecord)this.ObjectManager.GetObject(
-                     //SymbolUtilityServices.GetBlockPaperSpaceId(this.Database));     
+                return null;// (BlockTableRecord)ObjectManager.GetObject(
+                     //SymbolUtilityServices.GetBlockPaperSpaceId(Database));     
             }
         }
 
@@ -80,24 +86,49 @@ namespace Pyrrha
         #region Constructors
 
         public PyrrhaDocument()
-            : this( AcApp.DocumentManager.MdiActiveDocument ) {}
+            : this(AcApp.DocumentManager.MdiActiveDocument) {}
 
-        public PyrrhaDocument( string path )
-            : this( () =>
-                AcApp.DocumentManager.Cast<Document>()
-                    .FirstOrDefault( doc => doc.Name.Equals( Path.GetFileName( path ) ) )
-                ?? AcApp.DocumentManager.Open( path, false, null ) ) {}
+        public PyrrhaDocument(string path)
+            : this(FindDocument(path)) { }
 
-        public PyrrhaDocument( Func<Document> func )
-            : this( func() ) {}
+        public PyrrhaDocument(Func<Document> func)
+            : this(func()) {}
 
         private PyrrhaDocument( Document doc )
         {
             if ( doc == null )
                 throw new NullReferenceException( "Document is null." );
             //PyrrhaException.IsScriptSource = Thread.CurrentThread.IsScriptSource();
-            this._document = doc;
+            BaseDocument = doc;
             DocumentManager.AddDocument( this );
+        }
+
+        // This is safer because it actually checks full drawing paths.
+        // AutoCAD allows ambiguous drawing names in a single session,
+        // so this checks for the fully qualified drawing, and opens it
+        // if not available.
+        public static Document FindDocument(string path)
+        {
+            var name = Path.GetFileName(path);
+            var host = HostApplicationServices.Current;
+
+            foreach (Document doc in AcApp.DocumentManager)
+            {
+                try
+                {
+                    var docName = host.FindFile(name, doc.Database, FindFileHint.Default);
+                    if (docName.Equals(path, StringComparison.InvariantCultureIgnoreCase))
+                        return doc;
+                }
+                catch (Autodesk.AutoCAD.Runtime.Exception ex)
+                {
+                    if (ex.ErrorStatus == Autodesk.AutoCAD.Runtime.ErrorStatus.FilerError)
+                        continue;
+                    throw;
+                }
+            }
+
+            return AcApp.DocumentManager.Open(path, false);
         }
 
         #endregion
@@ -117,57 +148,57 @@ namespace Pyrrha
 
         public object AcadDocument
         {
-            get { return this._document.AcadDocument; }
+            get { return BaseDocument.AcadDocument; }
         }
 
         public string CommandInProgress
         {
-            get { return this._document.CommandInProgress; }
+            get { return BaseDocument.CommandInProgress; }
         }
 
         public Database Database
         {
-            get { return this._document.Database; }
+            get { return BaseDocument.Database; }
         }
 
         public Editor Editor
         {
-            get { return this._document.Editor; }
+            get { return BaseDocument.Editor; }
         }
 
         public Manager GraphicsManager
         {
-            get { return this._document.GraphicsManager; }
+            get { return BaseDocument.GraphicsManager; }
         }
 
         public bool IsActive
         {
-            get { return this._document.IsActive; }
+            get { return BaseDocument.IsActive; }
         }
 
         public bool IsReadOnly
         {
-            get { return this._document.IsReadOnly; }
+            get { return BaseDocument.IsReadOnly; }
         }
 
         public string Name
         {
-            get { return this._document.Name; }
+            get { return BaseDocument.Name; }
         }
 
         public StatusBar StatusBar
         {
-            get { return this._document.StatusBar; }
+            get { return BaseDocument.StatusBar; }
         }
 
         public Hashtable UserData
         {
-            get { return this._document.UserData; }
+            get { return BaseDocument.UserData; }
         }
 
         public Window Window
         {
-            get { return this._document.Window; }
+            get { return BaseDocument.Window; }
         }
 
         #endregion
@@ -176,17 +207,17 @@ namespace Pyrrha
 
         public Bitmap CapturePreviewImage( uint width, uint height )
         {
-            return this._document.CapturePreviewImage( width, height );
+            return BaseDocument.CapturePreviewImage( width, height );
         }
 
         public void CloseAndDiscard()
         {
-            this._document.CloseAndDiscard();
+            BaseDocument.CloseAndDiscard();
         }
 
         public void CloseAndSave( string fileName )
         {
-            this._document.CloseAndSave( fileName );
+            BaseDocument.CloseAndSave( fileName );
         }
 
         public static Document Create( IntPtr unmanagedPointer )
@@ -196,7 +227,7 @@ namespace Pyrrha
 
         public void DowngradeDocOpen( bool bPromptForSave )
         {
-            this._document.DowngradeDocOpen( bPromptForSave );
+            BaseDocument.DowngradeDocOpen( bPromptForSave );
         }
 
         public static Document FromAcadDocument( object acadDocument )
@@ -206,48 +237,48 @@ namespace Pyrrha
 
         public DocumentLock LockDocument()
         {
-            return this._document.LockDocument();
+            return BaseDocument.LockDocument();
         }
 
         public DocumentLock LockDocument( DocumentLockMode lockMode, string globalCommandName, string localCommandName,
             bool promptIfFails )
         {
-            return this._document.LockDocument( lockMode, globalCommandName, localCommandName, promptIfFails );
+            return BaseDocument.LockDocument( lockMode, globalCommandName, localCommandName, promptIfFails );
         }
 
         public DocumentLockMode LockMode()
         {
-            return this._document.LockMode();
+            return BaseDocument.LockMode();
         }
 
         public DocumentLockMode LockMode( bool bIncludeMyLocks )
         {
-            return this._document.LockMode( bIncludeMyLocks );
+            return BaseDocument.LockMode( bIncludeMyLocks );
         }
 
         public void PopDbmod()
         {
-            this._document.PopDbmod();
+            BaseDocument.PopDbmod();
         }
 
         public void PushDbmod()
         {
-            this._document.PushDbmod();
+            BaseDocument.PushDbmod();
         }
 
         public void SendStringToExecute( string command, bool activate, bool wrapUpInactiveDoc, bool echoCommand )
         {
-            this._document.SendStringToExecute( command, activate, wrapUpInactiveDoc, echoCommand );
+            BaseDocument.SendStringToExecute( command, activate, wrapUpInactiveDoc, echoCommand );
         }
 
         public Database TryGetDatabase()
         {
-            return this._document.TryGetDatabase();
+            return BaseDocument.TryGetDatabase();
         }
 
         public void UpgradeDocOpen()
         {
-            this._document.UpgradeDocOpen();
+            BaseDocument.UpgradeDocOpen();
         }
 
         #endregion
@@ -256,99 +287,99 @@ namespace Pyrrha
 
         public event DisposingEventHandler BeginDocumentDispose
         {
-            add { this._beginDocumentDispose += value; }
-            remove { this._beginDocumentDispose -= value; }
+            add { _beginDocumentDispose += value; }
+            remove { _beginDocumentDispose -= value; }
         }
         private event DisposingEventHandler _beginDocumentDispose;
 
         public event DocumentBeginCloseEventHandler BeginDocumentClose
         {
-            add { this._document.BeginDocumentClose += value; }
-            remove { this._document.BeginDocumentClose -= value; }
+            add { BaseDocument.BeginDocumentClose += value; }
+            remove { BaseDocument.BeginDocumentClose -= value; }
         }
 
         public event DrawingOpenEventHandler BeginDwgOpen
         {
-            add { this._document.BeginDwgOpen += value; }
-            remove { this._document.BeginDwgOpen -= value; }
+            add { BaseDocument.BeginDwgOpen += value; }
+            remove { BaseDocument.BeginDwgOpen -= value; }
         }
 
         public event EventHandler CloseAborted
         {
-            add { this._document.CloseAborted += value; }
-            remove { this._document.CloseAborted -= value; }
+            add { BaseDocument.CloseAborted += value; }
+            remove { BaseDocument.CloseAborted -= value; }
         }
 
         public event EventHandler CloseWillStart
         {
-            add { this._document.CloseWillStart += value; }
-            remove { this._document.CloseWillStart -= value; }
+            add { BaseDocument.CloseWillStart += value; }
+            remove { BaseDocument.CloseWillStart -= value; }
         }
 
         public event CommandEventHandler CommandCancelled
         {
-            add { this._document.CommandCancelled += value; }
-            remove { this._document.CommandCancelled -= value; }
+            add { BaseDocument.CommandCancelled += value; }
+            remove { BaseDocument.CommandCancelled -= value; }
         }
 
         public event CommandEventHandler CommandEnded
         {
-            add { this._document.CommandEnded += value; }
-            remove { this._document.CommandEnded -= value; }
+            add { BaseDocument.CommandEnded += value; }
+            remove { BaseDocument.CommandEnded -= value; }
         }
 
         public event CommandEventHandler CommandFailed
         {
-            add { this._document.CommandFailed += value; }
-            remove { this._document.CommandFailed -= value; }
+            add { BaseDocument.CommandFailed += value; }
+            remove { BaseDocument.CommandFailed -= value; }
         }
 
         public event CommandEventHandler CommandWillStart
         {
-            add { this._document.CommandWillStart += value; }
-            remove { this._document.CommandWillStart -= value; }
+            add { BaseDocument.CommandWillStart += value; }
+            remove { BaseDocument.CommandWillStart -= value; }
         }
 
         public event DrawingOpenEventHandler EndDwgOpen
         {
-            add { this._document.EndDwgOpen += value; }
-            remove { this._document.EndDwgOpen -= value; }
+            add { BaseDocument.EndDwgOpen += value; }
+            remove { BaseDocument.EndDwgOpen -= value; }
         }
 
         public event EventHandler ImpliedSelectionChanged
         {
-            add { this._document.ImpliedSelectionChanged += value; }
-            remove { this._document.ImpliedSelectionChanged -= value; }
+            add { BaseDocument.ImpliedSelectionChanged += value; }
+            remove { BaseDocument.ImpliedSelectionChanged -= value; }
         }
 
         public event EventHandler LispCancelled
         {
-            add { this._document.LispCancelled += value; }
-            remove { this._document.LispCancelled -= value; }
+            add { BaseDocument.LispCancelled += value; }
+            remove { BaseDocument.LispCancelled -= value; }
         }
 
         public event EventHandler LispEnded
         {
-            add { this._document.LispEnded += value; }
-            remove { this._document.LispEnded -= value; }
+            add { BaseDocument.LispEnded += value; }
+            remove { BaseDocument.LispEnded -= value; }
         }
 
         public event LispWillStartEventHandler LispWillStart
         {
-            add { this._document.LispWillStart += value; }
-            remove { this._document.LispWillStart -= value; }
+            add { BaseDocument.LispWillStart += value; }
+            remove { BaseDocument.LispWillStart -= value; }
         }
 
         public event UnknownCommandEventHandler UnknownCommand
         {
-            add { this._document.UnknownCommand += value; }
-            remove { this._document.UnknownCommand -= value; }
+            add { BaseDocument.UnknownCommand += value; }
+            remove { BaseDocument.UnknownCommand -= value; }
         }
 
         public event EventHandler ViewChanged
         {
-            add { this._document.ViewChanged += value; }
-            remove { this._document.ViewChanged -= value; }
+            add { BaseDocument.ViewChanged += value; }
+            remove { BaseDocument.ViewChanged -= value; }
         }
 
         #endregion
@@ -357,9 +388,12 @@ namespace Pyrrha
 
         public void Dispose()
         {
-            if (this._beginDocumentDispose != null)
-                this._beginDocumentDispose(this , new EventArgs());
-            this._document.Dispose();
+            if (_beginDocumentDispose != null)
+                _beginDocumentDispose(this , new EventArgs());
+
+            ObjectManager.Dispose();
+            BaseDocument.Dispose();
+
         }
 
         #endregion
@@ -372,20 +406,20 @@ namespace Pyrrha
                 return false;
             if ( ReferenceEquals( this , obj ) )
                 return true;
-            return obj.GetType() == this.GetType() && this.Equals( (PyrrhaDocument) obj );
+            return obj.GetType() == GetType() && Equals( (PyrrhaDocument) obj );
         }
 
         internal bool Equals(PyrrhaDocument other)
         {
-            return Equals(this._document, other._document) 
-                && Equals(this._objectManager, other._objectManager);
+            return Equals(BaseDocument, other.BaseDocument) 
+                && Equals(_objectManager, other._objectManager);
         }
 
         public override int GetHashCode()
         {
             unchecked
             {
-                return ((this._document != null ? this._document.GetHashCode() : 0) * 397) ^ (this._objectManager != null ? this._objectManager.GetHashCode() : 0);
+                return ((BaseDocument != null ? BaseDocument.GetHashCode() : 0) * 397);
             }
         }
 

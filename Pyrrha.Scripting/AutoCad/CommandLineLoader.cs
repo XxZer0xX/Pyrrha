@@ -1,14 +1,16 @@
 ﻿#region Referencing
 
-using System;
-using System.IO;
-using System.Linq;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Runtime;
 using IronPython.Hosting;
+using Microsoft.Scripting.Hosting;
 using Pyrrha.Scripting.Compiler;
 using Pyrrha.Util;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Windows.Forms;
 using AcApp = Autodesk.AutoCAD.ApplicationServices.Application;
 using Exception = System.Exception;
 
@@ -19,18 +21,18 @@ namespace Pyrrha.Scripting.AutoCad
     public class CommandLineLoader
     {
         [CommandMethod("-PYLOAD")]
-        public static void PythonLoadCmdLine()
+        public void PythonLoadCmdLine()
         {
             PythonLoad(true);
         }
 
         [CommandMethod("PYLOAD")]
-        public static void PythonLoadUI()
+        public void PythonLoadUI()
         {
             PythonLoad(false);
         }
 
-        public static void PythonLoad(bool useCmdLine)
+        public void PythonLoad(bool useCmdLine)
         {
             var doc = AcApp.DocumentManager.MdiActiveDocument;
             var ed = doc.Editor;
@@ -43,14 +45,14 @@ namespace Pyrrha.Scripting.AutoCad
                   "Select Python script to load"
                 )
             {
-                Filter = "Python script (*.py)|*.py" ,
+                Filter = "Python script (*.py)|*.py",
                 PreferCommandLine = (useCmdLine || fd == 0)
             };
 
             var pr = ed.GetFileNameForOpen(pfo);
 
-            if (pr.Status == PromptStatus.OK)
-                ExecutePythonScript(pr.StringResult);
+            if (pr.Status == PromptStatus.OK && File.Exists(pr.StringResult))
+                LoadSciptFromFile(pr.StringResult);
         }
 
         [LispFunction("PYLOAD")]
@@ -72,46 +74,140 @@ namespace Pyrrha.Scripting.AutoCad
             if (typedValue.TypeCode != rtstr)
                 return null;
 
-            var success =
-              ExecutePythonScript(Convert.ToString(typedValue.Value));
-            return success ? new ResultBuffer(
-                    new TypedValue(rtstr , typedValue.Value))
-                    : null;
+            return LoadSciptFromFile(Convert.ToString(typedValue.Value))
+                ? new ResultBuffer(new TypedValue(rtstr, typedValue.Value))
+                : null;
         }
 
-        private static bool ExecutePythonScript(string filePath)
+        private Queue<string> _sessionCodeRepo;
+        private Queue<string> SessionCodeRepo
         {
-            if (!File.Exists(filePath))
+            get { return _sessionCodeRepo ?? (_sessionCodeRepo = new Queue<string>()); }
+            set { _sessionCodeRepo = value; }
+        }
+
+        [CommandMethod("pystart")]
+        public void StartPythonScripting()
+        {
+            //
+            // Trhowing a fatal error some where in here
+            //
+
+            var commandEcho = AcApp.GetSystemVariable("CMDECHO");
+            AcApp.SetSystemVariable("CMDECHO", 0);
+            string ValidatedCode = string.Empty;
+            AcApp.DocumentManager.MdiActiveDocument.Editor.WriteMessage("Python Compiler Initialized.. Enter Python code.\n");
+            while (!ValidatedCode.Equals("pyexecute"))
             {
-                StaticExtenstions.WriteToActiveDocument(string.Format(
-                    "{0} does not exist" , filePath
-                    ));
-                return false;
+                var promptOptions = new PromptStringOptions(">>> ")
+                    {
+                        AllowSpaces = true
+                    };
+
+                var response = AcApp.DocumentManager.MdiActiveDocument.Editor.GetString(promptOptions);
+
+                if(string.IsNullOrEmpty(response.StringResult))
+                    return;
+
+                ValidatedCode = LoadedFromCommandLine(response.StringResult);
+                AcApp.DocumentManager.MdiActiveDocument.Editor.WriteMessage(string.Format(">>> {0}", ValidatedCode));
+            }
+            AcApp.SetSystemVariable("CMDECHO", commandEcho);
+            CopyCodeToFile_RequestSave();
+        }
+
+        private string LoadedFromCommandLine(string code)
+        {
+            var errorListener = new ComplieTimeErrorListener();
+            Python.CreateEngine().CreateScriptSourceFromString(code).Compile(errorListener);
+            if (errorListener.FoundError)
+            {
+                AcApp.DocumentManager.MdiActiveDocument.Editor.WriteMessage("****___________  Errors thrown  ___________****");
+                foreach (var error in errorListener.ErrorDataList)
+                    StaticExtenstions.WriteToActiveDocument(
+                        string.Format("{1} Error: {0}", error.Message, error.Severity)
+                        );
+                AcApp.DocumentManager.MdiActiveDocument.Editor.WriteMessage("****___________  End Errors  ___________****");
+                return null;
+            }
+            SessionCodeRepo.Enqueue(code);
+            return code;
+        }
+
+        internal string tempFilePath = string.Format(@"{0}\local\temp\PyrrhaScriptsTempFolder\{1}_{2}.py", Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), Environment.UserName, DateTime.Now);
+
+        private bool CopyCodeToFile_RequestSave()
+        {
+            var sfd = new SaveFileDialog()
+            {
+                SupportMultiDottedExtensions = true,
+                CreatePrompt = false,
+                DefaultExt = ".py",
+                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
+            };
+            bool willSave = false;
+
+            if (MessageBox.Show("Would you like to save this script source?") == DialogResult.OK)
+            {
+                willSave = true;
+                if (sfd.ShowDialog() != DialogResult.OK)
+                    willSave = false;
             }
 
+            using (var stream = new FileStream(willSave? sfd.FileName : tempFilePath, FileMode.Create))
+            {
+                using (var writer = new StreamWriter(stream))
+                {
+                    foreach (var line in SessionCodeRepo)
+                        writer.WriteLine(line);
+                    stream.Flush();
+                }
+            }
+
+           return LoadSciptFromFile(willSave ? sfd.FileName : tempFilePath);
+        }
+
+        private bool LoadedFromIDE(params string[] code)
+        {
+            throw new NotImplementedException();
+        }
+
+        private bool LoadSciptFromFile(string filePath)
+        {
             var scriptSource = Python.CreateEngine().CreateScriptSourceFromFile(filePath);
+            return proccessPythonScript(scriptSource);
+        }
+
+        private bool proccessPythonScript(ScriptSource source)
+        {
+            // TODO Implement checking and loading the default imports statments
+            return complieAndRunScriptSource(source);
+        }
+
+        private bool complieAndRunScriptSource(ScriptSource source)
+        {
             var errorListener = new ComplieTimeErrorListener();
-            var compliedScript = scriptSource.Compile(errorListener);
+            var compliedScript = source.Compile(errorListener);
 
             if (!errorListener.FoundError)
-
                 try
                 {
                     compliedScript.Execute();
-                    StaticExtenstions.WriteToActiveDocument(Path.GetFileName(filePath) + " Execution Successful.");
+                    StaticExtenstions.WriteToActiveDocument("Python Execution Successful.");
                     return true;
 
-                } catch (Exception e)
+                }
+                catch (Exception e)
                 {
                     StaticExtenstions.WriteToActiveDocument(
-                        string.Format("\nMessage: {0}\nSource:{1}" , e.Message , e.Source));
+                        string.Format("\nMessage: {0}\nSource:{1}", e.Message, e.Source));
                     return false;
                 }
 
             foreach (var error in errorListener.ErrorDataList)
 
                 StaticExtenstions.WriteToActiveDocument(
-                    string.Format("{1} Error: {0}" , error.Message , error.Severity)
+                    string.Format("{1} Error: {0}", error.Message, error.Severity)
                     );
 
             return false;

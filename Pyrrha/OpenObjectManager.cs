@@ -10,8 +10,18 @@ using Autodesk.AutoCAD.DatabaseServices;
 
 namespace Pyrrha
 {
+<<<<<<< HEAD
     public class OpenObjectManager : IDisposable, IEqualityComparer<DBObject>, IEnumerable<DBObject>
     {
+=======
+    public delegate void FetchingEvent( object sender , EventArgs args );
+
+    public class OpenObjectManager : IDisposable, IEqualityComparer<DBObject>, IEnumerable<DBObject>
+    {
+        private readonly IDictionary<ObjectId, DBObject> _openObjects;
+        private readonly OpenCloseTransaction _transaction;
+
+>>>>>>> origin/master
         #region Properties
 
         public int Count
@@ -23,8 +33,13 @@ namespace Pyrrha
 
         public IDictionary<ObjectId, DBObject> OpenObjects
         {
+<<<<<<< HEAD
             get { return _openObjects ?? (_openObjects = new Dictionary<ObjectId, DBObject>()); }
             private set { _openObjects = value;}
+=======
+            this._transaction = new OpenCloseTransaction();
+            this._openObjects = new Dictionary<ObjectId, DBObject>();
+>>>>>>> origin/master
         }
         private IDictionary<ObjectId, DBObject> _openObjects;
 
@@ -34,12 +49,15 @@ namespace Pyrrha
 
         #region Constructor
 
+<<<<<<< HEAD
         public OpenObjectManager(Database database)
         {
             Database = database;
             Transactions = new List<Transaction>();
         }
 
+=======
+>>>>>>> origin/master
         #endregion
 
         #region Methods
@@ -139,11 +157,17 @@ namespace Pyrrha
 
         public void RemoveTransaction(Transaction trans, bool commit = false)
         {
+<<<<<<< HEAD
             if (commit)
                 trans.Commit();
 
             Transactions.Remove(trans);
             trans.Dispose();
+=======
+            var obj = this._transaction.GetObject(id, OpenMode.ForWrite);
+            this._openObjects.Add(id, (DBObject)obj);
+            return obj;
+>>>>>>> origin/master
         }
 
         #endregion

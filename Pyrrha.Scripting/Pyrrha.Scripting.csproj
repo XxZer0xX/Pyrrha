@@ -51,16 +51,30 @@
     <Reference Include="Microsoft.Scripting">
       <HintPath>..\..\..\..\..\..\IronPython-2.7.4\Microsoft.Scripting.dll</HintPath>
     </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xaml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="UIAutomationProvider" />
+    <Reference Include="WindowsBase" />
+    <Reference Include="WindowsFormsIntegration" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AutoCad\CommandLineLoader.cs" />
+    <Compile Include="AutoCad\UI\PyAppLoad.xaml.cs">
+      <DependentUpon>PyAppLoad.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="AutoCad\UI\UserControls\SearchBox.xaml.cs">
+      <DependentUpon>SearchBox.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Compiler\ErrorData.cs" />
     <Compile Include="Compiler\ComplieTimeErrorListener.cs" />
@@ -71,6 +85,16 @@
       <Project>{0C1311D2-6FC4-46AD-B1EC-0C3357AE34F4}</Project>
       <Name>Pyrrha</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="AutoCad\UI\PyAppLoad.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="AutoCad\UI\UserControls\SearchBox.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

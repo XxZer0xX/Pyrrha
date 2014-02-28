@@ -60,6 +60,13 @@
     <Compile Include="Runtime\PyrrhaException.cs" />
     <Compile Include="TransactionEventArgs.cs" />
     <Compile Include="Util\Query\EntityQuery.cs" />
+    <Compile Include="Runtime\Exception\AeSQL\SyntaxParsingException.cs" />
+    <Compile Include="Runtime\Exception\AeSQL\InvalidArgumentException.cs" />
+    <Compile Include="Runtime\Exception\InvalidAccessException.cs" />
+    <Compile Include="Runtime\Exception\NonEnumerableException.cs" />
+    <Compile Include="Runtime\Exception\PyrrhaExcpetion.cs" />
+    <Compile Include="Runtime\Exception\AeSQL\AeSQLException.cs" />
+    <Compile Include="Query\EntityQuery.cs" />
     <Compile Include="Util\StaticExtenstions.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -12,8 +12,20 @@ using Autodesk.AutoCAD.GraphicsSystem;
 using Autodesk.AutoCAD.Runtime;
 using Autodesk.AutoCAD.Windows;
 using Autodesk.AutoCAD.Windows.Data;
+<<<<<<< HEAD
 using Pyrrha.Collections;
 
+=======
+using Pyrrha.Runtime;
+using Pyrrha.Runtime.Exception;
+using Pyrrha.Util;
+using System;
+using System.Collections;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Threading;
+>>>>>>> origin/master
 using AcApp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 #endregion
@@ -25,6 +37,7 @@ namespace Pyrrha
     {
         #region Properties
 
+<<<<<<< HEAD
         internal readonly Document BaseDocument;
 
         public DocumentManager DocumentManager
@@ -32,13 +45,23 @@ namespace Pyrrha
             get { return _documentManager ?? (_documentManager = new DocumentManager()); }
         }
         private DocumentManager _documentManager;
+=======
+        private readonly Document _document;
+        private OpenObjectManager _objectManager;
+        public DocumentManager DocumentManager;
+>>>>>>> origin/master
 
         public OpenObjectManager ObjectManager
         {
             get
             {
+<<<<<<< HEAD
                 return _objectManager ??
                        (_objectManager = new OpenObjectManager(Database));
+=======
+                return this._objectManager ??
+                       (this._objectManager = new OpenObjectManager());
+>>>>>>> origin/master
             }
         }
         private OpenObjectManager _objectManager;
@@ -409,7 +432,11 @@ namespace Pyrrha
             return obj.GetType() == GetType() && Equals( (PyrrhaDocument) obj );
         }
 
+<<<<<<< HEAD
         internal bool Equals(PyrrhaDocument other)
+=======
+        public bool Equals(PyrrhaDocument other)
+>>>>>>> origin/master
         {
             return Equals(BaseDocument, other.BaseDocument) 
                 && Equals(_objectManager, other._objectManager);

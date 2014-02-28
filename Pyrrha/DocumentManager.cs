@@ -1,101 +1,49 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-<<<<<<< HEAD
 using Autodesk.AutoCAD.ApplicationServices;
 
 using AcApp = Autodesk.AutoCAD.ApplicationServices.Application;
-=======
-using Pyrrha.Runtime;
-using Pyrrha.Runtime.Exception;
->>>>>>> origin/master
 
 namespace Pyrrha
 {
-    public class DocumentManager : IDisposable, IEnumerable<PyrrhaDocument>
+    public class DocumentManager : IDisposable
     {
-        private static IDictionary<int, PyrrhaDocument> _documents;
-        public static IDictionary<int, PyrrhaDocument> Documents
+        private static IList<PyrrhaDocument> _documents;
+        public static IList<PyrrhaDocument> Documents
         {
-            get { return _documents ?? (_documents = new Dictionary<int, PyrrhaDocument>()); }
-        }
-
-        public PyrrhaDocument this[int hash]
-        {
-            get
-            {
-                if (Documents.ContainsKey(hash))
-                    return Documents[hash];
-
-                var exception = new InvalidAccessException("Document Not available");
-                exception.ThrowException();
-                return null;
-
-            }
-            set
-            {
-                if (Documents.ContainsKey(hash))
-                {
-                    Documents[hash] = value;
-                    return;
-                }
-
-                var exception = new InvalidAccessException("Document Not available");
-                exception.ThrowException();
-            }
+            get { return _documents ?? ( _documents = new List<PyrrhaDocument>() ); }
         }
 
         public static PyrrhaDocument ActiveDocument
         {
-<<<<<<< HEAD
             get { return GetActiveDocument(); }
-=======
-            get { return Documents.Values.First(); }
->>>>>>> origin/master
         }
 
         public static void AddDocument(PyrrhaDocument document)
         {
-<<<<<<< HEAD
             if (!Documents.Contains(document))
                 Documents.Add(document);
-=======
-            if (!Documents.ContainsKey(docParameter.GetHashCode()))
-                Documents.Add(docParameter.GetHashCode(), docParameter);
->>>>>>> origin/master
         }
 
         public static void SaveAndCloseAll()
         {
-            foreach (var doc in _documents.Values)
+            foreach (var doc in _documents)
             {
                 doc.ConfirmAllChanges();
-<<<<<<< HEAD
 
                 // This might not save to the right location.
                 // I think we should add extensions for 
                 // Save() and Close() from the AcadDocument.
-=======
->>>>>>> origin/master
                 doc.CloseAndSave(doc.Name);
             }
         }
 
         public void Dispose()
         {
-            foreach (var doc in _documents.Values)
+            foreach (var doc in _documents)
                 doc.Dispose();
-            GC.SuppressFinalize(this);
-        }
-
-        public IEnumerator<PyrrhaDocument> GetEnumerator()
-        {
-            return Documents.Values.GetEnumerator();
-        }
-
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
+            GC.SuppressFinalize( this );
         }
 
         private static PyrrhaDocument GetActiveDocument()

@@ -11,6 +11,8 @@ using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using Pyrrha;
 using Exception = System.Exception;
+using WinForms = System.Windows.Forms;
+using Autodesk.AutoCAD.Windows;
 
 #endregion
 
@@ -40,7 +42,6 @@ namespace CSharp_Testing
                     pyDoc.Editor.WriteMessage("{0} - {1}\n", textstyle.Name, textstyle.FileName);
 
                 pyDoc.ConfirmAllChanges();
-                pyDoc.Dispose();
             }   
         
             // Disposing isn't working yet.
@@ -236,6 +237,75 @@ namespace CSharp_Testing
                 acEd.WriteMessage("Final score is: {0}", score);
             }
 
+        }
+
+        [CommandMethod("CommandTest")]
+        public void CommandTest()
+        {
+            var acDoc = Application.DocumentManager.MdiActiveDocument;
+
+            var test = Autodesk.AutoCAD.Internal.PreviousInput.CommandLineMonitorServices.Instance();
+            var mon = test.GetCommandLineMonitor(acDoc);
+            mon.UnknownCmd += mon_UnknownCmd;
+
+            acDoc.CommandWillStart += acDoc_CommandWillStart;
+            acDoc.LispWillStart += acDoc_LispWillStart;
+            acDoc.UnknownCommand += acDoc_UnknownCommand;
+            Autodesk.AutoCAD.Internal.Windows.CommandThroat.InputCharactersQueued += CommandThroat_InputCharactersQueued;
+        }
+
+        void mon_UnknownCmd(object sender, Autodesk.AutoCAD.Internal.PreviousInput.InputStringEventArgs e)
+        {
+           
+        }
+
+        void acDoc_UnknownCommand(object sender, UnknownCommandEventArgs e)
+        {
+            
+        }
+
+        void acDoc_LispWillStart(object sender, LispWillStartEventArgs e)
+        {
+            
+        }
+
+        void acDoc_CommandWillStart(object sender, CommandEventArgs e)
+        {
+            
+        }
+
+        void CommandThroat_InputCharactersQueued(object sender, Autodesk.AutoCAD.Internal.Windows.InputCharactersQueuedEventArgs e)
+        {
+            if (pythonStarted)
+                sb.Append(e.Characters);
+
+            if (e.Characters.Equals("(pyStart)\n", StringComparison.InvariantCultureIgnoreCase))
+            {
+                pythonStarted = true;
+                sb = new System.Text.StringBuilder();
+                Application.SetSystemVariable("NOMUTT", 1);
+                Application.SetSystemVariable("CMDECHO", 0);
+            }
+            else if (e.Characters.Equals("(pyEnd)\n", StringComparison.InvariantCultureIgnoreCase))
+            {
+                pythonStarted = false;
+                Application.SetSystemVariable("NOMUTT", 0);
+                Application.SetSystemVariable("CMDECHO", 1);
+            }
+        }
+
+        private static bool pythonStarted;
+        private static System.Text.StringBuilder sb;
+
+        [CommandMethod("DialogTest")]
+        public void DialogTest()
+        {
+            var acDoc = Application.DocumentManager.MdiActiveDocument;
+            var dia = new OpenFileDialog("Open python script", "example", "py", "Python",
+                                         OpenFileDialog.OpenFileDialogFlags.DefaultIsFolder);
+
+            if (dia.ShowDialog() == WinForms.DialogResult.OK)
+                acDoc.Editor.WriteMessage("{0} chosen.", dia.Filename);
         }
     }
 }

@@ -110,7 +110,7 @@ namespace Pyrrha.Scripting.AutoCad
                     return;
 
                 ValidatedCode = LoadedFromCommandLine(response.StringResult);
-                AcApp.DocumentManager.MdiActiveDocument.Editor.WriteMessage(string.Format(">>> {0}", ValidatedCode));
+                //AcApp.DocumentManager.MdiActiveDocument.Editor.WriteMessage(string.Format(">>> {0}", ValidatedCode));
             }
             AcApp.SetSystemVariable("CMDECHO", commandEcho);
             CopyCodeToFile_RequestSave();
@@ -128,7 +128,7 @@ namespace Pyrrha.Scripting.AutoCad
                         string.Format("{1} Error: {0}", error.Message, error.Severity)
                         );
                 AcApp.DocumentManager.MdiActiveDocument.Editor.WriteMessage("****___________  End Errors  ___________****");
-                return null;
+                Environment.Exit(errorListener.ErrorDataList[0].ErrorCode);
             }
             SessionCodeRepo.Enqueue(code);
             return code;

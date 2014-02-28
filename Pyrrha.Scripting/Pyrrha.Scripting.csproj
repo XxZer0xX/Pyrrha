@@ -68,6 +68,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AutoCad\CommandLineLoader.cs" />
+    <Compile Include="AutoCad\PyrrhaMonitor.cs" />
     <Compile Include="AutoCad\UI\PyAppLoad.xaml.cs">
       <DependentUpon>PyAppLoad.xaml</DependentUpon>
     </Compile>

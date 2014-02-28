@@ -6,6 +6,7 @@ using Autodesk.AutoCAD.Runtime;
 using IronPython.Hosting;
 using Microsoft.Scripting.Hosting;
 using Pyrrha.Scripting.Compiler;
+using Pyrrha.Scripting.Runtime;
 using Pyrrha.Util;
 using System;
 using System.Collections.Generic;
@@ -86,55 +87,69 @@ namespace Pyrrha.Scripting.AutoCad
             set { _sessionCodeRepo = value; }
         }
 
+        private ScriptEngine SessionPythonEngine;
+
         [CommandMethod("pystart")]
         public void StartPythonScripting()
         {
-            //
-            // Trhowing a fatal error some where in here
-            //
-
-            var commandEcho = AcApp.GetSystemVariable("CMDECHO");
-            AcApp.SetSystemVariable("CMDECHO", 0);
-            string ValidatedCode = string.Empty;
-            AcApp.DocumentManager.MdiActiveDocument.Editor.WriteMessage("Python Compiler Initialized.. Enter Python code.\n");
-            while (!ValidatedCode.Equals("pyexecute"))
+            try
             {
-                var promptOptions = new PromptStringOptions(">>> ")
-                    {
-                        AllowSpaces = true
-                    };
+                SessionPythonEngine = PyrrhaHosting.CreateEngine();
+                var commandEcho = AcApp.GetSystemVariable("CMDECHO");
+                AcApp.SetSystemVariable("CMDECHO", 0);
 
-                var response = AcApp.DocumentManager.MdiActiveDocument.Editor.GetString(promptOptions);
+                string ValidatedCode = string.Empty;
+                AcApp.DocumentManager.MdiActiveDocument.Editor.WriteMessage("Python Compiler Initialized... Enter Python code.\n");
+                while (!ValidatedCode.Equals("pyexecute"))
+                {
+                    var promptOptions = new PromptStringOptions(">>> ") { AllowSpaces = true };
 
-                if(string.IsNullOrEmpty(response.StringResult))
-                    return;
+                    var response = AcApp.DocumentManager.MdiActiveDocument.Editor.GetString(promptOptions);
 
-                ValidatedCode = LoadedFromCommandLine(response.StringResult);
-                //AcApp.DocumentManager.MdiActiveDocument.Editor.WriteMessage(string.Format(">>> {0}", ValidatedCode));
+                    if (string.IsNullOrEmpty(response.StringResult))
+                        return;
+
+                    ValidatedCode = LoadedFromCommandLine(response.StringResult);
+
+                    if (string.IsNullOrEmpty(ValidatedCode))
+                        return;
+                }
+
+                SessionPythonEngine.Runtime.Shutdown();
+                AcApp.SetSystemVariable("CMDECHO", commandEcho);
+                CopyCodeToFile_RequestSave();
             }
-            AcApp.SetSystemVariable("CMDECHO", commandEcho);
-            CopyCodeToFile_RequestSave();
+            catch (Exception e)
+            {
+                StaticExtenstions.WriteToActiveDocument(
+                        string.Format("\nMessage: {0}\nSource:{1}", e.Message, e.Source));
+                return;
+            }
+
         }
 
         private string LoadedFromCommandLine(string code)
         {
             var errorListener = new ComplieTimeErrorListener();
-            Python.CreateEngine().CreateScriptSourceFromString(code).Compile(errorListener);
+            var compiledcode = SessionPythonEngine.CreateScriptSourceFromString(code).Compile(errorListener);
+
             if (errorListener.FoundError)
             {
-                AcApp.DocumentManager.MdiActiveDocument.Editor.WriteMessage("****___________  Errors thrown  ___________****");
+                AcApp.DocumentManager.MdiActiveDocument.Editor.WriteMessage("****___________  Errors thrown  ___________****\n");
                 foreach (var error in errorListener.ErrorDataList)
                     StaticExtenstions.WriteToActiveDocument(
-                        string.Format("{1} Error: {0}", error.Message, error.Severity)
+                        string.Format("{1} Error: {0}\n", error.Message, error.Severity)
                         );
-                AcApp.DocumentManager.MdiActiveDocument.Editor.WriteMessage("****___________  End Errors  ___________****");
-                Environment.Exit(errorListener.ErrorDataList[0].ErrorCode);
+                AcApp.DocumentManager.MdiActiveDocument.Editor.WriteMessage("****___________  End Errors  ___________****\n");
+                return null;
             }
-            SessionCodeRepo.Enqueue(code);
+
+            SessionPythonEngine.Execute(code, PyrrhaHosting.InstanceScope);
+
             return code;
         }
 
-        internal string tempFilePath = string.Format(@"{0}\local\temp\PyrrhaScriptsTempFolder\{1}_{2}.py", Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), Environment.UserName, DateTime.Now);
+        internal string tempFilePath = string.Format(@"{0}\local\temp\PyrrhaScriptsTempFolder\{1}_{2}.py", Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), Environment.UserName, DateTime.Now.ToString().Replace('\\', ('_')));
 
         private bool CopyCodeToFile_RequestSave()
         {
@@ -142,19 +157,20 @@ namespace Pyrrha.Scripting.AutoCad
             {
                 SupportMultiDottedExtensions = true,
                 CreatePrompt = false,
-                DefaultExt = ".py",
+                AddExtension = true,
+                DefaultExt = Path.GetFileNameWithoutExtension(tempFilePath) + ".py",
                 InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
             };
             bool willSave = false;
 
-            if (MessageBox.Show("Would you like to save this script source?") == DialogResult.OK)
+            if (MessageBox.Show("Would you like to save this script source?", "Save File", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.OK)
             {
                 willSave = true;
                 if (sfd.ShowDialog() != DialogResult.OK)
                     willSave = false;
             }
 
-            using (var stream = new FileStream(willSave? sfd.FileName : tempFilePath, FileMode.Create))
+            using (var stream = new FileStream(willSave ? sfd.FileName : tempFilePath, FileMode.Create))
             {
                 using (var writer = new StreamWriter(stream))
                 {
@@ -164,7 +180,7 @@ namespace Pyrrha.Scripting.AutoCad
                 }
             }
 
-           return LoadSciptFromFile(willSave ? sfd.FileName : tempFilePath);
+            return LoadSciptFromFile(willSave ? sfd.FileName : tempFilePath);
         }
 
         private bool LoadedFromIDE(params string[] code)

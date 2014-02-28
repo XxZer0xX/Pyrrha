@@ -400,11 +400,11 @@ namespace Pyrrha
 
         public override bool Equals(object obj)
         {
-            if ( ReferenceEquals( null , obj ) )
+            if (ReferenceEquals(null, obj))
                 return false;
-            if ( ReferenceEquals( this , obj ) )
+            if (ReferenceEquals(this, obj))
                 return true;
-            return obj.GetType() == GetType() && Equals( (PyrrhaDocument) obj );
+            return obj.GetType() == GetType() && Equals((PyrrhaDocument)obj);
         }
 
         internal bool Equals(PyrrhaDocument other)

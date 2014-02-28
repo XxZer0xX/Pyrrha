@@ -1,8 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+<<<<<<< HEAD
+using Autodesk.AutoCAD.ApplicationServices;
+
+using AcApp = Autodesk.AutoCAD.ApplicationServices.Application;
+=======
 using Pyrrha.Runtime;
 using Pyrrha.Runtime.Exception;
+>>>>>>> origin/master
 
 namespace Pyrrha
 {
@@ -41,13 +47,22 @@ namespace Pyrrha
 
         public static PyrrhaDocument ActiveDocument
         {
+<<<<<<< HEAD
+            get { return GetActiveDocument(); }
+=======
             get { return Documents.Values.First(); }
+>>>>>>> origin/master
         }
 
-        public static void AddDocument(PyrrhaDocument docParameter)
+        public static void AddDocument(PyrrhaDocument document)
         {
+<<<<<<< HEAD
+            if (!Documents.Contains(document))
+                Documents.Add(document);
+=======
             if (!Documents.ContainsKey(docParameter.GetHashCode()))
                 Documents.Add(docParameter.GetHashCode(), docParameter);
+>>>>>>> origin/master
         }
 
         public static void SaveAndCloseAll()
@@ -55,6 +70,13 @@ namespace Pyrrha
             foreach (var doc in _documents.Values)
             {
                 doc.ConfirmAllChanges();
+<<<<<<< HEAD
+
+                // This might not save to the right location.
+                // I think we should add extensions for 
+                // Save() and Close() from the AcadDocument.
+=======
+>>>>>>> origin/master
                 doc.CloseAndSave(doc.Name);
             }
         }
@@ -74,6 +96,12 @@ namespace Pyrrha
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        private static PyrrhaDocument GetActiveDocument()
+        {
+            return Documents.FirstOrDefault(doc => doc.BaseDocument
+                            .Equals(AcApp.DocumentManager.MdiActiveDocument));
         }
     }
 }

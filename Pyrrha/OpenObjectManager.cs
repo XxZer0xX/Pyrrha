@@ -1,15 +1,19 @@
 ﻿#region Referencing
 
 using System;
-using Autodesk.AutoCAD.DatabaseServices;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Autodesk.AutoCAD.DatabaseServices;
 
 #endregion
 
 namespace Pyrrha
 {
+<<<<<<< HEAD
+    public class OpenObjectManager : IDisposable, IEqualityComparer<DBObject>, IEnumerable<DBObject>
+    {
+=======
     public delegate void FetchingEvent( object sender , EventArgs args );
 
     public class OpenObjectManager : IDisposable, IEqualityComparer<DBObject>, IEnumerable<DBObject>
@@ -17,64 +21,153 @@ namespace Pyrrha
         private readonly IDictionary<ObjectId, DBObject> _openObjects;
         private readonly OpenCloseTransaction _transaction;
 
+>>>>>>> origin/master
         #region Properties
 
         public int Count
         {
-            get { return this._openObjects.Count; }
+            get { return OpenObjects.Count; }
         }
+
+        public Database Database {get; private set;}
+
+        public IDictionary<ObjectId, DBObject> OpenObjects
+        {
+<<<<<<< HEAD
+            get { return _openObjects ?? (_openObjects = new Dictionary<ObjectId, DBObject>()); }
+            private set { _openObjects = value;}
+=======
+            this._transaction = new OpenCloseTransaction();
+            this._openObjects = new Dictionary<ObjectId, DBObject>();
+>>>>>>> origin/master
+        }
+        private IDictionary<ObjectId, DBObject> _openObjects;
+
+        public IList<Transaction> Transactions { get; private set; }
 
         #endregion
 
         #region Constructor
 
-        public OpenObjectManager()
+<<<<<<< HEAD
+        public OpenObjectManager(Database database)
         {
-            this._transaction = new OpenCloseTransaction();
-            this._openObjects = new Dictionary<ObjectId, DBObject>();
+            Database = database;
+            Transactions = new List<Transaction>();
         }
 
-        #endregion
-
-        #region Events
-
+=======
+>>>>>>> origin/master
         #endregion
 
         #region Methods
 
-        public DBObject GetObject(ObjectId id)
+        private DBObject AddObject(ObjectId id, Transaction trans, OpenMode mode)
         {
-            return this._openObjects.ContainsKey(id)
-                ? this._openObjects[id]
-                : this._getAddObject(id);
+            DBObject returnObj = null;
+
+            try
+            {
+                returnObj = trans.GetObject(id, mode);
+            }
+            catch (Autodesk.AutoCAD.Runtime.Exception ex)
+            {
+                if (ex.ErrorStatus == Autodesk.AutoCAD.Runtime.ErrorStatus.NotOpenForWrite)
+                    AddObject(id, trans, OpenMode.ForRead).Close();
+                
+                id.GetObject(OpenMode.ForRead).Close();
+                AddObject(id, trans, mode);
+
+                throw;
+            }
+
+            if (OpenObjects.ContainsKey(id))
+                OpenObjects[id] = returnObj;
+            else
+                OpenObjects.Add(id, returnObj);
+            return returnObj;
         }
 
-        public IEnumerable<TDesired> GetAllOfType<TDesired>(IEnumerable source)
-            where TDesired : DBObject
+        public void AbortAll()
         {
-            return source.OfType<ObjectId>().Any()
-                ? source.Cast<ObjectId>().Select(this.GetObject).OfType<TDesired>()
-                : source.OfType<TDesired>();
+            foreach (var trans in Transactions)
+                trans.Abort();
+            OpenObjects = null;
         }
 
-        public void ConfirmAllChanges()
+        public Transaction AddTransaction()
         {
-            Dispose();
+            var newTrans = Database.TransactionManager.StartOpenCloseTransaction();
+            Transactions.Add(newTrans);
+
+            return newTrans;
         }
 
-        internal void Remove(ObjectId id)
+        public void CommitAll(bool clearobjects = true)
         {
-            var obj = this._openObjects[id];
-            if (obj == null) return;
-            obj.Dispose();
-            this._openObjects.Remove(id);
+            foreach (var trans in Transactions)
+            {
+                trans.Commit();
+                trans.Dispose();
+            }
+            Transactions.Clear();
         }
 
-        private DBObject _getAddObject(ObjectId id)
+        public DBObject GetRecord(ObjectId id, Transaction trans, OpenMode mode)
         {
+            //bool inCollection = collection.Contains(id);
+            bool inManager = OpenObjects.ContainsKey(id);
+
+            // Check the object for a value;
+            var returnObj = inManager ? OpenObjects[id] : null;
+
+            bool isNull = returnObj == null;
+            bool isOpen = !isNull && (OpenObjects[id].IsReadEnabled || OpenObjects[id].IsWriteEnabled);
+
+            // The DBObject is managed and already open
+            if (inManager && isOpen)
+            {
+                if (!returnObj.IsReadEnabled && mode != OpenMode.ForRead)
+                    returnObj.DowngradeOpen();
+                else if (returnObj.IsWriteEnabled && mode != OpenMode.ForWrite)
+                    returnObj.UpgradeOpen();
+
+                return OpenObjects[id];
+            }
+
+            // Add the object to the transaction owned by the collection
+            return AddObject(id, trans, mode);
+        }
+
+        internal void RemoveObject(ObjectId id, bool erase = false)
+        {
+            if (!OpenObjects.ContainsKey(id))
+                return;
+
+            var obj = OpenObjects[id];
+            if (obj != null)
+            {
+                if (erase)
+                    obj.Erase();
+                obj.Close();                  
+            }
+                
+            OpenObjects.Remove(id);
+        }
+
+        public void RemoveTransaction(Transaction trans, bool commit = false)
+        {
+<<<<<<< HEAD
+            if (commit)
+                trans.Commit();
+
+            Transactions.Remove(trans);
+            trans.Dispose();
+=======
             var obj = this._transaction.GetObject(id, OpenMode.ForWrite);
             this._openObjects.Add(id, (DBObject)obj);
             return obj;
+>>>>>>> origin/master
         }
 
         #endregion
@@ -83,12 +176,12 @@ namespace Pyrrha
 
         public IEnumerator<DBObject> GetEnumerator()
         {
-            return this._openObjects.Values.GetEnumerator();
+            return OpenObjects.Values.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return this.GetEnumerator();
+            return GetEnumerator();
         }
 
         #endregion
@@ -102,7 +195,8 @@ namespace Pyrrha
 
         public int GetHashCode(DBObject obj)
         {
-            return obj.GetHashCode();
+            // Hashing off the (Long) handle might be better
+            return obj.Handle.GetHashCode();
         }
 
         #endregion
@@ -113,18 +207,22 @@ namespace Pyrrha
 
         public void Dispose()
         {
-            this._transaction.Commit();
-            this._transaction.Dispose();
-            _openObjects.Clear();
-            Dispose( true );
+            Dispose(true);
         }
 
-        public void Dispose(bool isDisposing)
+        protected void Dispose(bool isDisposing)
         {
             if (!isDisposing || _disposed)
                 return;
+
+            foreach (var trans in Transactions)
+                trans.Dispose();
+
+            foreach (var obj in OpenObjects.Values.Where(obj => obj != null))
+                obj.Close();
+                
             _disposed = true;
-            GC.SuppressFinalize( this );
+            GC.SuppressFinalize(this);
         }
 
         #endregion

@@ -2,9 +2,11 @@
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
@@ -21,7 +23,7 @@ using AcApp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace Pyrrha
 {
-    public sealed class PyrrhaDocument : MarshalByRefObject , IDisposable
+    public sealed partial class PyrrhaDocument : MarshalByRefObject , IDisposable
     {
         #region Properties
 
@@ -139,7 +141,6 @@ namespace Pyrrha
         {
             ObjectManager.CommitAll();
         }
-
         #endregion
 
         #region Autocad Document Implementation
@@ -426,3 +427,4 @@ namespace Pyrrha
         #endregion
     }
 }
+

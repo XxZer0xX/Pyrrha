@@ -111,8 +111,11 @@ namespace Pyrrha.Scripting.AutoCad
 
                     ValidatedCode = LoadedFromCommandLine(response.StringResult);
 
-                    if (string.IsNullOrEmpty(ValidatedCode))
-                        return;
+                    if ( !string.IsNullOrEmpty( ValidatedCode ) )
+                        continue;
+
+                    this.DisposeScriptingInstanceDocument();
+                    return;
                 }
 
                 SessionPythonEngine.Runtime.Shutdown();
@@ -123,9 +126,14 @@ namespace Pyrrha.Scripting.AutoCad
             {
                 StaticExtenstions.WriteToActiveDocument(
                         string.Format("\nMessage: {0}\nSource:{1}", e.Message, e.Source));
-                return;
+                DisposeScriptingInstanceDocument();
             }
+        }
 
+        private void DisposeScriptingInstanceDocument()
+        {
+            var doc = PyrrhaHosting.InstanceScope.GetVariable("self");
+            doc.Dispose();
         }
 
         private string LoadedFromCommandLine(string code)

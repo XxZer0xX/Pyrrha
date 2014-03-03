@@ -89,7 +89,7 @@ namespace Pyrrha.Collections
         {
             using (var iter = RecordTable.GetEnumerator())
             {
-                int i = 0;
+                int i = -1;
                 while (i++ != index)
                     iter.MoveNext();
 
@@ -101,6 +101,7 @@ namespace Pyrrha.Collections
             var id = RecordTable[recordName];
             return GetRecord(id);
         }
+
         private int GetCount()
         {
             int result = 0;

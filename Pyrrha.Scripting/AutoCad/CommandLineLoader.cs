@@ -89,38 +89,36 @@ namespace Pyrrha.Scripting.AutoCad
 
         private ScriptEngine SessionPythonEngine;
 
+        private void setScriptingCommandEvents()
+        {
+            AcApp.DocumentManager.MdiActiveDocument.BeginDocumentClose += (s,a) => this.DisposeScriptingInstanceDocument();
+        }
+
+        private void disolveScriptingCommandEvents()
+        {
+            AcApp.DocumentManager.MdiActiveDocument.BeginDocumentClose -= (s, a) => this.DisposeScriptingInstanceDocument();
+        }
+
         [CommandMethod("pystart")]
         public void StartPythonScripting()
         {
+            setScriptingCommandEvents();
+
             try
             {
                 SessionPythonEngine = PyrrhaHosting.CreateEngine();
                 var commandEcho = AcApp.GetSystemVariable("CMDECHO");
                 AcApp.SetSystemVariable("CMDECHO", 0);
+                StaticExtenstions.WriteToActiveDocument("Python Compiler Initialized...\n");
 
-                string ValidatedCode = string.Empty;
-                AcApp.DocumentManager.MdiActiveDocument.Editor.WriteMessage("Python Compiler Initialized... Enter Python code.\n");
-                while (!ValidatedCode.Equals("pyexecute"))
-                {
-                    var promptOptions = new PromptStringOptions(">>> ") { AllowSpaces = true };
-
-                    var response = AcApp.DocumentManager.MdiActiveDocument.Editor.GetString(promptOptions);
-
-                    if (string.IsNullOrEmpty(response.StringResult))
-                        return;
-
-                    ValidatedCode = LoadedFromCommandLine(response.StringResult);
-
-                    if ( !string.IsNullOrEmpty( ValidatedCode ) )
-                        continue;
-
-                    this.DisposeScriptingInstanceDocument();
-                    return;
-                }
+                SourceAccumulate();
 
                 SessionPythonEngine.Runtime.Shutdown();
                 AcApp.SetSystemVariable("CMDECHO", commandEcho);
+                disolveScriptingCommandEvents();
+                this.DisposeScriptingInstanceDocument();
                 CopyCodeToFile_RequestSave();
+                
             }
             catch (Exception e)
             {
@@ -130,13 +128,39 @@ namespace Pyrrha.Scripting.AutoCad
             }
         }
 
+        private void SourceAccumulate()
+        {
+            KeyValuePair<string, object>? validatedCode = null; 
+            while (validatedCode == null || !validatedCode.Value.Key.Equals("end"))
+            {
+                var promptOptions = new PromptStringOptions(">>> ") { AllowSpaces = true };
+
+                var response = AcApp.DocumentManager.MdiActiveDocument.Editor.GetString(promptOptions);
+
+                if (response.Status != PromptStatus.OK)
+                    this.DisposeScriptingInstanceDocument();
+                    
+                validatedCode = LoadedFromCommandLine(response.StringResult);
+
+                if (!validatedCode.HasValue )
+                    continue;
+
+                if (!validatedCode.Value.Key.Equals("end"))
+                {
+                    PyrrhaHosting.InstanceScope.SetVariable(validatedCode.Value.Key, validatedCode.Value.Value);
+                    continue;
+                }  
+            }
+        }
+
         private void DisposeScriptingInstanceDocument()
         {
             var doc = PyrrhaHosting.InstanceScope.GetVariable("self");
+            disolveScriptingCommandEvents();
             doc.Dispose();
         }
 
-        private string LoadedFromCommandLine(string code)
+        private KeyValuePair<string,object>? LoadedFromCommandLine(string code)
         {
             var errorListener = new ComplieTimeErrorListener();
             var compiledcode = SessionPythonEngine.CreateScriptSourceFromString(code).Compile(errorListener);
@@ -152,9 +176,15 @@ namespace Pyrrha.Scripting.AutoCad
                 return null;
             }
 
-            SessionPythonEngine.Execute(code, PyrrhaHosting.InstanceScope);
+            string scopeKey = null;
+            KeyValuePair<string, object>? scopeVarible;
 
-            return code;
+             if (code.Contains("="))
+                 scopeKey = code.Split('=')[0].Replace(" ", string.Empty);
+
+            var scopeObj = SessionPythonEngine.Execute(code, PyrrhaHosting.InstanceScope);
+            SessionCodeRepo.Enqueue(code);
+            return scopeObj == null ? null : (scopeVarible = new KeyValuePair<string, object>(scopeKey, (object)scopeObj));
         }
 
         internal string tempFilePath = string.Format(@"{0}\local\temp\PyrrhaScriptsTempFolder\{1}_{2}.py", Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), Environment.UserName, DateTime.Now.ToString().Replace('\\', ('_')));

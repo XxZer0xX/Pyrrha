@@ -14,14 +14,16 @@ namespace Pyrrha.Scripting.Runtime
     {
         internal static ScriptScope InstanceScope { get; set; }
 
+        internal static ScriptEngine PyrrhaEngine { get; set; }
+
         public static ScriptEngine CreateEngine()
         {
-            var engine = Python.CreateEngine();
-            engine.Runtime.LoadAssembly(typeof(Autodesk.AutoCAD.DatabaseServices.DBObject).Assembly);
-            engine.Runtime.LoadAssembly(typeof(Application).Assembly);
-            InstanceScope = engine.CreateScope(new Dictionary<string, object>());
+            PyrrhaEngine = Python.CreateEngine();
+            PyrrhaEngine.Runtime.LoadAssembly(typeof(Autodesk.AutoCAD.DatabaseServices.DBObject).Assembly);
+            PyrrhaEngine.Runtime.LoadAssembly(typeof(Application).Assembly);
+            InstanceScope = PyrrhaEngine.CreateScope(new Dictionary<string, object>());
             InstanceScope.SetVariable("self", new PyrrhaDocument());
-            return engine;
+            return PyrrhaEngine;
         }
     }
 }

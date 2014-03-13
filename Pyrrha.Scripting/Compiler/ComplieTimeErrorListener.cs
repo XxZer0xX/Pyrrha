@@ -12,7 +12,7 @@ namespace Pyrrha.Scripting.Compiler
 {
     public class ComplieTimeErrorListener : ErrorListener
     {
-        public IList<ErrorData> ErrorDataList { get; set; }
+        public IList<ErrorData> ErrorData { get; set; }
         public bool FoundError { get; set; }
 
         public override void ErrorReported(
@@ -24,7 +24,7 @@ namespace Pyrrha.Scripting.Compiler
         {
             this.FoundError = true;
 
-            this.ErrorDataList.Add(new ErrorData
+            this.ErrorData.Add(new ErrorData
             {
                 Message = message,
                 Span = span,
@@ -36,7 +36,7 @@ namespace Pyrrha.Scripting.Compiler
 
         public ComplieTimeErrorListener()
         {
-            this.ErrorDataList = new List<ErrorData>();
+            this.ErrorData = new List<ErrorData>();
         }
     }
 }

@@ -16,7 +16,7 @@ namespace Pyrrha.Collections
         private bool _disposed;
         private readonly ObjectId _tableId;
 
-        protected TTable RecordTable
+        internal TTable RecordTable
         {
             get { return _recordTable ?? (_recordTable = GetRecordTable()); }
             set { _recordTable = value; }
@@ -32,6 +32,11 @@ namespace Pyrrha.Collections
         public int Count
         {
             get { return GetCount(); }
+        }
+
+        public bool Has(string record)
+        {
+            return RecordTable.Has(record);
         }
 
         public bool IsReadOnly
@@ -66,6 +71,11 @@ namespace Pyrrha.Collections
             set { SetIndex(value); }
         }
 
+        public TRecord this[ObjectId id]
+        {
+            get { return GetRecord(id); }
+        }
+
         #endregion
 
         #region Constructor
@@ -84,6 +94,11 @@ namespace Pyrrha.Collections
         #endregion
 
         #region Methods
+
+        private TRecord GetIndex(ObjectId id)
+        {
+            throw new NotImplementedException();
+        }
 
         private TRecord GetIndex(int index)
         {

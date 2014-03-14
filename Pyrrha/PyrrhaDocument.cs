@@ -3,11 +3,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Drawing;
+
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.GraphicsSystem;
@@ -17,13 +18,15 @@ using Autodesk.AutoCAD.Windows.Data;
 using Pyrrha.Collections;
 
 using AcApp = Autodesk.AutoCAD.ApplicationServices.Application;
+using Autodesk.AutoCAD.Geometry;
+using Pyrrha.Attributes;
 
 #endregion
 //#pragma warning disable 612,618
 
 namespace Pyrrha
 {
-    public sealed partial class PyrrhaDocument : MarshalByRefObject , IDisposable
+    public sealed partial class PyrrhaDocument : MarshalByRefObject, IDisposable
     {
         #region Properties
 
@@ -35,6 +38,7 @@ namespace Pyrrha
         }
         private DocumentManager _documentManager;
 
+        [Scripting]
         public OpenObjectManager ObjectManager
         {
             get
@@ -58,10 +62,11 @@ namespace Pyrrha
             get
             {
                 return null;// (BlockTableRecord)ObjectManager.GetObject(
-                     //SymbolUtilityServices.GetBlockPaperSpaceId(Database));     
+                //SymbolUtilityServices.GetBlockPaperSpaceId(Database));     
             }
         }
 
+        [Scripting]
         public LayerCollection Layers
         {
             get { return _layers ?? (_layers = new LayerCollection(this, OpenMode.ForWrite)); }
@@ -69,6 +74,7 @@ namespace Pyrrha
         }
         private LayerCollection _layers;
 
+        [Scripting]
         public TextStyleCollection TextStyles
         {
             get { return _textstyles ?? (_textstyles = new TextStyleCollection(this, OpenMode.ForWrite)); }
@@ -76,6 +82,7 @@ namespace Pyrrha
         }
         private TextStyleCollection _textstyles;
 
+        [Scripting]
         public LinetypeCollection Linetypes
         {
             get { return _linetypes ?? (_linetypes = new LinetypeCollection(this, OpenMode.ForWrite)); }
@@ -88,21 +95,21 @@ namespace Pyrrha
         #region Constructors
 
         public PyrrhaDocument()
-            : this(AcApp.DocumentManager.MdiActiveDocument) {}
+            : this(AcApp.DocumentManager.MdiActiveDocument) { }
 
         public PyrrhaDocument(string path)
             : this(FindDocument(path)) { }
 
         public PyrrhaDocument(Func<Document> func)
-            : this(func()) {}
+            : this(func()) { }
 
-        private PyrrhaDocument( Document doc )
+        private PyrrhaDocument(Document doc)
         {
-            if ( doc == null )
-                throw new NullReferenceException( "Document is null." );
+            if (doc == null)
+                throw new NullReferenceException("Document is null.");
             //PyrrhaException.IsScriptSource = Thread.CurrentThread.IsScriptSource();
             BaseDocument = doc;
-            DocumentManager.AddDocument( this );
+            DocumentManager.AddDocument(this);
         }
 
         // This is safer because it actually checks full drawing paths.
@@ -137,10 +144,178 @@ namespace Pyrrha
 
         #region Methods
 
+        [Scripting]
         public void ConfirmAllChanges()
         {
             ObjectManager.CommitAll();
         }
+
+        #endregion
+
+        #region Scripting Methods
+
+        #region Editor
+
+        [Scripting]
+        public void Print(object message)
+        {
+            Editor.WriteMessage(string.Format("\n{0}\n", message));
+        }
+
+        [Scripting]
+        public double? GetDistance() 
+        {
+            return GetDistance("\nPlease select two points: ");
+        }
+
+        [Scripting]
+        public double? GetDistance(string message) 
+        {
+            var result = Editor.GetDistance(message);
+            return result.Status.Equals(PromptStatus.OK) ? new double?(result.Value) : null;
+        }
+
+        [Scripting]
+        public double? GetDouble() 
+        {
+            return GetDouble("\nPlease input number: ");
+        }
+
+        [Scripting]
+        public double? GetDouble(string message) 
+        {
+            var result = Editor.GetDouble(message);
+            return result.Status.Equals(PromptStatus.OK) ? new double?(result.Value) : null;
+        }
+        [Scripting]
+        public Entity GetEntity() 
+        {
+            throw new NotImplementedException();
+        }
+        [Scripting]
+        public Entity GetEntity(string message)
+        {
+            throw new NotImplementedException();
+        }
+        [Scripting]
+        public string GetFileNameForOpen() 
+        {
+            return GetFileNameForOpen("\nPlease select file to open: ");
+        }
+        [Scripting]
+        public string GetFileNameForOpen(string message) 
+        {
+            return Editor.GetFileNameForOpen(message).StringResult;
+        }
+        [Scripting]
+        public string GetFileNameForSave()
+        {
+            return GetFileNameForOpen("\nPlease input file path: ");
+        }
+        [Scripting]
+        public string GetFileNameForSave(string message)
+        {
+            return Editor.GetFileNameForSave(message).StringResult;
+        }
+        [Scripting]
+        public int? GetInteger() 
+        {
+            return GetInteger("\nPlease input number: ");
+        }
+        [Scripting]
+        public int? GetInteger(string message)
+        {
+            var result = Editor.GetInteger(message);
+            return result.Status.Equals(PromptStatus.OK) ? new int?(result.Value) : null;
+        }
+
+        //public PromptNestedEntityResult GetNestedEntity(PromptNestedEntityOptions options) { return null; }
+        //public PromptNestedEntityResult GetNestedEntity(string message) { return null; }
+        [Scripting]
+        public Point3d? GetPoint( ) 
+        {
+            return GetPoint("\nPlease select point: ");
+        }
+        [Scripting]
+        public Point3d? GetPoint(string message) 
+        {
+            var result = Editor.GetPoint(message);
+            return result.Status.Equals(PromptStatus.OK) ? new Point3d?(result.Value) : null;
+        }
+        [Scripting]
+        public string GetString( ) 
+        {
+            return GetString("\nPlease input string: "); 
+        }
+        [Scripting]
+        public string GetString(string message)
+        {
+            return Editor.GetString(message).StringResult;
+        }
+
+        #endregion
+
+        #region Layer
+        [Scripting]
+        public LayerTableRecord createlayer(string name)
+        {
+            var curlayer = Layers[Database.Clayer];
+            return createlayer(name, curlayer.Color.ColorIndex , "Contenuous");
+        }
+        [Scripting]
+        public LayerTableRecord createlayer(string name, short colorIndex)
+        {
+            return createlayer(name, colorIndex, "Contenuous");
+        }
+        [Scripting]
+        public LayerTableRecord createlayer(string name, short colorIndex, string linetype)
+        {
+            var color = Color.FromColorIndex(ColorMethod.ByAci, colorIndex);
+            return _createLayer(name, color,_getLinetypeId(linetype));
+        }
+
+        private LayerTableRecord _createLayer(string name, Color color, ObjectId linetypeId)
+        {
+            if (!Layers.Has(name))
+                using (var transaction = ObjectManager.AddTransaction())
+                {
+                    var newRecord = new LayerTableRecord()
+                    {
+                        Name = name,
+                        Color = color,
+                        LinetypeObjectId = linetypeId
+                    };
+
+                    Layers.RecordTable.Add(newRecord);
+                    transaction.AddNewlyCreatedDBObject(newRecord, true);
+                    transaction.Commit();
+                }
+
+            return Layers[name];
+        }
+
+        [Scripting]
+        public bool LayerExists(string name)
+        {
+            return Layers.Has(name);
+        }
+
+        #endregion
+
+        #endregion
+
+        #region Private Supporting Methods
+
+        private ObjectId _getLinetypeId(string linetypeName)
+        {
+            if (!Linetypes.Has(linetypeName))
+            {
+                Linetypes.RecordTable.Dispose();
+                Database.LoadLineTypeFile(linetypeName, "acad.lin");
+            }
+            return Linetypes[linetypeName].ObjectId;
+        }
+
         #endregion
 
         #region Autocad Document Implementation
@@ -157,16 +332,19 @@ namespace Pyrrha
             get { return BaseDocument.CommandInProgress; }
         }
 
+        [Scripting]
         public Database Database
         {
             get { return BaseDocument.Database; }
         }
 
+        [Scripting]
         public Editor Editor
         {
             get { return BaseDocument.Editor; }
         }
 
+        [Scripting]
         public Manager GraphicsManager
         {
             get { return BaseDocument.GraphicsManager; }
@@ -177,11 +355,13 @@ namespace Pyrrha
             get { return BaseDocument.IsActive; }
         }
 
+        [Scripting]
         public bool IsReadOnly
         {
             get { return BaseDocument.IsReadOnly; }
         }
 
+        [Scripting]
         public string Name
         {
             get { return BaseDocument.Name; }
@@ -206,45 +386,48 @@ namespace Pyrrha
 
         #region Methods
 
-        public Bitmap CapturePreviewImage( uint width, uint height )
+        public System.Drawing.Bitmap CapturePreviewImage(int width, int height)
         {
-            return BaseDocument.CapturePreviewImage( width, height );
+            return BaseDocument.CapturePreviewImage((uint)width, (uint)height);
         }
 
+        [Scripting(Name = "close")]
         public void CloseAndDiscard()
         {
             BaseDocument.CloseAndDiscard();
         }
 
-        public void CloseAndSave( string fileName )
+        [Scripting(Name = "save")]
+        public void CloseAndSave()
         {
-            BaseDocument.CloseAndSave( fileName );
+            BaseDocument.CloseAndSave(Name);
         }
 
-        public static Document Create( IntPtr unmanagedPointer )
+        public static Document Create(IntPtr unmanagedPointer)
         {
-            return Document.Create( unmanagedPointer );
+            return Document.Create(unmanagedPointer);
         }
 
-        public void DowngradeDocOpen( bool bPromptForSave )
+        public void DowngradeDocOpen(bool bPromptForSave)
         {
-            BaseDocument.DowngradeDocOpen( bPromptForSave );
+            BaseDocument.DowngradeDocOpen(bPromptForSave);
         }
 
-        public static Document FromAcadDocument( object acadDocument )
+        public static Document FromAcadDocument(object acadDocument)
         {
-            return Document.FromAcadDocument( acadDocument );
+            return Document.FromAcadDocument(acadDocument);
         }
 
+        [Scripting]
         public DocumentLock LockDocument()
         {
             return BaseDocument.LockDocument();
         }
 
-        public DocumentLock LockDocument( DocumentLockMode lockMode, string globalCommandName, string localCommandName,
-            bool promptIfFails )
+        public DocumentLock LockDocument(DocumentLockMode lockMode, string globalCommandName, string localCommandName,
+            bool promptIfFails)
         {
-            return BaseDocument.LockDocument( lockMode, globalCommandName, localCommandName, promptIfFails );
+            return BaseDocument.LockDocument(lockMode, globalCommandName, localCommandName, promptIfFails);
         }
 
         public DocumentLockMode LockMode()
@@ -252,9 +435,9 @@ namespace Pyrrha
             return BaseDocument.LockMode();
         }
 
-        public DocumentLockMode LockMode( bool bIncludeMyLocks )
+        public DocumentLockMode LockMode(bool bIncludeMyLocks)
         {
-            return BaseDocument.LockMode( bIncludeMyLocks );
+            return BaseDocument.LockMode(bIncludeMyLocks);
         }
 
         public void PopDbmod()
@@ -267,9 +450,9 @@ namespace Pyrrha
             BaseDocument.PushDbmod();
         }
 
-        public void SendStringToExecute( string command, bool activate, bool wrapUpInactiveDoc, bool echoCommand )
+        public void SendStringToExecute(string command, bool activate, bool wrapUpInactiveDoc, bool echoCommand)
         {
-            BaseDocument.SendStringToExecute( command, activate, wrapUpInactiveDoc, echoCommand );
+            BaseDocument.SendStringToExecute(command, activate, wrapUpInactiveDoc, echoCommand);
         }
 
         public Database TryGetDatabase()
@@ -390,7 +573,7 @@ namespace Pyrrha
         public void Dispose()
         {
             if (_beginDocumentDispose != null)
-                _beginDocumentDispose(this , new EventArgs());
+                _beginDocumentDispose(this, new EventArgs());
 
             ObjectManager.Dispose();
         }
@@ -410,7 +593,7 @@ namespace Pyrrha
 
         internal bool Equals(PyrrhaDocument other)
         {
-            return Equals(BaseDocument, other.BaseDocument) 
+            return Equals(BaseDocument, other.BaseDocument)
                 && Equals(_objectManager, other._objectManager);
         }
 

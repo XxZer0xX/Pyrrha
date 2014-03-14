@@ -62,10 +62,12 @@
     <Compile Include="Util\PyrrhaScriptingMethods.cs" />
     <Compile Include="Util\Query\EntityQuery.cs" />
     <Compile Include="Util\StaticExtenstions.cs" />
-    <Compile Include="Util\StaticPyrrhaMethods.cs" />
     <Compile Include="Util\TypeExtenstions\DbObject.cs" />
     <Compile Include="Util\TypeExtenstions\Entity.cs" />
     <Compile Include="Util\TypeExtenstions\SymbolTableRecord.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Attributes\ScriptingAttribute.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

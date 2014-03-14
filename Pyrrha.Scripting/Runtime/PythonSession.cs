@@ -47,7 +47,8 @@ namespace Pyrrha.Scripting.Runtime
             try
             {
                 SourceAccumulate();
-                CopyCodeToFile_RequestSave();
+                if(!EncounterdErrors)
+                    CopyCodeToFile_RequestSave();
 
             }
             catch (Exception e)
@@ -60,7 +61,7 @@ namespace Pyrrha.Scripting.Runtime
 
         private void SourceAccumulate()
         {
-            while (true)
+            for (;;)
             {
                 var promptOptions = new PromptStringOptions(">>> ") { AllowSpaces = true };
 

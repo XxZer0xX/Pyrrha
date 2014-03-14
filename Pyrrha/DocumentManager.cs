@@ -35,7 +35,7 @@ namespace Pyrrha
                 // This might not save to the right location.
                 // I think we should add extensions for 
                 // Save() and Close() from the AcadDocument.
-                doc.CloseAndSave(doc.Name);
+                doc.CloseAndSave();
             }
         }
 

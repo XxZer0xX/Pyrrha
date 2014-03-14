@@ -13,6 +13,7 @@ using Microsoft.Scripting;
 using Microsoft.Scripting.Hosting;
 using Pyrrha.Scripting.Compiler;
 using Pyrrha.Util;
+using Pyrrha.Attributes;
 
 #endregion
 
@@ -37,7 +38,7 @@ namespace Pyrrha.Scripting.Runtime
         private ComplieTimeErrorListener _errorListener;
         public ComplieTimeErrorListener ErrorListener
         {
-            get { return _errorListener ?? ( _errorListener = new ComplieTimeErrorListener() ); }
+            get { return _errorListener ?? (_errorListener = new ComplieTimeErrorListener()); }
         }
 
         public ScriptScope CurrentScope
@@ -52,11 +53,28 @@ namespace Pyrrha.Scripting.Runtime
             Runtime.LoadAssembly(typeof(Application).Assembly);
             Runtime.LoadAssembly(typeof(Autodesk.AutoCAD.DatabaseServices.DBObject).Assembly);
 
-            this.Scopes = new Dictionary<string , ScriptScope>
+            var initalScope = new Dictionary<string, object> { { "self", this.LinkedDocument = new PyrrhaDocument() } };
+
+            foreach (var obj in LinkedDocument.GetType().GetProperties().Where(
+             prop => prop.GetCustomAttributes(typeof(ScriptingAttribute), true).Length != 0))
+                initalScope.Add(obj.Name, obj.GetValue(LinkedDocument, null));
+
+
+            // 
+            // invoking methods Reflection.
+            //
+
+            //foreach (var obj in LinkedDocument.GetType().GetMethods().Where(
+            // method => method.GetCustomAttributes(typeof(ScriptingAttribute), true).Length != 0))
+            //    initalScope.Add(obj.Name.ToLower(), obj.);
+
+
+
+            this.Scopes = new Dictionary<string, ScriptScope>
             {
                 {
                     CurrentScopeName = "initial" ,
-                    this._engine.CreateScope( new Dictionary<string , object> { { "self" , this.LinkedDocument = new PyrrhaDocument() } } )
+                    this._engine.CreateScope( initalScope )
                 }
             };
 
@@ -65,14 +83,14 @@ namespace Pyrrha.Scripting.Runtime
             LinkedDocument.Editor.WriteMessage("Python Compiler Initialized...\n");
         }
 
-        public CompiledCode Compile( string code )
+        public CompiledCode Compile(string code)
         {
-            return _engine.CreateScriptSourceFromString( code , SourceCodeKind.AutoDetect ).Compile( ErrorListener );
+            return _engine.CreateScriptSourceFromString(code, SourceCodeKind.AutoDetect).Compile(ErrorListener);
         }
 
-        public CompiledCode Compile( ScriptSource source )
+        public CompiledCode Compile(ScriptSource source)
         {
-            return source.Compile( ErrorListener );
+            return source.Compile(ErrorListener);
         }
 
         public void SetCurrentScope(string scopeName)
@@ -80,10 +98,10 @@ namespace Pyrrha.Scripting.Runtime
             this.CurrentScopeName = scopeName;
         }
 
-        public dynamic ExecuteInNewScope( string expression, string newScopeName )
+        public dynamic ExecuteInNewScope(string expression, string newScopeName)
         {
-            Scopes.Add( newScopeName , _engine.CreateScope() );
-            return Execute( expression , newScopeName );
+            Scopes.Add(newScopeName, _engine.CreateScope());
+            return Execute(expression, newScopeName);
         }
 
         public T ExecuteInNewScope<T>(string expression, string newScopeName)
@@ -92,19 +110,19 @@ namespace Pyrrha.Scripting.Runtime
             return Execute<T>(expression, newScopeName);
         }
 
-        public dynamic Execute( CompiledCode code )
+        public dynamic Execute(CompiledCode code)
         {
-            return code.Execute( CurrentScope );
+            return code.Execute(CurrentScope);
         }
 
-        public dynamic Execute( string expression )
+        public dynamic Execute(string expression)
         {
-            return this._engine.Execute( expression , CurrentScope );
+            return this._engine.Execute(expression, CurrentScope);
         }
 
         public dynamic Execute(string expression, string scopeName)
         {
-            return this.Execute( expression , this.Scopes[scopeName] );
+            return this.Execute(expression, this.Scopes[scopeName]);
         }
 
         public dynamic Execute(string expression, ScriptScope scope)
@@ -132,9 +150,9 @@ namespace Pyrrha.Scripting.Runtime
             return this._engine.ExecuteFile(path, CurrentScope);
         }
 
-        public ScriptScope ExecuteFile( string path , string scopeName )
+        public ScriptScope ExecuteFile(string path, string scopeName)
         {
-            return this._engine.ExecuteFile( path , this.Scopes[scopeName] );
+            return this._engine.ExecuteFile(path, this.Scopes[scopeName]);
         }
 
         public ScriptScope ExecuteFile(string path, ScriptScope scope)
@@ -327,12 +345,12 @@ namespace Pyrrha.Scripting.Runtime
 
         public void Dispose()
         {
-            this.Dispose( true );
+            this.Dispose(true);
         }
 
-        private void Dispose( bool disposing )
+        private void Dispose(bool disposing)
         {
-            if ( !disposing || this._isDisposed )
+            if (!disposing || this._isDisposed)
                 return;
 
             Application.SetSystemVariable("CMDECHO", _commandEcho);

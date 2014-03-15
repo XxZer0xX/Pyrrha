@@ -1,8 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.21005.1
-MinimumVisualStudioVersion = 10.0.40219.1
+# Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pyrrha", "Pyrrha\Pyrrha.csproj", "{0C1311D2-6FC4-46AD-B1EC-0C3357AE34F4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharp_Testing", "CSharp_Testing\CSharp_Testing.csproj", "{DCE79769-C007-415B-B806-0F27F23A8DAB}"

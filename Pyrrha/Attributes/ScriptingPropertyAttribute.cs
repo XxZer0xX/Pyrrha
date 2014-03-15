@@ -5,10 +5,10 @@ using System.Text;
 
 namespace Pyrrha.Attributes
 {
-    public class ScriptingAttribute : Attribute
+    public class ScriptingPropertyAttribute : Attribute
     {
 		public string Name;
 
-        public ScriptingAttribute() { }
+        public ScriptingPropertyAttribute() { }
     }
 }

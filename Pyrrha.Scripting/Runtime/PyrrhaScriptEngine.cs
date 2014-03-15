@@ -5,6 +5,7 @@ using System.CodeDom;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.Remoting;
 using System.Text;
 using Autodesk.AutoCAD.ApplicationServices;
@@ -56,7 +57,7 @@ namespace Pyrrha.Scripting.Runtime
             var initalScope = new Dictionary<string, object> { { "self", this.LinkedDocument = new PyrrhaDocument() } };
 
             foreach (var obj in LinkedDocument.GetType().GetProperties().Where(
-             prop => prop.GetCustomAttributes(typeof(ScriptingAttribute), true).Length != 0))
+             prop => prop.GetCustomAttributes(typeof(ScriptingPropertyAttribute), true).Length != 0))
                 initalScope.Add(obj.Name, obj.GetValue(LinkedDocument, null));
 
 
@@ -64,9 +65,36 @@ namespace Pyrrha.Scripting.Runtime
             // invoking methods Reflection.
             //
 
-            //foreach (var obj in LinkedDocument.GetType().GetMethods().Where(
-            // method => method.GetCustomAttributes(typeof(ScriptingAttribute), true).Length != 0))
-            //    initalScope.Add(obj.Name.ToLower(), obj.);
+            foreach (var obj in LinkedDocument.GetType().GetMethods().Where(
+                            method => method.GetCustomAttributes(typeof(ScriptingVoidAttribute), true).Length != 0
+                            && method.GetCustomAttributes(typeof(ScriptingFuncAttribute), true).Length != 0))
+            {
+
+                Delegate method;
+
+                switch ( obj.GetParameters().Count() )
+                {
+                    case 1:
+                        method = obj.ReturnType == typeof(void)
+                            ? new Func<object,dynamic>(param => obj.Invoke(LinkedDocument, new [] { param }))
+                            : (Delegate) new Action<object>(param => obj.Invoke(LinkedDocument, new [] { param }));
+                        break;
+                    case 2:
+                        method = obj.ReturnType == typeof(void)
+                            ? new Func<object,object, dynamic>((param1, param2) => obj.Invoke(LinkedDocument, new[] { param1, param2 }))
+                            : (Delegate)new Action<object>(param => obj.Invoke(LinkedDocument, new[] { param }));
+                        break;
+                    case 3:
+                        method = obj.ReturnType == typeof(void)
+                            ? new Func<object, object, object, dynamic>((param1, param2, param3) => obj.Invoke(LinkedDocument, new[] { param1, param2, param3 }))
+                            : (Delegate)new Action<object>(param => obj.Invoke(LinkedDocument, new[] { param }));
+                        break;
+                    default:
+                        throw new NotImplementedException();
+                }
+                initalScope.Add(obj.Name.ToLower(), method);
+            }
+
 
 
 

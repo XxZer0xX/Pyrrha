@@ -1,32 +1,26 @@
 ﻿#region Referencing
 
-using System;
-using System.Collections;
-using System.Collections.Generic;
-
-using System.IO;
-using System.Linq;
-using System.Reflection;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
+using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.GraphicsSystem;
-using Autodesk.AutoCAD.Runtime;
 using Autodesk.AutoCAD.Windows;
 using Autodesk.AutoCAD.Windows.Data;
-using Pyrrha.Collections;
-
-using AcApp = Autodesk.AutoCAD.ApplicationServices.Application;
-using Autodesk.AutoCAD.Geometry;
 using Pyrrha.Attributes;
+using Pyrrha.Collections;
+using System;
+using System.Collections;
+using System.IO;
+using AcApp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 #endregion
 //#pragma warning disable 612,618
 
 namespace Pyrrha
 {
-    public sealed partial class PyrrhaDocument : MarshalByRefObject, IDisposable
+    public sealed class PyrrhaDocument : MarshalByRefObject, IDisposable
     {
         #region Properties
 
@@ -38,7 +32,7 @@ namespace Pyrrha
         }
         private DocumentManager _documentManager;
 
-        [Scripting]
+        [ScriptingProperty]
         public OpenObjectManager ObjectManager
         {
             get
@@ -66,7 +60,7 @@ namespace Pyrrha
             }
         }
 
-        [Scripting]
+        [ScriptingProperty]
         public LayerCollection Layers
         {
             get { return _layers ?? (_layers = new LayerCollection(this, OpenMode.ForWrite)); }
@@ -74,7 +68,7 @@ namespace Pyrrha
         }
         private LayerCollection _layers;
 
-        [Scripting]
+        [ScriptingProperty]
         public TextStyleCollection TextStyles
         {
             get { return _textstyles ?? (_textstyles = new TextStyleCollection(this, OpenMode.ForWrite)); }
@@ -82,7 +76,7 @@ namespace Pyrrha
         }
         private TextStyleCollection _textstyles;
 
-        [Scripting]
+        [ScriptingProperty]
         public LinetypeCollection Linetypes
         {
             get { return _linetypes ?? (_linetypes = new LinetypeCollection(this, OpenMode.ForWrite)); }
@@ -144,7 +138,7 @@ namespace Pyrrha
 
         #region Methods
 
-        [Scripting]
+        [ScriptingVoid]
         public void ConfirmAllChanges()
         {
             ObjectManager.CommitAll();
@@ -156,73 +150,81 @@ namespace Pyrrha
 
         #region Editor
 
-        [Scripting]
+        [ScriptingVoid]
         public void Print(object message)
         {
             Editor.WriteMessage(string.Format("\n{0}\n", message));
         }
 
-        [Scripting]
+        [ScriptingFunc]
         public double? GetDistance() 
         {
             return GetDistance("\nPlease select two points: ");
         }
 
-        [Scripting]
+        [ScriptingFunc]
         public double? GetDistance(string message) 
         {
             var result = Editor.GetDistance(message);
             return result.Status.Equals(PromptStatus.OK) ? new double?(result.Value) : null;
         }
 
-        [Scripting]
+        [ScriptingFunc]
         public double? GetDouble() 
         {
             return GetDouble("\nPlease input number: ");
         }
 
-        [Scripting]
+        [ScriptingFunc]
         public double? GetDouble(string message) 
         {
             var result = Editor.GetDouble(message);
             return result.Status.Equals(PromptStatus.OK) ? new double?(result.Value) : null;
         }
-        [Scripting]
+
+        [ScriptingFunc]
         public Entity GetEntity() 
         {
             throw new NotImplementedException();
         }
-        [Scripting]
+
+        [ScriptingFunc]
         public Entity GetEntity(string message)
         {
             throw new NotImplementedException();
         }
-        [Scripting]
+
+        [ScriptingFunc]
         public string GetFileNameForOpen() 
         {
             return GetFileNameForOpen("\nPlease select file to open: ");
         }
-        [Scripting]
+
+        [ScriptingFunc]
         public string GetFileNameForOpen(string message) 
         {
             return Editor.GetFileNameForOpen(message).StringResult;
         }
-        [Scripting]
+
+        [ScriptingFunc]
         public string GetFileNameForSave()
         {
             return GetFileNameForOpen("\nPlease input file path: ");
         }
-        [Scripting]
+
+        [ScriptingFunc]
         public string GetFileNameForSave(string message)
         {
             return Editor.GetFileNameForSave(message).StringResult;
         }
-        [Scripting]
+
+        [ScriptingFunc]
         public int? GetInteger() 
         {
             return GetInteger("\nPlease input number: ");
         }
-        [Scripting]
+
+        [ScriptingFunc]
         public int? GetInteger(string message)
         {
             var result = Editor.GetInteger(message);
@@ -231,23 +233,23 @@ namespace Pyrrha
 
         //public PromptNestedEntityResult GetNestedEntity(PromptNestedEntityOptions options) { return null; }
         //public PromptNestedEntityResult GetNestedEntity(string message) { return null; }
-        [Scripting]
+        [ScriptingFunc]
         public Point3d? GetPoint( ) 
         {
             return GetPoint("\nPlease select point: ");
         }
-        [Scripting]
+        [ScriptingFunc]
         public Point3d? GetPoint(string message) 
         {
             var result = Editor.GetPoint(message);
             return result.Status.Equals(PromptStatus.OK) ? new Point3d?(result.Value) : null;
         }
-        [Scripting]
+        [ScriptingFunc]
         public string GetString( ) 
         {
             return GetString("\nPlease input string: "); 
         }
-        [Scripting]
+        [ScriptingFunc]
         public string GetString(string message)
         {
             return Editor.GetString(message).StringResult;
@@ -256,18 +258,18 @@ namespace Pyrrha
         #endregion
 
         #region Layer
-        [Scripting]
+        [ScriptingFunc]
         public LayerTableRecord createlayer(string name)
         {
             var curlayer = Layers[Database.Clayer];
             return createlayer(name, curlayer.Color.ColorIndex , "Contenuous");
         }
-        [Scripting]
+        [ScriptingFunc]
         public LayerTableRecord createlayer(string name, short colorIndex)
         {
             return createlayer(name, colorIndex, "Contenuous");
         }
-        [Scripting]
+        [ScriptingFunc]
         public LayerTableRecord createlayer(string name, short colorIndex, string linetype)
         {
             var color = Color.FromColorIndex(ColorMethod.ByAci, colorIndex);
@@ -294,7 +296,7 @@ namespace Pyrrha
             return Layers[name];
         }
 
-        [Scripting]
+        [ScriptingFunc]
         public bool LayerExists(string name)
         {
             return Layers.Has(name);
@@ -332,19 +334,19 @@ namespace Pyrrha
             get { return BaseDocument.CommandInProgress; }
         }
 
-        [Scripting]
+        [ScriptingProperty]
         public Database Database
         {
             get { return BaseDocument.Database; }
         }
 
-        [Scripting]
+        [ScriptingProperty]
         public Editor Editor
         {
             get { return BaseDocument.Editor; }
         }
 
-        [Scripting]
+        [ScriptingProperty]
         public Manager GraphicsManager
         {
             get { return BaseDocument.GraphicsManager; }
@@ -355,13 +357,13 @@ namespace Pyrrha
             get { return BaseDocument.IsActive; }
         }
 
-        [Scripting]
+        [ScriptingProperty]
         public bool IsReadOnly
         {
             get { return BaseDocument.IsReadOnly; }
         }
 
-        [Scripting]
+        [ScriptingProperty]
         public string Name
         {
             get { return BaseDocument.Name; }
@@ -391,13 +393,13 @@ namespace Pyrrha
             return BaseDocument.CapturePreviewImage((uint)width, (uint)height);
         }
 
-        [Scripting(Name = "close")]
+        [ScriptingProperty(Name = "close")]
         public void CloseAndDiscard()
         {
             BaseDocument.CloseAndDiscard();
         }
 
-        [Scripting(Name = "save")]
+        [ScriptingProperty(Name = "save")]
         public void CloseAndSave()
         {
             BaseDocument.CloseAndSave(Name);
@@ -418,7 +420,7 @@ namespace Pyrrha
             return Document.FromAcadDocument(acadDocument);
         }
 
-        [Scripting]
+        [ScriptingProperty]
         public DocumentLock LockDocument()
         {
             return BaseDocument.LockDocument();

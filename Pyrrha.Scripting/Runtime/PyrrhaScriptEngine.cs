@@ -5,16 +5,15 @@ using System.CodeDom;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.Remoting;
 using System.Text;
 using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.DatabaseServices;
 using IronPython.Hosting;
 using Microsoft.Scripting;
 using Microsoft.Scripting.Hosting;
-using Pyrrha.Scripting.Compiler;
-using Pyrrha.Util;
 using Pyrrha.Attributes;
+using Pyrrha.Scripting.Compiler;
 
 #endregion
 
@@ -31,7 +30,7 @@ namespace Pyrrha.Scripting.Runtime
 
         public IList<string> AvailableScopes
         {
-            get { return Scopes.Keys.ToList(); }
+            get { return this.Scopes.Keys.ToList(); }
         }
 
         public string CurrentScopeName { get; private set; }
@@ -39,7 +38,8 @@ namespace Pyrrha.Scripting.Runtime
         private ComplieTimeErrorListener _errorListener;
         public ComplieTimeErrorListener ErrorListener
         {
-            get { return _errorListener ?? (_errorListener = new ComplieTimeErrorListener()); }
+            get { return this._errorListener ?? (this._errorListener = new ComplieTimeErrorListener()); }
+            private set { this._errorListener = value; }
         }
 
         public ScriptScope CurrentScope
@@ -51,43 +51,42 @@ namespace Pyrrha.Scripting.Runtime
         {
             this._engine = Python.CreateEngine();
 
-            Runtime.LoadAssembly(typeof(Application).Assembly);
-            Runtime.LoadAssembly(typeof(Autodesk.AutoCAD.DatabaseServices.DBObject).Assembly);
+            this.Runtime.LoadAssembly(typeof(Application).Assembly);
+            this.Runtime.LoadAssembly(typeof(DBObject).Assembly);
 
             var initalScope = new Dictionary<string, object> { { "self", this.LinkedDocument = new PyrrhaDocument() } };
 
-            foreach (var obj in LinkedDocument.GetType().GetProperties().Where(
+            foreach (var obj in this.LinkedDocument.GetType().GetProperties().Where(
              prop => prop.GetCustomAttributes(typeof(ScriptingPropertyAttribute), true).Length != 0))
-                initalScope.Add(obj.Name, obj.GetValue(LinkedDocument, null));
+                initalScope.Add(obj.Name, obj.GetValue(this.LinkedDocument, null));
 
 
             // 
-            // invoking methods Reflection.
+            // Note: Stuck on DLR accepting params object[] from Ironpython. IE: createlayer("somelayer",5)
             //
 
-            foreach (var obj in LinkedDocument.GetType().GetMethods().Where(
+            foreach (var obj in this.LinkedDocument.GetType().GetMethods().Where(
                             method => method.GetCustomAttributes(typeof(ScriptingVoidAttribute), true).Length != 0
-                            && method.GetCustomAttributes(typeof(ScriptingFuncAttribute), true).Length != 0))
+                            || method.GetCustomAttributes(typeof(ScriptingFuncAttribute), true).Length != 0))
             {
-
+                //initalScope.Add(obj.Name.ToLower(), new Func<object[], dynamic>( param 
+                //    => ReflectionMethodProxy( obj.Name , param ) ));
+                //
                 Delegate method;
 
-                switch ( obj.GetParameters().Count() )
+                switch (obj.GetParameters().Count())
                 {
+                    case 0:
+                        method = new Func<dynamic>(() => this.ReflectionMethodProxy(obj.Name, new object[] { }));
+                        break;
                     case 1:
-                        method = obj.ReturnType == typeof(void)
-                            ? new Func<object,dynamic>(param => obj.Invoke(LinkedDocument, new [] { param }))
-                            : (Delegate) new Action<object>(param => obj.Invoke(LinkedDocument, new [] { param }));
+                        method = new Func<object, dynamic>(param =>this.ReflectionMethodProxy(obj.Name, new[] { param }));
                         break;
                     case 2:
-                        method = obj.ReturnType == typeof(void)
-                            ? new Func<object,object, dynamic>((param1, param2) => obj.Invoke(LinkedDocument, new[] { param1, param2 }))
-                            : (Delegate)new Action<object>(param => obj.Invoke(LinkedDocument, new[] { param }));
+                        method = new Func<object, object, dynamic>((param1, param2) => this.ReflectionMethodProxy(obj.Name, new[] { param1, param2 }));
                         break;
                     case 3:
-                        method = obj.ReturnType == typeof(void)
-                            ? new Func<object, object, object, dynamic>((param1, param2, param3) => obj.Invoke(LinkedDocument, new[] { param1, param2, param3 }))
-                            : (Delegate)new Action<object>(param => obj.Invoke(LinkedDocument, new[] { param }));
+                        method = new Func<object, object, object, dynamic>((param1, param2, param3) => this.ReflectionMethodProxy(obj.Name, new[] { param1, param2, param3 }));
                         break;
                     default:
                         throw new NotImplementedException();
@@ -95,30 +94,35 @@ namespace Pyrrha.Scripting.Runtime
                 initalScope.Add(obj.Name.ToLower(), method);
             }
 
-
-
-
             this.Scopes = new Dictionary<string, ScriptScope>
             {
                 {
-                    CurrentScopeName = "initial" ,
+                    this.CurrentScopeName = "initial" ,
                     this._engine.CreateScope( initalScope )
                 }
             };
 
-            _commandEcho = Application.GetSystemVariable("CMDECHO");
+            this._commandEcho = Application.GetSystemVariable("CMDECHO");
             Application.SetSystemVariable("CMDECHO", 0);
-            LinkedDocument.Editor.WriteMessage("Python Compiler Initialized...\n");
+            this.LinkedDocument.Editor.WriteMessage("Python Compiler Initialized...\n");
+        }
+
+        public dynamic ReflectionMethodProxy(string methodName,params object[] args)
+        {
+            var paramsObj = args.Select(obj => obj).ToArray();
+            return this.LinkedDocument.GetType().GetMethod(methodName, paramsObj.Select(obj
+                        => obj.GetType()).ToArray())
+                   .Invoke(this.LinkedDocument, paramsObj);
         }
 
         public CompiledCode Compile(string code)
         {
-            return _engine.CreateScriptSourceFromString(code, SourceCodeKind.AutoDetect).Compile(ErrorListener);
+            return this._engine.CreateScriptSourceFromString(code, SourceCodeKind.AutoDetect).Compile(this.ErrorListener);
         }
 
         public CompiledCode Compile(ScriptSource source)
         {
-            return source.Compile(ErrorListener);
+            return source.Compile(this.ErrorListener);
         }
 
         public void SetCurrentScope(string scopeName)
@@ -128,24 +132,24 @@ namespace Pyrrha.Scripting.Runtime
 
         public dynamic ExecuteInNewScope(string expression, string newScopeName)
         {
-            Scopes.Add(newScopeName, _engine.CreateScope());
+            this.Scopes.Add(newScopeName, this._engine.CreateScope());
             return Execute(expression, newScopeName);
         }
 
         public T ExecuteInNewScope<T>(string expression, string newScopeName)
         {
-            Scopes.Add(newScopeName, _engine.CreateScope());
+            this.Scopes.Add(newScopeName, this._engine.CreateScope());
             return Execute<T>(expression, newScopeName);
         }
 
         public dynamic Execute(CompiledCode code)
         {
-            return code.Execute(CurrentScope);
+            return code.Execute(this.CurrentScope);
         }
 
         public dynamic Execute(string expression)
         {
-            return this._engine.Execute(expression, CurrentScope);
+            return this._engine.Execute(expression, this.CurrentScope);
         }
 
         public dynamic Execute(string expression, string scopeName)
@@ -160,7 +164,7 @@ namespace Pyrrha.Scripting.Runtime
 
         public T Execute<T>(string expression)
         {
-            return this._engine.Execute<T>(expression, CurrentScope);
+            return this._engine.Execute<T>(expression, this.CurrentScope);
         }
 
         public T Execute<T>(string expression, string scopeName)
@@ -175,7 +179,7 @@ namespace Pyrrha.Scripting.Runtime
 
         public ScriptScope ExecuteFile(string path)
         {
-            return this._engine.ExecuteFile(path, CurrentScope);
+            return this._engine.ExecuteFile(path, this.CurrentScope);
         }
 
         public ScriptScope ExecuteFile(string path, string scopeName)
@@ -190,8 +194,8 @@ namespace Pyrrha.Scripting.Runtime
 
         public ScriptScope ExecuteFileInNewScope(string path, string newScopeName)
         {
-            Scopes.Add(newScopeName, _engine.CreateScope());
-            return this._engine.ExecuteFile(path, CurrentScope);
+            this.Scopes.Add(newScopeName, this._engine.CreateScope());
+            return this._engine.ExecuteFile(path, this.CurrentScope);
         }
 
         public ScriptScope GetInstanceScope(string scopeName)
@@ -381,7 +385,9 @@ namespace Pyrrha.Scripting.Runtime
             if (!disposing || this._isDisposed)
                 return;
 
-            Application.SetSystemVariable("CMDECHO", _commandEcho);
+            foreach (var prop in this.GetType().GetProperties().Where(obj => obj.CanWrite))
+                prop.SetValue(this, null, null);
+            Application.SetSystemVariable("CMDECHO", this._commandEcho);
             this.LinkedDocument.Dispose();
             this._isDisposed = true;
         }

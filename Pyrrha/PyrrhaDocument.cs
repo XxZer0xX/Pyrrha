@@ -151,7 +151,7 @@ namespace Pyrrha
         #region Editor
 
         [ScriptingVoid]
-        public void Print(object message)
+        public void Write(object message)
         {
             Editor.WriteMessage(string.Format("\n{0}\n", message));
         }
@@ -162,7 +162,6 @@ namespace Pyrrha
             return GetDistance("\nPlease select two points: ");
         }
 
-        [ScriptingFunc]
         public double? GetDistance(string message) 
         {
             var result = Editor.GetDistance(message);
@@ -175,7 +174,6 @@ namespace Pyrrha
             return GetDouble("\nPlease input number: ");
         }
 
-        [ScriptingFunc]
         public double? GetDouble(string message) 
         {
             var result = Editor.GetDouble(message);
@@ -188,7 +186,6 @@ namespace Pyrrha
             throw new NotImplementedException();
         }
 
-        [ScriptingFunc]
         public Entity GetEntity(string message)
         {
             throw new NotImplementedException();
@@ -200,7 +197,6 @@ namespace Pyrrha
             return GetFileNameForOpen("\nPlease select file to open: ");
         }
 
-        [ScriptingFunc]
         public string GetFileNameForOpen(string message) 
         {
             return Editor.GetFileNameForOpen(message).StringResult;
@@ -212,7 +208,6 @@ namespace Pyrrha
             return GetFileNameForOpen("\nPlease input file path: ");
         }
 
-        [ScriptingFunc]
         public string GetFileNameForSave(string message)
         {
             return Editor.GetFileNameForSave(message).StringResult;
@@ -224,7 +219,6 @@ namespace Pyrrha
             return GetInteger("\nPlease input number: ");
         }
 
-        [ScriptingFunc]
         public int? GetInteger(string message)
         {
             var result = Editor.GetInteger(message);
@@ -238,7 +232,7 @@ namespace Pyrrha
         {
             return GetPoint("\nPlease select point: ");
         }
-        [ScriptingFunc]
+
         public Point3d? GetPoint(string message) 
         {
             var result = Editor.GetPoint(message);
@@ -249,7 +243,7 @@ namespace Pyrrha
         {
             return GetString("\nPlease input string: "); 
         }
-        [ScriptingFunc]
+
         public string GetString(string message)
         {
             return Editor.GetString(message).StringResult;
@@ -262,13 +256,15 @@ namespace Pyrrha
         public LayerTableRecord createlayer(string name)
         {
             var curlayer = Layers[Database.Clayer];
-            return createlayer(name, curlayer.Color.ColorIndex , "Contenuous");
+            return _createLayer(name, curlayer.Color, curlayer.LinetypeObjectId);
         }
+
         [ScriptingFunc]
         public LayerTableRecord createlayer(string name, short colorIndex)
         {
-            return createlayer(name, colorIndex, "Contenuous");
+            return createlayer(name, colorIndex, "continuous");
         }
+
         [ScriptingFunc]
         public LayerTableRecord createlayer(string name, short colorIndex, string linetype)
         {

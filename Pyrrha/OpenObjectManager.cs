@@ -23,6 +23,8 @@ namespace Pyrrha
 
         public Database Database {get; private set;}
 
+        public PyrrhaDocument Document { get; private set; }
+
         public IDictionary<ObjectId, DBObject> OpenObjects
         {
             get { return this._openObjects ?? (this._openObjects = new Dictionary<ObjectId, DBObject>()); }
@@ -36,9 +38,10 @@ namespace Pyrrha
 
         #region Constructor
 
-        public OpenObjectManager(Database database)
+        public OpenObjectManager(PyrrhaDocument document)
         {
-            this.Database = database;
+            Document = document;
+            this.Database = document.Database;
             this.Transactions = new List<Transaction>();
         }
 
@@ -52,6 +55,7 @@ namespace Pyrrha
 
             try
             {
+               
                 returnObj = trans.GetObject(id, mode);
             }
             catch (Exception ex)
@@ -98,6 +102,16 @@ namespace Pyrrha
         }
 
         public DBObject GetRecord(ObjectId id, Transaction trans, OpenMode mode)
+        {
+            return GetObject(id, trans, mode);
+        }
+
+        public DBObject GetTable(ObjectId id, Transaction trans, OpenMode mode)
+        {
+            return GetObject(id, trans, mode);
+        }
+
+        public DBObject GetObject(ObjectId id, Transaction trans, OpenMode mode)
         {
             //bool inCollection = collection.Contains(id);
             bool inManager = this.OpenObjects.ContainsKey(id);

@@ -41,15 +41,19 @@
     </Reference>
     <Reference Include="IronPython">
       <HintPath>..\..\..\..\..\..\IronPython-2.7.4\IronPython.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="IronPython.Modules">
       <HintPath>..\..\..\..\..\..\IronPython-2.7.4\IronPython.Modules.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.Dynamic">
       <HintPath>..\..\..\..\..\..\IronPython-2.7.4\Microsoft.Dynamic.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.Scripting">
       <HintPath>..\..\..\..\..\..\IronPython-2.7.4\Microsoft.Scripting.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
@@ -120,6 +124,7 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+    <None Include="TestScipts\pyrrhaLayersTesting.py" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

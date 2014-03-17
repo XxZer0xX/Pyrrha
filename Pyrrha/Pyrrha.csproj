@@ -57,6 +57,11 @@
     <Compile Include="Collections\TextStyleCollection.cs" />
     <Compile Include="DocumentManager.cs" />
     <Compile Include="OpenObjectManager.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="PyrrhaDocument.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Query\SelectionFilter.cs" />
@@ -67,6 +72,15 @@
     <Compile Include="Util\TypeExtenstions\DbObject.cs" />
     <Compile Include="Util\TypeExtenstions\Entity.cs" />
     <Compile Include="Util\TypeExtenstions\SymbolTableRecord.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\pyrrha.plin" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

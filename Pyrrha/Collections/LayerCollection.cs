@@ -4,6 +4,7 @@
 using System.Linq;
 using Autodesk.AutoCAD.DatabaseServices;
 using Pyrrha.Runtime;
+using Autodesk.AutoCAD.Colors;
 
 #endregion
 
@@ -83,6 +84,23 @@ namespace Pyrrha.Collections
         public bool Contains( string name )
         {
             return base.RecordTable.Has( name );
+        }
+
+        public LayerTableRecord CreateLayer(string name, Color color, string linetypeName )
+        {
+            if (!RecordTable.Has(name))
+            {
+                var newRecord = new LayerTableRecord()
+                {
+                    Name = name,
+                    Color = color,
+                    LinetypeObjectId = ObjectManager.Document.Linetypes.Load(linetypeName)
+                };
+
+                RecordTable.Add(newRecord);
+                Transaction.AddNewlyCreatedDBObject(newRecord, true);
+            }
+            return this[name];
         }
 
         #endregion

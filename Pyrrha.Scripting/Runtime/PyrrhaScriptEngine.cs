@@ -60,17 +60,9 @@ namespace Pyrrha.Scripting.Runtime
              prop => prop.GetCustomAttributes(typeof(ScriptingPropertyAttribute), true).Length != 0))
                 initalScope.Add(obj.Name, obj.GetValue(this.LinkedDocument, null));
 
-
-            // 
-            // Note: Stuck on DLR accepting params object[] from Ironpython. IE: createlayer("somelayer",5)
-            //
-
             foreach (var obj in this.LinkedDocument.GetType().GetMethods().Where(
                             method => method.GetCustomAttributes(typeof(ScriptingMethodAttribute), true).Length != 0))
             {
-                //initalScope.Add(obj.Name.ToLower(), new Func<object[], dynamic>( param 
-                //    => ReflectionMethodProxy( obj.Name , param ) ));
-                //
                 Delegate method;
 
                 switch (obj.GetParameters().Count())
@@ -90,6 +82,7 @@ namespace Pyrrha.Scripting.Runtime
                     default:
                         throw new NotImplementedException();
                 }
+
                 initalScope.Add(obj.Name.ToLower(), method);
             }
 

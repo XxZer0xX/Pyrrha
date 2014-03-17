@@ -16,13 +16,22 @@ namespace Pyrrha.Collections
         {
         }
 
-        public void Load(string linetype, string filename = "acad.lin")
+        public ObjectId Load(string linetypeName)
         {
-            if (this.RecordTable.Has(linetype))
-                throw new PyrrhaException("{0} is already loaded.", linetype);
-
-            this.ObjectManager.Database.LoadLineTypeFile(linetype, filename);
+            if (!this.RecordTable.Has(linetypeName))
+            {
+                Transaction.Commit();
+                ObjectManager.Database.LoadLineTypeFile(linetypeName, "acad.lin");
+            }
+            return this[linetypeName].ObjectId;
         }
 
+        public ObjectId CreateLinetype(string name, string description)
+        {
+            var newRecord = new LinetypeTableRecord() { AsciiDescription = description, Name = name };
+            RecordTable.Add(newRecord);
+            Transaction.AddNewlyCreatedDBObject(newRecord,true);
+            return newRecord.ObjectId;
+        }
     }
 }

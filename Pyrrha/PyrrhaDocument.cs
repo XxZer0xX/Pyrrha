@@ -43,7 +43,7 @@ namespace Pyrrha
             get
             {
                 return this._objectManager ??
-                       (this._objectManager = new OpenObjectManager(this.Database));
+                       (this._objectManager = new OpenObjectManager(this));
             }
         }
         private OpenObjectManager _objectManager;
@@ -106,10 +106,11 @@ namespace Pyrrha
         {
             if (doc == null)
                 throw new NullReferenceException("Document is null.");
+            //_loadAllLinetypes(doc);
             //PyrrhaException.IsScriptSource = Thread.CurrentThread.IsScriptSource();
             this.BaseDocument = doc;
             DocumentManager.AddDocument(this);
-            this.Database.LoadLineTypeFile("*", "acad.lin");
+            
         }
 
         // This is safer because it actually checks full drawing paths.
@@ -212,9 +213,9 @@ namespace Pyrrha
         }
 
         [ScriptingMethod]
-        public string GetString(string message)
+        public string GetString(string message,bool spacesAllowed)
         {
-            return this.Editor.GetString(message).StringResult;
+            return this.Editor.GetString(new PromptStringOptions(message) { AllowSpaces = spacesAllowed }).StringResult;
         }
 
         [ScriptingMethod]
@@ -228,30 +229,17 @@ namespace Pyrrha
         #region Layers
 
         [ScriptingMethod]
-        public LayerTableRecord createlayer(string name, int colorIndex, string linetype)
+        public LayerTableRecord CreateLayer(string name, int colorIndex, string linetype)
         {
             var color = Color.FromColorIndex(ColorMethod.ByAci, (short)colorIndex);
-            return this._createLayer(name, color, this._getLinetypeId(linetype));
+            return Layers.CreateLayer(name, color, linetype);
         }
 
-        private LayerTableRecord _createLayer(string name, Color color, ObjectId linetypeId)
+        
+        [ScriptingMethod]
+        public Color FromColorIndex(int colorIndex)
         {
-            if (!this.Layers.Has(name))
-                using (var transaction = this.ObjectManager.AddTransaction())
-                {
-                    var newRecord = new LayerTableRecord()
-                    {
-                        Name = name,
-                        Color = color,
-                        LinetypeObjectId = linetypeId
-                    };
-
-                    this.Layers.RecordTable.Add(newRecord);
-                    transaction.AddNewlyCreatedDBObject(newRecord, true);
-                    transaction.Commit();
-                }
-
-            return this.Layers[name];
+            return Color.FromColorIndex(ColorMethod.ByAci, (short)colorIndex);
         }
 
         #endregion
@@ -288,15 +276,7 @@ namespace Pyrrha
 
         #region Private Supporting Methods
 
-        private ObjectId _getLinetypeId(string linetypeName)
-        {
-            if (!this.Linetypes.Has(linetypeName))
-            {
-                this.Linetypes.RecordTable.Dispose();
-                this.Database.LoadLineTypeFile(linetypeName, "acad.lin");
-            }
-            return this.Linetypes[linetypeName].ObjectId;
-        }
+        
 
         #endregion
 

@@ -9,6 +9,8 @@ using System.Windows.Forms;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Runtime;
 using Exception = System.Exception;
+using System.Text;
+using System.Text.RegularExpressions;
 
 #endregion
 
@@ -16,9 +18,9 @@ namespace Pyrrha.Scripting.Runtime
 {
     public class PythonSession : IDisposable
     {
-        internal string TempFilePath = string.Format(@"{0}\local\temp\PyrrhaScriptsTempFolder\{1}_{2}.py", 
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), 
-            Environment.UserName, 
+        internal string TempFilePath = string.Format(@"{0}\local\temp\PyrrhaScriptsTempFolder\{1}_{2}.py",
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            Environment.UserName,
             DateTime.Now.ToString(CultureInfo.InvariantCulture).Replace('\\', ('_')));
 
         private Queue<string> _sessionCodeRepo;
@@ -29,7 +31,7 @@ namespace Pyrrha.Scripting.Runtime
 
         private bool _userCanceled { get; set; }
 
-        public bool EncounterdErrors 
+        public bool EncounterdErrors
         {
             get { return this.SessionEngine.ErrorListener.FoundError; }
         }
@@ -56,14 +58,17 @@ namespace Pyrrha.Scripting.Runtime
                 this.SessionEngine.LinkedDocument.Editor.WriteMessage(
                         string.Format("\nMessage: {0}\nSource:{1}", e.Message, e.Source));
             }
-            this.SessionEngine.Dispose();
+            Dispose();
         }
 
         private void SourceAccumulate()
         {
-            for (;;)
+            var isMultilining = 0;
+            var deferedExecutableCodeBuilder = new StringBuilder();
+
+            while (true)
             {
-                var promptOptions = new PromptStringOptions(">>> ") { AllowSpaces = true };
+                var promptOptions = new PromptStringOptions(isMultilining.Equals(0)? ">>> " : _generateMLPrompt(isMultilining)) { AllowSpaces = true };
 
                 var response = this.SessionEngine.LinkedDocument.Editor.GetString(promptOptions);
 
@@ -74,9 +79,42 @@ namespace Pyrrha.Scripting.Runtime
                     return;
                 }
 
-                if (response.StringResult.Equals("end", StringComparison.InvariantCultureIgnoreCase) || !this._execute(response.StringResult))
+                var stringResult = response.StringResult;
+
+                if (stringResult.Contains('{') || stringResult.Contains('}'))
+                {
+                    deferedExecutableCodeBuilder.Append(string.Format(" {0}", stringResult));
+
+                    foreach (var character in response.StringResult.Where(c => c.Equals('{') || c.Equals('}')))
+
+                        if (character.Equals('{'))
+                            isMultilining++;
+                        else
+                            isMultilining--;
+
+                    if (isMultilining < 0)
+                        throw new IronPython.Runtime.Exceptions.SyntaxWarningException(string.Format("Missing opening bracket.", stringResult));
+
+                    if (isMultilining > 0)    
+                        continue;
+
+                    stringResult = new Regex("[{}]").Replace(deferedExecutableCodeBuilder.ToString(), " ");
+                }
+
+                if (stringResult.Equals("end", StringComparison.InvariantCultureIgnoreCase) || !this._execute(stringResult))
                     return;
+
+                deferedExecutableCodeBuilder = new StringBuilder();
             }
+        }
+
+        private string _generateMLPrompt(int iter)
+        {
+            var stringbuilder = new StringBuilder();
+            for (var i = 0; i < iter; i++)
+                stringbuilder.Append('{');
+            stringbuilder.Append("_>");
+            return stringbuilder.ToString();
         }
 
         private bool _execute(string code)
@@ -101,7 +139,7 @@ namespace Pyrrha.Scripting.Runtime
             return true;
         }
 
-        
+
 
         private void CopyCodeToFile_RequestSave()
         {
@@ -145,15 +183,24 @@ namespace Pyrrha.Scripting.Runtime
 
         public void ExecuteScriptFile(string path)
         {
-            var scriptSource = this.SessionEngine.CreateScriptSourceFromFile( path );
-            var compiledCode = this.SessionEngine.Compile( scriptSource );
-            if ( this.EncounterdErrors )
+            try
             {
-                this.ReportErrors();
-                return;
-            }
+                var scriptSource = this.SessionEngine.CreateScriptSourceFromFile(path);
+                var compiledCode = this.SessionEngine.Compile(scriptSource);
+                if (this.EncounterdErrors)
+                {
+                    this.ReportErrors();
+                    return;
+                }
 
-            this.SessionEngine.Execute( compiledCode );
+                this.SessionEngine.Execute(compiledCode);
+            }
+            catch (Exception e)
+            {
+                this.SessionEngine.LinkedDocument.Editor.WriteMessage(
+                        string.Format("\nMessage: {0}\nSource:{1}", e.Message, e.Source));
+                Dispose();
+            }
         }
 
         private void ReportErrors()

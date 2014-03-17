@@ -24,5 +24,17 @@ namespace Pyrrha.Collections
             : base(document, document.Database.TextStyleTableId, openMode)
         {
         }
+
+        public ObjectId CreateTextStyle(string name, string fileName)
+        {
+            var newRecord = new TextStyleTableRecord() 
+            {
+                Name = name,
+                FileName = fileName
+            };
+            RecordTable.Add(newRecord);
+            Transaction.AddNewlyCreatedDBObject(newRecord, true);
+            return newRecord.ObjectId;
+        }
     }
 }

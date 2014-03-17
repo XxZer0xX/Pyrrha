@@ -7,8 +7,7 @@ using System.Linq;
 
 namespace Pyrrha.Attributes
 {
-    public class ScriptingPropertyAttribute : Attribute
+    public class ScriptingMethodAttribute : Attribute
     {
-
     }
 }

@@ -22,7 +22,7 @@ namespace Pyrrha.Collections
 
         public int Count
         {
-            get { return _innerList.Count; }
+            get { return this._innerList.Count; }
         }
 
         public bool IsReadOnly { get; private set; }
@@ -31,21 +31,21 @@ namespace Pyrrha.Collections
 
         public OpenMode OpenMode
         {
-            get { return _openMode; }
+            get { return this._openMode; }
             set
             {
                 switch (value)
                 {
                     case OpenMode.ForWrite:
-                        foreach (var obj in _innerList)
+                        foreach (var obj in this._innerList)
                             obj.UpgradeOpen();
                         break;
                     case OpenMode.ForRead:
-                        foreach (var obj in _innerList)
+                        foreach (var obj in this._innerList)
                             obj.DowngradeOpen();
                         break;
                 }
-                _openMode = value;
+                this._openMode = value;
             }
         }
         private OpenMode _openMode;
@@ -56,18 +56,18 @@ namespace Pyrrha.Collections
 
         protected EntityCollection(OpenObjectManager manager, OpenMode openmode)
         {
-            IsReadOnly = false;
-            ObjectManager = manager;
-            _transaction = ObjectManager.AddTransaction();
-            _openMode = openmode;
-            _innerList = new List<T>();
+            this.IsReadOnly = false;
+            this.ObjectManager = manager;
+            this._transaction = this.ObjectManager.AddTransaction();
+            this._openMode = openmode;
+            this._innerList = new List<T>();
         }
 
         protected EntityCollection(OpenObjectManager manager, IEnumerable<ObjectId> ids, OpenMode openmode = OpenMode.ForRead)
             : this(manager, openmode)
         {
             foreach (var id in ids)
-                _innerList.Add(GetObject(id));
+                this._innerList.Add(this.GetObject(id));
         }
 
         
@@ -77,25 +77,25 @@ namespace Pyrrha.Collections
 
         public T this[ObjectId id]
         {
-            get { return (T)ObjectManager.OpenObjects[id]; }
-            set { ObjectManager.OpenObjects[id] = value; }
+            get { return (T)this.ObjectManager.OpenObjects[id]; }
+            set { this.ObjectManager.OpenObjects[id] = value; }
         }
 
         public T this[int index]
         {
-            get { return _innerList[index]; }
-            set { _innerList[index] = value; }
+            get { return this._innerList[index]; }
+            set { this._innerList[index] = value; }
         }
 
         private T GetObject(ObjectId id)
         {
-            if (ObjectManager.OpenObjects.ContainsKey(id))
+            if (this.ObjectManager.OpenObjects.ContainsKey(id))
             {
-                return (T)ObjectManager.OpenObjects[id];
+                return (T)this.ObjectManager.OpenObjects[id];
             }
 
-            var obj = (T) _transaction.GetObject(id, OpenMode);
-            ObjectManager.OpenObjects.Add(id, obj);
+            var obj = (T) this._transaction.GetObject(id, this.OpenMode);
+            this.ObjectManager.OpenObjects.Add(id, obj);
 
             return obj;
         }
@@ -106,22 +106,22 @@ namespace Pyrrha.Collections
 
         ~EntityCollection()
         {
-            Dispose(false);
+            this.Dispose(false);
         }
         public void Dispose()
         {
-            Dispose(true);
+            this.Dispose(true);
             GC.SuppressFinalize(this);
         }
         protected virtual void Dispose(bool disposing)
         {
-            if (_disposed)
+            if (this._disposed)
                 return;
 
             if (disposing)
-                Clear();
+                this.Clear();
 
-            _disposed = true;
+            this._disposed = true;
         }
 
         #endregion
@@ -130,71 +130,71 @@ namespace Pyrrha.Collections
 
         public void Add(T item)
         {
-            if (Contains(item))
+            if (this.Contains(item))
                 throw new PyrrhaException("This {0} already exists in the collection", item.GetType().Name);
 
-            _innerList.Add(item);
-            GetObject(item.Id);
+            this._innerList.Add(item);
+            this.GetObject(item.Id);
         }
 
         public void Clear()
         {
-            foreach (var obj in _innerList)
-                Remove(obj);
-            _innerList.Clear();
+            foreach (var obj in this._innerList)
+                this.Remove(obj);
+            this._innerList.Clear();
         }
 
         public void Commit()
         {
-            _transaction.Commit();
-            ObjectManager.Transactions.Remove(_transaction);
-            _transaction.Dispose();
+            this._transaction.Commit();
+            this.ObjectManager.Transactions.Remove(this._transaction);
+            this._transaction.Dispose();
             
         }
 
         public bool Contains(T item)
         {
-            return _innerList.Contains(item);
+            return this._innerList.Contains(item);
         }
 
         public bool ContainsId(ObjectId id)
         {
-            return _innerList.Any(o => o.Id == id);
+            return this._innerList.Any(o => o.Id == id);
         }
 
         public void CopyTo(T[] array, int arrayIndex)
         {
-            _innerList.CopyTo(array, arrayIndex);
+            this._innerList.CopyTo(array, arrayIndex);
         }
 
         public void Refresh()
         {
-            var refreshList = _innerList.Select(obj => GetObject(obj.Id)).ToList();
-            _innerList = refreshList;
+            var refreshList = this._innerList.Select(obj => this.GetObject(obj.Id)).ToList();
+            this._innerList = refreshList;
         }
 
         public bool Remove(T item)
         {
-            if (!Contains(item))
+            if (!this.Contains(item))
                 throw new PyrrhaException("The {0} does not exist in the collection", item.GetType().Name);
 
-            ObjectManager.OpenObjects.Remove(item.Id);
-            return _innerList.Remove(item);
+            this.ObjectManager.OpenObjects.Remove(item.Id);
+            return this._innerList.Remove(item);
         }
 
         public bool RemoveAt(int index)
         {
-            return Remove(this[index]);
+            return this.Remove(this[index]);
         }
 
         public IEnumerator<T> GetEnumerator()
         {
-            return _innerList.GetEnumerator();
+            return this._innerList.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return GetEnumerator();
+            return this.GetEnumerator();
         }
 
         #endregion

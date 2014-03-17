@@ -1,34 +1,34 @@
 ﻿<Window x:Class="Pyrrha.Scripting.AutoCad.UI.PyAppLoad"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:Custom="clr-namespace:Pyrrha.Scripting.AutoCad.UI.UserControls"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         Width="600"
-        mc:Ignorable="d" >
+        mc:Ignorable="d">
     <Grid x:Name="MainGrid">
         <Grid.RowDefinitions>
-            <RowDefinition/>
-            <RowDefinition/>
+            <RowDefinition />
+            <RowDefinition />
         </Grid.RowDefinitions>
-        <StackPanel Orientation="Vertical" 
+        <StackPanel Orientation="Vertical"
                     Grid.Row="0">
-            
+
             <StackPanel Orientation="Horizontal"
                         VerticalAlignment="Center"
                         Width="{Binding ElementName=DirectoryView,Path=Width}">
                 <DockPanel>
 
-                    <Custom:SearchBox></Custom:SearchBox>
+                    <Custom:SearchBox />
                 </DockPanel>
-                
+
             </StackPanel>
-            
+
             <ListView x:Name="DirectoryView"
-        		       VerticalAlignment="Center"
-        		       HorizontalAlignment="Center"
-        		       Width="570"
-        		       Height="200"/>
+                      VerticalAlignment="Center"
+                      HorizontalAlignment="Center"
+                      Width="570"
+                      Height="200" />
 
         </StackPanel>
     </Grid>

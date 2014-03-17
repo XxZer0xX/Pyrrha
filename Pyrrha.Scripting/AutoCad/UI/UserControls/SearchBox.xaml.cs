@@ -1,6 +1,10 @@
-﻿using System.Windows.Controls;
+﻿#region Referencing
+
+using System.Linq;
 using System.Windows.Input;
 using System.Windows.Media;
+
+#endregion
 
 namespace Pyrrha.Scripting.AutoCad.UI.UserControls
 {
@@ -11,34 +15,34 @@ namespace Pyrrha.Scripting.AutoCad.UI.UserControls
     {
         public string Text
         {
-            get { return TextBox.Text; }
-            set { TextBox.Text = value; }
+            get { return this.TextBox.Text; }
+            set { this.TextBox.Text = value; }
         }
 
         public ICommand Command
         {
-            get { return Button.Command; }
-            set { Button.Command = value; }
+            get { return this.Button.Command; }
+            set { this.Button.Command = value; }
         }
 
         public object CommandParameter
         {
-            get { return Button.CommandParameter; }
-            set { Button.CommandParameter = value; }
+            get { return this.Button.CommandParameter; }
+            set { this.Button.CommandParameter = value; }
         }
 
         public Brush BorderBrush
         {
             set
             {
-                Button.BorderBrush = value;
-                TextBox.BorderBrush = value;
+                this.Button.BorderBrush = value;
+                this.TextBox.BorderBrush = value;
             }
         }
 
         public SearchBox()
         {
-            InitializeComponent();
+            this.InitializeComponent();
         }
     }
 }

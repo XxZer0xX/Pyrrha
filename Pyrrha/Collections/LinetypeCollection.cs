@@ -1,7 +1,11 @@
-﻿
+﻿#region Referencing
+
+using System.Linq;
 using Autodesk.AutoCAD.DatabaseServices;
-using Utils = Autodesk.AutoCAD.DatabaseServices.SymbolUtilityServices;
 using Pyrrha.Runtime;
+using Utils = Autodesk.AutoCAD.DatabaseServices.SymbolUtilityServices;
+
+#endregion
 
 namespace Pyrrha.Collections
 {
@@ -14,10 +18,10 @@ namespace Pyrrha.Collections
 
         public void Load(string linetype, string filename = "acad.lin")
         {
-            if (RecordTable.Has(linetype))
+            if (this.RecordTable.Has(linetype))
                 throw new PyrrhaException("{0} is already loaded.", linetype);
 
-            ObjectManager.Database.LoadLineTypeFile(linetype, filename);
+            this.ObjectManager.Database.LoadLineTypeFile(linetype, filename);
         }
 
     }

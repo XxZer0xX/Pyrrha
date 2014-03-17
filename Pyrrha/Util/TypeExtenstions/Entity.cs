@@ -1,7 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿#region Referencing
+
 using System.Linq;
-using System.Text;
+
+#endregion
 
 namespace Pyrrha.Util.TypeExtenstions
 {

@@ -1,8 +1,5 @@
 ﻿#region Referencing
 
-using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.Colors;
-using Autodesk.AutoCAD.DatabaseServices;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -11,8 +8,9 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
-
-using Pyrrha.Collections;
+using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.Colors;
+using Autodesk.AutoCAD.DatabaseServices;
 
 #endregion
 

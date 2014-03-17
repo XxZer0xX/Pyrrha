@@ -48,8 +48,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Attributes\ScriptingFuncAttribute.cs" />
-    <Compile Include="Attributes\ScriptingVoidAttribute.cs" />
+    <Compile Include="Attributes\ScriptingMethodAttribute.cs" />
+    <Compile Include="Attributes\ScriptingPropertyAttribute.cs" />
     <Compile Include="Collections\LinetypeCollection.cs" />
     <Compile Include="Collections\RecordCollection.cs" />
     <Compile Include="Collections\LayerCollection.cs" />
@@ -67,9 +67,6 @@
     <Compile Include="Util\TypeExtenstions\DbObject.cs" />
     <Compile Include="Util\TypeExtenstions\Entity.cs" />
     <Compile Include="Util\TypeExtenstions\SymbolTableRecord.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Attributes\ScriptingPropertyAttribute.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -1,19 +1,13 @@
 ﻿#region Referencing
 
+using System;
+using System.IO;
+using System.Linq;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Runtime;
-using IronPython.Hosting;
-using Microsoft.Scripting.Hosting;
-using Pyrrha.Scripting.Compiler;
 using Pyrrha.Scripting.Runtime;
-using Pyrrha.Util;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Windows.Forms;
 using AcApp = Autodesk.AutoCAD.ApplicationServices.Application;
-using Exception = System.Exception;
 
 #endregion
 
@@ -24,13 +18,13 @@ namespace Pyrrha.Scripting.AutoCad
         [CommandMethod("-PYLOAD")]
         public void PythonLoadCmdLine()
         {
-            PythonLoad(true);
+            this.PythonLoad(true);
         }
 
         [CommandMethod("PYLOAD")]
         public void PythonLoadUI()
         {
-            PythonLoad(false);
+            this.PythonLoad(false);
         }
 
         public void PythonLoad(bool useCmdLine)

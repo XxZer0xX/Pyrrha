@@ -1,16 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿#region Referencing
+
 using System.Linq;
-using System.Text;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+
+#endregion
 
 namespace Pyrrha.Scripting.AutoCad.UI
 {
@@ -21,7 +13,7 @@ namespace Pyrrha.Scripting.AutoCad.UI
     {
         public PyAppLoad()
         {
-            InitializeComponent();
+            this.InitializeComponent();
         }
     }
 }

@@ -66,8 +66,7 @@ namespace Pyrrha.Scripting.Runtime
             //
 
             foreach (var obj in this.LinkedDocument.GetType().GetMethods().Where(
-                            method => method.GetCustomAttributes(typeof(ScriptingVoidAttribute), true).Length != 0
-                            || method.GetCustomAttributes(typeof(ScriptingFuncAttribute), true).Length != 0))
+                            method => method.GetCustomAttributes(typeof(ScriptingMethodAttribute), true).Length != 0))
             {
                 //initalScope.Add(obj.Name.ToLower(), new Func<object[], dynamic>( param 
                 //    => ReflectionMethodProxy( obj.Name , param ) ));
@@ -77,16 +76,16 @@ namespace Pyrrha.Scripting.Runtime
                 switch (obj.GetParameters().Count())
                 {
                     case 0:
-                        method = new Func<dynamic>(() => this.ReflectionMethodProxy(obj.Name, new object[] { }));
+                        method = new Func<dynamic>(() => obj.Invoke(this.LinkedDocument, null));
                         break;
                     case 1:
-                        method = new Func<object, dynamic>(param =>this.ReflectionMethodProxy(obj.Name, new[] { param }));
+                        method = new Func<object, dynamic>(param => obj.Invoke(this.LinkedDocument, new[] { param }));
                         break;
                     case 2:
-                        method = new Func<object, object, dynamic>((param1, param2) => this.ReflectionMethodProxy(obj.Name, new[] { param1, param2 }));
+                        method = new Func<object, object, dynamic>((param1, param2) => obj.Invoke(this.LinkedDocument, new[] { param1, param2 }));
                         break;
                     case 3:
-                        method = new Func<object, object, object, dynamic>((param1, param2, param3) => this.ReflectionMethodProxy(obj.Name, new[] { param1, param2, param3 }));
+                        method = new Func<object, object, object, dynamic>((param1, param2, param3) => obj.Invoke(this.LinkedDocument, new[] { param1, param2, param3 }));
                         break;
                     default:
                         throw new NotImplementedException();
@@ -94,25 +93,11 @@ namespace Pyrrha.Scripting.Runtime
                 initalScope.Add(obj.Name.ToLower(), method);
             }
 
-            this.Scopes = new Dictionary<string, ScriptScope>
-            {
-                {
-                    this.CurrentScopeName = "initial" ,
-                    this._engine.CreateScope( initalScope )
-                }
-            };
+            this.Scopes = new Dictionary<string, ScriptScope> { { this.CurrentScopeName = "initial", this._engine.CreateScope(initalScope) } };
 
             this._commandEcho = Application.GetSystemVariable("CMDECHO");
             Application.SetSystemVariable("CMDECHO", 0);
             this.LinkedDocument.Editor.WriteMessage("Python Compiler Initialized...\n");
-        }
-
-        public dynamic ReflectionMethodProxy(string methodName,params object[] args)
-        {
-            var paramsObj = args.Select(obj => obj).ToArray();
-            return this.LinkedDocument.GetType().GetMethod(methodName, paramsObj.Select(obj
-                        => obj.GetType()).ToArray())
-                   .Invoke(this.LinkedDocument, paramsObj);
         }
 
         public CompiledCode Compile(string code)
@@ -387,6 +372,7 @@ namespace Pyrrha.Scripting.Runtime
 
             foreach (var prop in this.GetType().GetProperties().Where(obj => obj.CanWrite))
                 prop.SetValue(this, null, null);
+
             Application.SetSystemVariable("CMDECHO", this._commandEcho);
             this.LinkedDocument.Dispose();
             this._isDisposed = true;

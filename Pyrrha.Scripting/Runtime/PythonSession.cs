@@ -1,18 +1,16 @@
-﻿using System;
+﻿#region Referencing
+
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Runtime;
-using IronPython.Hosting;
-using Microsoft.Scripting.Hosting;
-using Pyrrha.Scripting.Compiler;
-using Pyrrha.Util;
-using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 using Exception = System.Exception;
+
+#endregion
 
 namespace Pyrrha.Scripting.Runtime
 {
@@ -26,19 +24,21 @@ namespace Pyrrha.Scripting.Runtime
         private Queue<string> _sessionCodeRepo;
         private Queue<string> SessionCodeRepo
         {
-            get { return _sessionCodeRepo ?? (_sessionCodeRepo = new Queue<string>()); }
+            get { return this._sessionCodeRepo ?? (this._sessionCodeRepo = new Queue<string>()); }
         }
+
+        private bool _userCanceled { get; set; }
 
         public bool EncounterdErrors 
         {
-            get { return SessionEngine.ErrorListener.FoundError; }
+            get { return this.SessionEngine.ErrorListener.FoundError; }
         }
 
         internal PyrrhaScriptEngine SessionEngine;
 
         public PythonSession()
         {
-            SessionEngine = new PyrrhaScriptEngine();
+            this.SessionEngine = new PyrrhaScriptEngine();
         }
 
         [CommandMethod("pystart")]
@@ -46,9 +46,9 @@ namespace Pyrrha.Scripting.Runtime
         {
             try
             {
-                SourceAccumulate();
-                if(!EncounterdErrors)
-                    CopyCodeToFile_RequestSave();
+                this.SourceAccumulate();
+                if (!this.EncounterdErrors && !this._userCanceled)
+                    this.CopyCodeToFile_RequestSave();
 
             }
             catch (Exception e)
@@ -70,6 +70,7 @@ namespace Pyrrha.Scripting.Runtime
                 if ( response.Status != PromptStatus.OK )
                 {
                     this.SessionEngine.Dispose();
+                    this._userCanceled = true;
                     return;
                 }
 
@@ -82,9 +83,9 @@ namespace Pyrrha.Scripting.Runtime
         {
             var compiledcode = this.SessionEngine.Compile(code);
 
-            if (SessionEngine.ErrorListener.FoundError)
+            if (this.SessionEngine.ErrorListener.FoundError)
             {
-                ReportErrors();
+                this.ReportErrors();
                 return false;
             }
 
@@ -92,8 +93,8 @@ namespace Pyrrha.Scripting.Runtime
             if (code.Contains("="))
                 scopeKey = code.Split('=')[0].Replace(" ", string.Empty);
 
-            var scopeObj = SessionEngine.Execute(compiledcode);
-            SessionCodeRepo.Enqueue(code);
+            var scopeObj = this.SessionEngine.Execute(compiledcode);
+            this.SessionCodeRepo.Enqueue(code);
 
             if (scopeKey != null && scopeObj != null)
                 this.SessionEngine.CurrentScope.SetVariable(scopeKey, scopeObj);
@@ -127,7 +128,7 @@ namespace Pyrrha.Scripting.Runtime
 
             using (var stream = new FileStream(this.TempFilePath, FileMode.Create))
             using (var writer = new StreamWriter(stream))
-                foreach (var line in SessionCodeRepo)
+                foreach (var line in this.SessionCodeRepo)
                     writer.WriteLine(line);
         }
 
@@ -144,21 +145,21 @@ namespace Pyrrha.Scripting.Runtime
 
         public void ExecuteScriptFile(string path)
         {
-            var scriptSource = SessionEngine.CreateScriptSourceFromFile( path );
-            var compiledCode = SessionEngine.Compile( scriptSource );
-            if ( EncounterdErrors )
+            var scriptSource = this.SessionEngine.CreateScriptSourceFromFile( path );
+            var compiledCode = this.SessionEngine.Compile( scriptSource );
+            if ( this.EncounterdErrors )
             {
-                ReportErrors();
+                this.ReportErrors();
                 return;
             }
 
-            SessionEngine.Execute( compiledCode );
+            this.SessionEngine.Execute( compiledCode );
         }
 
         private void ReportErrors()
         {
             this.SessionEngine.LinkedDocument.Editor.WriteMessage("****___________  Errors thrown  ___________****\n");
-            foreach (var error in SessionEngine.ErrorListener.ErrorData)
+            foreach (var error in this.SessionEngine.ErrorListener.ErrorData)
                 this.SessionEngine.LinkedDocument.Editor.WriteMessage(
                     string.Format("{1} Error: {0}\n", error.Message, error.Severity)
                     );
@@ -180,7 +181,7 @@ namespace Pyrrha.Scripting.Runtime
             if (!disposing || this._isDisposed)
                 return;
 
-            SessionEngine.Dispose();
+            this.SessionEngine.Dispose();
             this._isDisposed = true;
         }
 

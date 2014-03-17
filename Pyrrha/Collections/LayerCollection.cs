@@ -1,6 +1,11 @@
 ﻿
+#region Referencing
+
+using System.Linq;
 using Autodesk.AutoCAD.DatabaseServices;
 using Pyrrha.Runtime;
+
+#endregion
 
 namespace Pyrrha.Collections
 {
@@ -10,27 +15,27 @@ namespace Pyrrha.Collections
 
         public bool HasUnReconciledLayers
         {
-            get { return RecordTable.HasUnreconciledLayers; }
+            get { return this.RecordTable.HasUnreconciledLayers; }
         }
 
         public bool IncludeErased
         {
-            get { return _includeErased; }
+            get { return this._includeErased; }
             set
             {
-                RecordTable = value ? (LayerTable)RecordTable.IncludingErased : null;
-                _includeErased = value;
+                this.RecordTable = value ? (LayerTable)this.RecordTable.IncludingErased : null;
+                this._includeErased = value;
             }
         }
         private bool _includeErased;
 
         public bool IncludeHidden
         {
-            get { return _includeHidden; }
+            get { return this._includeHidden; }
             set
             {
-                RecordTable = value ? RecordTable.IncludingHidden : null;
-                _includeHidden = value;
+                this.RecordTable = value ? this.RecordTable.IncludingHidden : null;
+                this._includeHidden = value;
             }
         }
         private bool _includeHidden;
@@ -51,8 +56,9 @@ namespace Pyrrha.Collections
 
         public void GenerateUsageData()
         {
-            RecordTable.GenerateUsageData();
+            this.RecordTable.GenerateUsageData();
         }
+
         public override bool Remove(LayerTableRecord item)
         {
             if (item.Name == "0")
@@ -67,6 +73,16 @@ namespace Pyrrha.Collections
             item.Erase();
 
             return true;
+        }
+
+        /// <summary>
+        ///     Returns true if layer exists.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public bool Contains( string name )
+        {
+            return base.RecordTable.Has( name );
         }
 
         #endregion

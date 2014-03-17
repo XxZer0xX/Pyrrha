@@ -1,9 +1,13 @@
-﻿using System;
+﻿#region Referencing
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Autodesk.AutoCAD.DatabaseServices;
 using Pyrrha.Runtime;
+
+#endregion
 
 namespace Pyrrha.Collections
 {
@@ -18,41 +22,41 @@ namespace Pyrrha.Collections
 
         internal TTable RecordTable
         {
-            get { return _recordTable ?? (_recordTable = GetRecordTable()); }
-            set { _recordTable = value; }
+            get { return this._recordTable ?? (this._recordTable = this.GetRecordTable()); }
+            set { this._recordTable = value; }
         }
         private TTable _recordTable;
 
         protected Transaction Transaction
         {
-            get { return _transaction ?? (_transaction = ObjectManager.AddTransaction()); }
+            get { return this._transaction ?? (this._transaction = this.ObjectManager.AddTransaction()); }
         }
         private Transaction _transaction;
 
         public int Count
         {
-            get { return GetCount(); }
+            get { return this.GetCount(); }
         }
 
         public bool Has(string record)
         {
-            return RecordTable.Has(record);
+            return this.RecordTable.Has(record);
         }
 
         public bool IsReadOnly
         {
-            get { return _isReadOnly; }
+            get { return this._isReadOnly; }
         }
         private readonly bool _isReadOnly;
 
         public OpenMode Mode
         {
-            get { return _mode; }
+            get { return this._mode; }
             set
             {
-                _mode = value;
-                foreach (var id in RecordTable)
-                    GetRecord(id);
+                this._mode = value;
+                foreach (var id in this.RecordTable)
+                    this.GetRecord(id);
             }
         }
         private OpenMode _mode;
@@ -62,18 +66,18 @@ namespace Pyrrha.Collections
         public TRecord this[int index]
         {
             get { return GetIndex(index); }
-            set { SetIndex(value); }
+            set { this.SetIndex(value); }
         }
 
         public TRecord this[string name]
         {
             get { return GetIndex(name); }
-            set { SetIndex(value); }
+            set { this.SetIndex(value); }
         }
 
         public TRecord this[ObjectId id]
         {
-            get { return GetRecord(id); }
+            get { return this.GetRecord(id); }
         }
 
         #endregion
@@ -82,13 +86,13 @@ namespace Pyrrha.Collections
 
         protected RecordCollection(PyrrhaDocument document, ObjectId tableid, OpenMode openMode = OpenMode.ForRead)
         {
-            ObjectManager = document.ObjectManager;
-            _mode = openMode;
-            _isReadOnly = false;
-            _tableId = tableid;
-            _recordTable = null;
+            this.ObjectManager = document.ObjectManager;
+            this._mode = openMode;
+            this._isReadOnly = false;
+            this._tableId = tableid;
+            this._recordTable = null;
 
-            Refresh();
+            this.Refresh();
         }
 
         #endregion
@@ -102,25 +106,25 @@ namespace Pyrrha.Collections
 
         private TRecord GetIndex(int index)
         {
-            using (var iter = RecordTable.GetEnumerator())
+            using (var iter = this.RecordTable.GetEnumerator())
             {
                 int i = -1;
                 while (i++ != index)
                     iter.MoveNext();
 
-                return GetRecord(iter.Current);
+                return this.GetRecord(iter.Current);
             }
         }
         private TRecord GetIndex(string recordName)
         {
-            var id = RecordTable[recordName];
-            return GetRecord(id);
+            var id = this.RecordTable[recordName];
+            return this.GetRecord(id);
         }
 
         private int GetCount()
         {
             int result = 0;
-            using (var iter = RecordTable.GetEnumerator())
+            using (var iter = this.RecordTable.GetEnumerator())
             {
                 while (iter.MoveNext())
                     result++;
@@ -130,12 +134,12 @@ namespace Pyrrha.Collections
         }
         private TTable GetRecordTable()
         {
-            return (TTable)Transaction.GetObject(_tableId, Mode);
+            return (TTable)this.Transaction.GetObject(this._tableId, this.Mode);
         }
         private void SetIndex(TRecord value)
         {
-            if (ObjectManager.OpenObjects.ContainsKey(value.Id))
-                ObjectManager.OpenObjects[value.Id] = value;
+            if (this.ObjectManager.OpenObjects.ContainsKey(value.Id))
+                this.ObjectManager.OpenObjects[value.Id] = value;
         }
 
         protected TRecord GetRecord(ObjectId id)
@@ -143,25 +147,25 @@ namespace Pyrrha.Collections
             if (id == null)
                 throw new PyrrhaException("ObjectId cannot be null");
 
-            if (ObjectManager == null)
+            if (this.ObjectManager == null)
                 throw new PyrrhaException("ObjectManager is null");
 
-            return (TRecord)ObjectManager.GetRecord(id, Transaction, Mode);
+            return (TRecord)this.ObjectManager.GetRecord(id, this.Transaction, this.Mode);
         }
 
         public void Commit()
         {
-            Transaction.Commit();
-            Transaction.Dispose();
+            this.Transaction.Commit();
+            this.Transaction.Dispose();
         }
         public bool Contains(ObjectId id)
         {
-            return RecordTable.Has(id);
+            return this.RecordTable.Has(id);
         }
         public void Refresh()
         {
-            foreach (var id in RecordTable)
-                GetRecord(id);
+            foreach (var id in this.RecordTable)
+                this.GetRecord(id);
         }
 
         #region ICollection
@@ -174,18 +178,18 @@ namespace Pyrrha.Collections
             if (item == null)
                 throw new PyrrhaException("Item cannot be null.");
 
-            RecordTable.Add(item); // Add to the Record Table
-            Transaction.AddNewlyCreatedDBObject(item, true);
-            GetRecord(item.Id); // Make sure its managed
+            this.RecordTable.Add(item); // Add to the Record Table
+            this.Transaction.AddNewlyCreatedDBObject(item, true);
+            this.GetRecord(item.Id); // Make sure its managed
         }
         public void Clear()
         {
             foreach (var obj in this)
-                Remove(obj);
+                this.Remove(obj);
         }
         public bool Contains(TRecord item)
         {
-            return RecordTable.Has(item.Id);
+            return this.RecordTable.Has(item.Id);
         }
         public void CopyTo(TRecord[] array, int arrayIndex)
         {
@@ -197,7 +201,7 @@ namespace Pyrrha.Collections
             if (!Contains(item))
                 throw new PyrrhaException("The {0} does not exist in the collection", item.GetType().Name);
 
-            if (RecordTable.Has(item.Id))
+            if (this.RecordTable.Has(item.Id))
                 item.Erase();
 
             return true;
@@ -209,18 +213,18 @@ namespace Pyrrha.Collections
 
         public IEnumerator<TRecord> GetEnumerator()
         {
-            if (ObjectManager == null)
+            if (this.ObjectManager == null)
                 throw new PyrrhaException("ObjectManager is null");
 
-            using (var iter = RecordTable.GetEnumerator())
+            using (var iter = this.RecordTable.GetEnumerator())
             {
                 while (iter.MoveNext())
-                    yield return GetRecord(iter.Current);
+                    yield return this.GetRecord(iter.Current);
             }
         }
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return GetEnumerator();
+            return this.GetEnumerator();
         }
 
         #endregion
@@ -229,22 +233,22 @@ namespace Pyrrha.Collections
 
         ~RecordCollection()
         {
-            Dispose(false);
+            this.Dispose(false);
         }
         public void Dispose()
         {
-            Dispose(true);
+            this.Dispose(true);
             GC.SuppressFinalize(this);
         }
         protected virtual void Dispose(bool disposing)
         {
-            if (_disposed)
+            if (this._disposed)
                 return;
 
             if (disposing)
-                Transaction.Dispose();
+                this.Transaction.Dispose();
 
-            _disposed = true;
+            this._disposed = true;
         }
 
         #endregion

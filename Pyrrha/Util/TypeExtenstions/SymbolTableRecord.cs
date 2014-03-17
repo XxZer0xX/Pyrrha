@@ -1,10 +1,12 @@
-﻿using System;
+﻿#region Referencing
+
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Colors;
+using Autodesk.AutoCAD.DatabaseServices;
+
+#endregion
 
 namespace Pyrrha.Util.TypeExtenstions
 {

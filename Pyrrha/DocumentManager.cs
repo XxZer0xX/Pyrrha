@@ -1,9 +1,11 @@
-﻿using System;
+﻿#region Referencing
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Autodesk.AutoCAD.ApplicationServices;
-
 using AcApp = Autodesk.AutoCAD.ApplicationServices.Application;
+
+#endregion
 
 namespace Pyrrha
 {

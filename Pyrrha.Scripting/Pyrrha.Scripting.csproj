@@ -94,6 +94,7 @@
     </Compile>
     <Compile Include="Runtime\PyrrhaScriptEngine.cs" />
     <Compile Include="Runtime\PythonSession.cs" />
+    <Compile Include="Util\ParamsDelegate.cs" />
     <Compile Include="Util\StaticExtensions.cs" />
   </ItemGroup>
   <ItemGroup>

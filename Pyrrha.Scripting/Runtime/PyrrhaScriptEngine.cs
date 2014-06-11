@@ -21,330 +21,334 @@ namespace Pyrrha.Scripting.Runtime
 {
     public class PyrrhaScriptEngine : IDisposable
     {
-        private readonly object _commandEcho;
-        private readonly ScriptEngine _engine;
-
         internal readonly PyrrhaDocument LinkedDocument;
 
-        public IDictionary<string, ScriptScope> Scopes { get; private set; }
+        private readonly object _commandEcho;
 
-        public IList<string> AvailableScopes
-        {
-            get { return this.Scopes.Keys.ToList(); }
-        }
-
-        public string CurrentScopeName { get; private set; }
+        private readonly ScriptEngine _engine;
 
         private ComplieTimeErrorListener _errorListener;
-        public ComplieTimeErrorListener ErrorListener
-        {
-            get { return this._errorListener ?? (this._errorListener = new ComplieTimeErrorListener()); }
-            private set { this._errorListener = value; }
-        }
-
-        public ScriptScope CurrentScope
-        {
-            get { return this.Scopes[this.CurrentScopeName]; }
-        }
 
         public PyrrhaScriptEngine()
         {
-            this._engine = Python.CreateEngine();
+            _engine = Python.CreateEngine();
 
-            this.Runtime.LoadAssembly(typeof(Application).Assembly);
-            this.Runtime.LoadAssembly(typeof(DBObject).Assembly);
+            Runtime.LoadAssembly( typeof (Application).Assembly );
+            Runtime.LoadAssembly( typeof (DBObject).Assembly );
 
-            var initalScope = new Dictionary<string, object> { { "self", this.LinkedDocument = new PyrrhaDocument() } };
+            var initalScope = new Dictionary<string, object>
+            {
+                {"self", LinkedDocument = new PyrrhaDocument()}
+            };
 
-            foreach (var obj in this.LinkedDocument.GetType().GetProperties().Where(
-             prop => prop.GetCustomAttributes(typeof(ScriptingPropertyAttribute), true).Length != 0))
-                initalScope.Add(obj.Name, obj.GetValue(this.LinkedDocument, null));
+            foreach ( var obj in LinkedDocument.GetType()
+                                               .GetProperties()
+                                               .Where(
+                                                   prop =>
+                                                       prop.GetCustomAttributes(
+                                                           typeof (ScriptingPropertyAttribute), true )
+                                                           .Length != 0 ) )
+                initalScope.Add( obj.Name, obj.GetValue( LinkedDocument, null ) );
 
-            foreach (var obj in this.LinkedDocument.GetType().GetMethods().Where(
-                            method => method.GetCustomAttributes(typeof(ScriptingMethodAttribute), true).Length != 0))
+            foreach ( var obj in LinkedDocument.GetType()
+                                               .GetMethods()
+                                               .Where(
+                                                   method =>
+                                                       method.GetCustomAttributes(
+                                                           typeof (ScriptingMethodAttribute), true )
+                                                             .Length != 0 ) )
             {
                 Delegate method;
 
-                switch (obj.GetParameters().Count())
+                switch (obj.GetParameters()
+                           .Count())
                 {
                     case 0:
-                        method = new Func<dynamic>(() => obj.Invoke(this.LinkedDocument, null));
+                        method = new Func<dynamic>( () => obj.Invoke( LinkedDocument, null ) );
                         break;
                     case 1:
-                        method = new Func<object, dynamic>(param => obj.Invoke(this.LinkedDocument, new[] { param }));
+                        method = new Func<object, dynamic>(
+                            param => obj.Invoke(
+                                LinkedDocument, new[]
+                                {
+                                    param
+                                } ) );
                         break;
                     case 2:
-                        method = new Func<object, object, dynamic>((param1, param2) => obj.Invoke(this.LinkedDocument, new[] { param1, param2 }));
+                        method =
+                            new Func<object, object, dynamic>(
+                                ( param1, param2 ) => obj.Invoke(
+                                    LinkedDocument, new[]
+                                    {
+                                        param1,
+                                        param2
+                                    } ) );
                         break;
                     case 3:
-                        method = new Func<object, object, object, dynamic>((param1, param2, param3) => obj.Invoke(this.LinkedDocument, new[] { param1, param2, param3 }));
+                        method =
+                            new Func<object, object, object, dynamic>(
+                                ( param1, param2, param3 ) => obj.Invoke(
+                                    LinkedDocument, new[]
+                                    {
+                                        param1,
+                                        param2,
+                                        param3
+                                    } ) );
                         break;
                     default:
                         throw new NotImplementedException();
                 }
 
-                initalScope.Add(obj.Name.ToLower(), method);
+                initalScope.Add( obj.Name.ToLower(), method );
             }
 
-            this.Scopes = new Dictionary<string, ScriptScope> { { this.CurrentScopeName = "initial", this._engine.CreateScope(initalScope) } };
+            CurrentScope = _engine.CreateScope( initalScope );
 
-            this._commandEcho = Application.GetSystemVariable("CMDECHO");
-            Application.SetSystemVariable("CMDECHO", 0);
-            this.LinkedDocument.Editor.WriteMessage("Python Compiler Initialized...\n");
+            _commandEcho = Application.GetSystemVariable( "CMDECHO" );
+            Application.SetSystemVariable( "CMDECHO", 0 );
+            LinkedDocument.Editor.WriteMessage( "Python Compiler Initialized...\n" );
         }
 
-        public CompiledCode Compile(string code)
+
+        public ScriptScope CurrentScope{ get; private set; }
+
+        public ComplieTimeErrorListener ErrorListener
         {
-            return this._engine.CreateScriptSourceFromString(code, SourceCodeKind.AutoDetect).Compile(this.ErrorListener);
+            get { return _errorListener ?? ( _errorListener = new ComplieTimeErrorListener() ); }
+            private set { _errorListener = value; }
         }
 
-        public CompiledCode Compile(ScriptSource source)
+        public CompiledCode Compile( string code )
         {
-            return source.Compile(this.ErrorListener);
+            return _engine.CreateScriptSourceFromString( code, SourceCodeKind.AutoDetect )
+                          .Compile( ErrorListener );
         }
 
-        public void SetCurrentScope(string scopeName)
+        public CompiledCode Compile( ScriptSource source )
         {
-            this.CurrentScopeName = scopeName;
+            return source.Compile( ErrorListener );
         }
 
-        public dynamic ExecuteInNewScope(string expression, string newScopeName)
+
+        public dynamic Execute( CompiledCode code )
         {
-            this.Scopes.Add(newScopeName, this._engine.CreateScope());
-            return Execute(expression, newScopeName);
+            return code.Execute( CurrentScope );
         }
 
-        public T ExecuteInNewScope<T>(string expression, string newScopeName)
+        public dynamic Execute( string expression )
         {
-            this.Scopes.Add(newScopeName, this._engine.CreateScope());
-            return Execute<T>(expression, newScopeName);
+            return _engine.Execute( expression, CurrentScope );
         }
 
-        public dynamic Execute(CompiledCode code)
+        public dynamic Execute( string expression, string scopeName )
         {
-            return code.Execute(this.CurrentScope);
+            return Execute(expression, CurrentScope);
         }
 
-        public dynamic Execute(string expression)
+        public dynamic Execute( string expression, ScriptScope scope )
         {
-            return this._engine.Execute(expression, this.CurrentScope);
+            return _engine.Execute( expression, scope );
         }
 
-        public dynamic Execute(string expression, string scopeName)
+        public T Execute<T>( string expression )
         {
-            return this.Execute(expression, this.Scopes[scopeName]);
+            return _engine.Execute<T>( expression, CurrentScope );
         }
 
-        public dynamic Execute(string expression, ScriptScope scope)
+        public T Execute<T>( string expression, string scopeName )
         {
-            return this._engine.Execute(expression, scope);
+            return _engine.Execute<T>(expression, CurrentScope);
         }
 
-        public T Execute<T>(string expression)
+        public T Execute<T>( string expression, ScriptScope scope )
         {
-            return this._engine.Execute<T>(expression, this.CurrentScope);
+            return _engine.Execute<T>( expression, scope );
         }
 
-        public T Execute<T>(string expression, string scopeName)
+        public ScriptScope ExecuteFile( string path )
         {
-            return this._engine.Execute<T>(expression, this.Scopes[scopeName]);
+            return _engine.ExecuteFile( path, CurrentScope );
         }
 
-        public T Execute<T>(string expression, ScriptScope scope)
+        public ScriptScope ExecuteFile( string path, string scopeName )
         {
-            return this._engine.Execute<T>(expression, scope);
+            return _engine.ExecuteFile(path, CurrentScope);
         }
 
-        public ScriptScope ExecuteFile(string path)
+        public ScriptScope ExecuteFile( string path, ScriptScope scope )
         {
-            return this._engine.ExecuteFile(path, this.CurrentScope);
-        }
-
-        public ScriptScope ExecuteFile(string path, string scopeName)
-        {
-            return this._engine.ExecuteFile(path, this.Scopes[scopeName]);
-        }
-
-        public ScriptScope ExecuteFile(string path, ScriptScope scope)
-        {
-            return this._engine.ExecuteFile(path, scope);
-        }
-
-        public ScriptScope ExecuteFileInNewScope(string path, string newScopeName)
-        {
-            this.Scopes.Add(newScopeName, this._engine.CreateScope());
-            return this._engine.ExecuteFile(path, this.CurrentScope);
-        }
-
-        public ScriptScope GetInstanceScope(string scopeName)
-        {
-            return this.Scopes[scopeName];
+            return _engine.ExecuteFile( path, scope );
         }
 
         #region ScriptEngine
 
         public Version LanguageVersion
         {
-            get { return this._engine.LanguageVersion; }
+            get { return _engine.LanguageVersion; }
         }
 
         public ObjectOperations Operations
         {
-            get { return this._engine.Operations; }
+            get { return _engine.Operations; }
         }
 
         public ScriptRuntime Runtime
         {
-            get { return this._engine.Runtime; }
+            get { return _engine.Runtime; }
         }
 
         public LanguageSetup Setup
         {
-            get { return this._engine.Setup; }
+            get { return _engine.Setup; }
         }
 
         public ObjectOperations CreateOperations()
         {
-            return this._engine.CreateOperations();
+            return _engine.CreateOperations();
         }
 
-        public ObjectOperations CreateOperations(ScriptScope scope)
+        public ObjectOperations CreateOperations( ScriptScope scope )
         {
-            return this._engine.CreateOperations(scope);
+            return _engine.CreateOperations( scope );
         }
 
         public ScriptScope CreateScope()
         {
-            return this._engine.CreateScope();
+            return _engine.CreateScope();
         }
 
-        public ScriptScope CreateScope(IDictionary<string, object> dictionary)
+        public ScriptScope CreateScope( IDictionary<string, object> dictionary )
         {
-            return this._engine.CreateScope(dictionary);
+            return _engine.CreateScope( dictionary );
         }
 
-        public ScriptScope CreateScope(IDynamicMetaObjectProvider storage)
+        public ScriptScope CreateScope( IDynamicMetaObjectProvider storage )
         {
-            return this._engine.CreateScope(storage);
+            return _engine.CreateScope( storage );
         }
 
-        public ScriptSource CreateScriptSource(CodeObject content)
+        public ScriptSource CreateScriptSource( CodeObject content )
         {
-            return this._engine.CreateScriptSource(content);
-        }
-        public ScriptSource CreateScriptSource(CodeObject content, SourceCodeKind kind)
-        {
-            return this._engine.CreateScriptSource(content, kind);
+            return _engine.CreateScriptSource( content );
         }
 
-        public ScriptSource CreateScriptSource(CodeObject content, string path)
+        public ScriptSource CreateScriptSource( CodeObject content, SourceCodeKind kind )
         {
-            return this._engine.CreateScriptSource(content, path);
+            return _engine.CreateScriptSource( content, kind );
         }
 
-        public ScriptSource CreateScriptSource(StreamContentProvider content, string path)
+        public ScriptSource CreateScriptSource( CodeObject content, string path )
         {
-            return this._engine.CreateScriptSource(content, path);
+            return _engine.CreateScriptSource( content, path );
         }
 
-        public ScriptSource CreateScriptSource(CodeObject content, string path, SourceCodeKind kind)
+        public ScriptSource CreateScriptSource( StreamContentProvider content, string path )
         {
-            return this._engine.CreateScriptSource(content, path, kind);
+            return _engine.CreateScriptSource( content, path );
         }
 
-        public ScriptSource CreateScriptSource(StreamContentProvider content, string path, Encoding encoding)
+        public ScriptSource CreateScriptSource( CodeObject content, string path, SourceCodeKind kind )
         {
-            return this._engine.CreateScriptSource(content, path, encoding);
+            return _engine.CreateScriptSource( content, path, kind );
         }
 
-        public ScriptSource CreateScriptSource(TextContentProvider contentProvider, string path, SourceCodeKind kind)
+        public ScriptSource CreateScriptSource( StreamContentProvider content, string path, Encoding encoding )
         {
-            return this._engine.CreateScriptSource(contentProvider, path, kind);
+            return _engine.CreateScriptSource( content, path, encoding );
         }
 
-        public ScriptSource CreateScriptSource(StreamContentProvider content, string path, Encoding encoding, SourceCodeKind kind)
+        public ScriptSource CreateScriptSource( TextContentProvider contentProvider, string path, SourceCodeKind kind )
         {
-            return this._engine.CreateScriptSource(content, path, encoding, kind);
+            return _engine.CreateScriptSource( contentProvider, path, kind );
         }
 
-        public ScriptSource CreateScriptSourceFromFile(string path)
+        public ScriptSource CreateScriptSource(
+            StreamContentProvider content,
+            string path,
+            Encoding encoding,
+            SourceCodeKind kind )
         {
-            return this._engine.CreateScriptSourceFromFile(path);
+            return _engine.CreateScriptSource( content, path, encoding, kind );
         }
 
-        public ScriptSource CreateScriptSourceFromFile(string path, Encoding encoding)
+        public ScriptSource CreateScriptSourceFromFile( string path )
         {
-            return this._engine.CreateScriptSourceFromFile(path, encoding);
+            return _engine.CreateScriptSourceFromFile( path );
         }
 
-        public ScriptSource CreateScriptSourceFromFile(string path, Encoding encoding, SourceCodeKind kind)
+        public ScriptSource CreateScriptSourceFromFile( string path, Encoding encoding )
         {
-            return this._engine.CreateScriptSourceFromFile(path, encoding, kind);
+            return _engine.CreateScriptSourceFromFile( path, encoding );
         }
 
-        public ScriptSource CreateScriptSourceFromString(string expression)
+        public ScriptSource CreateScriptSourceFromFile( string path, Encoding encoding, SourceCodeKind kind )
         {
-            return this._engine.CreateScriptSourceFromString(expression);
+            return _engine.CreateScriptSourceFromFile( path, encoding, kind );
         }
 
-        public ScriptSource CreateScriptSourceFromString(string code, SourceCodeKind kind)
+        public ScriptSource CreateScriptSourceFromString( string expression )
         {
-            return this._engine.CreateScriptSourceFromString(code, kind);
+            return _engine.CreateScriptSourceFromString( expression );
         }
 
-        public ScriptSource CreateScriptSourceFromString(string expression, string path)
+        public ScriptSource CreateScriptSourceFromString( string code, SourceCodeKind kind )
         {
-            return this._engine.CreateScriptSourceFromString(expression, path);
+            return _engine.CreateScriptSourceFromString( code, kind );
         }
 
-        public ScriptSource CreateScriptSourceFromString(string code, string path, SourceCodeKind kind)
+        public ScriptSource CreateScriptSourceFromString( string expression, string path )
         {
-            return this._engine.CreateScriptSourceFromString(code, path, kind);
+            return _engine.CreateScriptSourceFromString( expression, path );
         }
 
-        public ObjectHandle ExecuteAndWrap(string expression)
+        public ScriptSource CreateScriptSourceFromString( string code, string path, SourceCodeKind kind )
         {
-            return this._engine.ExecuteAndWrap(expression);
+            return _engine.CreateScriptSourceFromString( code, path, kind );
         }
 
-        public ObjectHandle ExecuteAndWrap(string expression, ScriptScope scope)
+        public ObjectHandle ExecuteAndWrap( string expression )
         {
-            return this._engine.ExecuteAndWrap(expression, scope);
+            return _engine.ExecuteAndWrap( expression );
+        }
+
+        public ObjectHandle ExecuteAndWrap( string expression, ScriptScope scope )
+        {
+            return _engine.ExecuteAndWrap( expression, scope );
         }
 
         public CompilerOptions GetCompilerOptions()
         {
-            return this._engine.GetCompilerOptions();
+            return _engine.GetCompilerOptions();
         }
 
-        public CompilerOptions GetCompilerOptions(ScriptScope scope)
+        public CompilerOptions GetCompilerOptions( ScriptScope scope )
         {
-            return this._engine.GetCompilerOptions(scope);
+            return _engine.GetCompilerOptions( scope );
         }
 
-        public ScriptScope GetScope(string path)
+        public ScriptScope GetScope( string path )
         {
-            return this._engine.GetScope(path);
+            return _engine.GetScope( path );
         }
 
         public ICollection<string> GetSearchPaths()
         {
-            return this._engine.GetSearchPaths();
+            return _engine.GetSearchPaths();
         }
 
-        public TService GetService<TService>(params object[] args) where TService : class
+        public TService GetService<TService>( params object[] args ) where TService : class
         {
-            return this._engine.GetService<TService>(args);
+            return _engine.GetService<TService>( args );
         }
 
         public object InitializeLifetimeService()
         {
-            return this._engine.InitializeLifetimeService();
+            return _engine.InitializeLifetimeService();
         }
 
-        public void SetSearchPaths(ICollection<string> paths)
+        public void SetSearchPaths( ICollection<string> paths )
         {
-            this._engine.SetSearchPaths(paths);
+            _engine.SetSearchPaths( paths );
         }
 
         #endregion
@@ -355,20 +359,22 @@ namespace Pyrrha.Scripting.Runtime
 
         public void Dispose()
         {
-            this.Dispose(true);
+            Dispose( true );
         }
 
-        private void Dispose(bool disposing)
+        private void Dispose( bool disposing )
         {
-            if (!disposing || this._isDisposed)
+            if (!disposing || _isDisposed)
                 return;
 
-            foreach (var prop in this.GetType().GetProperties().Where(obj => obj.CanWrite))
-                prop.SetValue(this, null, null);
+            foreach ( var prop in GetType()
+                .GetProperties()
+                .Where( obj => obj.CanWrite ) )
+                prop.SetValue( this, null, null );
 
-            Application.SetSystemVariable("CMDECHO", this._commandEcho);
-            this.LinkedDocument.Dispose();
-            this._isDisposed = true;
+            Application.SetSystemVariable( "CMDECHO", _commandEcho );
+            LinkedDocument.Dispose();
+            _isDisposed = true;
         }
 
         #endregion

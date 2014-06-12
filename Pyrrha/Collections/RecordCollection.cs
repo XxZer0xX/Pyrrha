@@ -150,7 +150,7 @@ namespace Pyrrha.Collections
             if (this.ObjectManager == null)
                 throw new PyrrhaException("ObjectManager is null");
 
-            return (TRecord)this.ObjectManager.GetRecord(id, this.Transaction, this.Mode);
+            return (TRecord) this.ObjectManager.GetObject(id, this.Transaction, this.Mode);
         }
 
         public void Commit()

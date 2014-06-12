@@ -46,7 +46,7 @@ namespace Pyrrha
 
         public DocumentManager DocumentManager
         {
-            get { return _documentManager ?? ( _documentManager = new DocumentManager() ); }
+            get { return _documentManager ?? (_documentManager = new DocumentManager()); }
         }
 
         [ScriptingProperty]
@@ -55,7 +55,7 @@ namespace Pyrrha
             get
             {
                 return _objectManager ??
-                       ( _objectManager = new OpenObjectManager( this ) );
+                       (_objectManager = new OpenObjectManager(this));
             }
         }
 
@@ -63,7 +63,7 @@ namespace Pyrrha
         {
             get
             {
-                return (BlockTableRecord) ObjectManager.GetObject(
+                return (BlockTableRecord)ObjectManager.GetObject(
                 SymbolUtilityServices.GetBlockModelSpaceId(Database));
             }
         }
@@ -72,29 +72,29 @@ namespace Pyrrha
         {
             get
             {
-                return null; // (BlockTableRecord)ObjectManager.GetObject(
-                //SymbolUtilityServices.GetBlockPaperSpaceId(Database));     
+                return (BlockTableRecord)ObjectManager.GetObject(
+                SymbolUtilityServices.GetBlockPaperSpaceId(Database));
             }
         }
 
         [ScriptingProperty]
         public LayerCollection Layers
         {
-            get { return _layers ?? ( _layers = new LayerCollection( this, OpenMode.ForWrite ) ); }
+            get { return _layers ?? (_layers = new LayerCollection(this, OpenMode.ForWrite)); }
             set { _layers = value; }
         }
 
         [ScriptingProperty]
         public TextStyleCollection TextStyles
         {
-            get { return _textstyles ?? ( _textstyles = new TextStyleCollection( this, OpenMode.ForWrite ) ); }
+            get { return _textstyles ?? (_textstyles = new TextStyleCollection(this, OpenMode.ForWrite)); }
             set { _textstyles = value; }
         }
 
         [ScriptingProperty]
         public LinetypeCollection Linetypes
         {
-            get { return _linetypes ?? ( _linetypes = new LinetypeCollection( this, OpenMode.ForWrite ) ); }
+            get { return _linetypes ?? (_linetypes = new LinetypeCollection(this, OpenMode.ForWrite)); }
             set { _linetypes = value; }
         }
 
@@ -103,44 +103,54 @@ namespace Pyrrha
         #region Constructors
 
         public PyrrhaDocument()
-            : this( AcApp.DocumentManager.MdiActiveDocument )
+            : this(AcApp.DocumentManager.MdiActiveDocument)
         {
         }
 
-        public PyrrhaDocument( string path )
-            : this( FindDocument( path ) )
+        public PyrrhaDocument(string path)
+            : this(FindDocument(path))
         {
         }
 
-        public PyrrhaDocument( Func<Document> func )
-            : this( func() )
+        public PyrrhaDocument(Func<Document> func)
+            : this(func())
         {
         }
 
-        private PyrrhaDocument( Document doc )
+        private PyrrhaDocument(Document doc)
         {
             if (doc == null)
-                throw new NullReferenceException( "Document is null." );
-            //_loadAllLinetypes(doc);
-            //PyrrhaException.IsScriptSource = Thread.CurrentThread.IsScriptSource();
-            BaseDocument = doc;
-            DocumentManager.AddDocument( this );
-        }
+                throw new NullReferenceException("Document is null.");
 
-        // This is safer because it actually checks full drawing paths.
-        // AutoCAD allows ambiguous drawing names in a single session,
-        // so this checks for the fully qualified drawing, and opens it
-        // if not available.
-        public static Document FindDocument( string path )
-        {
-            var openDocument = AcApp.DocumentManager.Cast<Document>()
-                                    .FirstOrDefault( doc => doc.Name.IndexOf( path, StringComparison.CurrentCultureIgnoreCase ) > -1 );
-            return openDocument ?? AcApp.DocumentManager.Open(path, false);
+            BaseDocument = doc;
+            DocumentManager.AddDocument(this);
         }
 
         #endregion
 
-        #region Methods
+        #region Scripting Methods
+
+        #region Document
+
+        [ScriptingMethod]
+        public static Document FindDocument(string path)
+        {
+            var openDocument = AcApp.DocumentManager.Cast<Document>()
+                                    .FirstOrDefault(doc => doc.Name.IndexOf(path, StringComparison.CurrentCultureIgnoreCase) > -1);
+            return openDocument ?? AcApp.DocumentManager.Open(path, false);
+        }
+
+        [ScriptingMethod]
+        public void SendCommandAsync(string command)
+        {
+            var acadDoc = AcadDocument;
+            acadDoc.GetType().InvokeMember(
+                "SendCommand",
+                System.Reflection.BindingFlags.InvokeMethod,
+                null,
+                acadDoc,
+                new[] { command + "\n" });
+        }
 
         [ScriptingMethod]
         public void ConfirmAllChanges()
@@ -148,62 +158,75 @@ namespace Pyrrha
             ObjectManager.CommitAll();
         }
 
-        #endregion
+        [ScriptingMethod]
+        public DBObject Import(string path)
+        {
+            return Import(path, ModelSpace);
+        }
 
-        #region Scripting Methods
+        [ScriptingMethod]
+        public DBObject Import(string path, BlockTableRecord selectedSpace)
+        {
+            var blockName = Path.GetFileNameWithoutExtension(path);
+            Database tmpDb = new Database(false, true);
+            tmpDb.ReadDwgFile(path, FileShare.Read, true, null);
+            return ObjectManager.GetObject(Database.Insert(blockName, tmpDb, true), OpenMode.ForWrite);
+        }
+
+        #endregion
 
         #region Editor
 
         [ScriptingMethod]
-        public void Write( object message )
+        public void Write(object message)
         {
-            Editor.WriteMessage( string.Format( "\n{0}\n", message ) );
+            Editor.WriteMessage(string.Format("\n{0}\n", message));
         }
 
         [ScriptingMethod]
-        public double? GetDistance( string message )
+        public double? GetDistance(string message)
         {
-            var result = Editor.GetDistance( message );
-            return result.Status.Equals( PromptStatus.OK )
-                ? new double?( result.Value )
+            var result = Editor.GetDistance(message);
+            return result.Status.Equals(PromptStatus.OK)
+                ? new double?(result.Value)
                 : null;
         }
 
         [ScriptingMethod]
-        public double? GetDouble( string message )
+        public double? GetDouble(string message)
         {
-            var result = Editor.GetDouble( message );
-            return result.Status.Equals( PromptStatus.OK )
-                ? new double?( result.Value )
+            var result = Editor.GetDouble(message);
+            return result.Status.Equals(PromptStatus.OK)
+                ? new double?(result.Value)
                 : null;
         }
 
         [ScriptingMethod]
-        public Entity GetEntity( string message )
+        public Entity GetEntity(string message)
         {
             throw new NotImplementedException();
         }
 
         [ScriptingMethod]
-        public string GetFileNameForOpen( string message )
+        public string GetFileNameForOpen(string message)
         {
-            return Editor.GetFileNameForOpen( message )
+            return Editor.GetFileNameForOpen(message)
                          .StringResult;
         }
 
         [ScriptingMethod]
-        public string GetFileNameForSave( string message )
+        public string GetFileNameForSave(string message)
         {
-            return Editor.GetFileNameForSave( message )
+            return Editor.GetFileNameForSave(message)
                          .StringResult;
         }
 
         [ScriptingMethod]
-        public int? GetInteger( string message )
+        public int? GetInteger(string message)
         {
-            var result = Editor.GetInteger( message );
-            return result.Status.Equals( PromptStatus.OK )
-                ? new int?( result.Value )
+            var result = Editor.GetInteger(message);
+            return result.Status.Equals(PromptStatus.OK)
+                ? new int?(result.Value)
                 : null;
         }
 
@@ -211,22 +234,22 @@ namespace Pyrrha
         //public PromptNestedEntityResult GetNestedEntity(string message) { return null; }
 
         [ScriptingMethod]
-        public Point3d? GetPoint( string message )
+        public Point3d? GetPoint(string message)
         {
-            var result = Editor.GetPoint( message );
-            return result.Status.Equals( PromptStatus.OK )
-                ? new Point3d?( result.Value )
+            var result = Editor.GetPoint(message);
+            return result.Status.Equals(PromptStatus.OK)
+                ? new Point3d?(result.Value)
                 : null;
         }
 
         [ScriptingMethod]
-        public string GetString( string message, bool spacesAllowed )
+        public string GetString(string message, bool spacesAllowed)
         {
             return Editor.GetString(
-                new PromptStringOptions( message )
+                new PromptStringOptions(message)
                 {
                     AllowSpaces = spacesAllowed
-                } )
+                })
                          .StringResult;
         }
 
@@ -241,16 +264,16 @@ namespace Pyrrha
         #region Layers
 
         [ScriptingMethod]
-        public LayerTableRecord CreateLayer( string name, int colorIndex, string linetype )
+        public LayerTableRecord CreateLayer(string name, int colorIndex, string linetype)
         {
-            var color = Color.FromColorIndex( ColorMethod.ByAci, (short) colorIndex );
-            return Layers.CreateLayer( name, color, linetype );
+            var color = Color.FromColorIndex(ColorMethod.ByAci, (short)colorIndex);
+            return Layers.CreateLayer(name, color, linetype);
         }
 
         [ScriptingMethod]
-        public Color FromColorIndex( int colorIndex )
+        public Color FromColorIndex(int colorIndex)
         {
-            return Color.FromColorIndex( ColorMethod.ByAci, (short) colorIndex );
+            return Color.FromColorIndex(ColorMethod.ByAci, (short)colorIndex);
         }
 
         #endregion
@@ -258,21 +281,21 @@ namespace Pyrrha
         #region Application
 
         [ScriptingMethod]
-        public void SetVar( string varName, object value )
+        public void SetVar(string varName, object value)
         {
-            Application.SetSystemVariable( varName, value );
+            Application.SetSystemVariable(varName, value);
         }
 
         [ScriptingMethod]
-        public object GetVar( string varName )
+        public object GetVar(string varName)
         {
-            return Application.GetSystemVariable( varName );
+            return Application.GetSystemVariable(varName);
         }
 
         [ScriptingMethod]
-        public void Alert( string message )
+        public void Alert(string message)
         {
-            Application.ShowAlertDialog( message );
+            Application.ShowAlertDialog(message);
         }
 
         [ScriptingMethod]
@@ -282,10 +305,6 @@ namespace Pyrrha
         }
 
         #endregion
-
-        #endregion
-
-        #region Private Supporting Methods
 
         #endregion
 
@@ -358,9 +377,9 @@ namespace Pyrrha
 
         #region Methods
 
-        public Bitmap CapturePreviewImage( int width, int height )
+        public Bitmap CapturePreviewImage(int width, int height)
         {
-            return BaseDocument.CapturePreviewImage( (uint) width, (uint) height );
+            return BaseDocument.CapturePreviewImage((uint)width, (uint)height);
         }
 
         [ScriptingMethod]
@@ -372,22 +391,22 @@ namespace Pyrrha
         [ScriptingMethod]
         public void CloseAndSave()
         {
-            BaseDocument.CloseAndSave( Name );
+            BaseDocument.CloseAndSave(Name);
         }
 
-        public static Document Create( IntPtr unmanagedPointer )
+        public static Document Create(IntPtr unmanagedPointer)
         {
-            return Document.Create( unmanagedPointer );
+            return Document.Create(unmanagedPointer);
         }
 
-        public void DowngradeDocOpen( bool bPromptForSave )
+        public void DowngradeDocOpen(bool bPromptForSave)
         {
-            BaseDocument.DowngradeDocOpen( bPromptForSave );
+            BaseDocument.DowngradeDocOpen(bPromptForSave);
         }
 
-        public static Document FromAcadDocument( object acadDocument )
+        public static Document FromAcadDocument(object acadDocument)
         {
-            return Document.FromAcadDocument( acadDocument );
+            return Document.FromAcadDocument(acadDocument);
         }
 
         [ScriptingMethod]
@@ -400,9 +419,9 @@ namespace Pyrrha
             DocumentLockMode lockMode,
             string globalCommandName,
             string localCommandName,
-            bool promptIfFails )
+            bool promptIfFails)
         {
-            return BaseDocument.LockDocument( lockMode, globalCommandName, localCommandName, promptIfFails );
+            return BaseDocument.LockDocument(lockMode, globalCommandName, localCommandName, promptIfFails);
         }
 
         public DocumentLockMode LockMode()
@@ -410,9 +429,9 @@ namespace Pyrrha
             return BaseDocument.LockMode();
         }
 
-        public DocumentLockMode LockMode( bool bIncludeMyLocks )
+        public DocumentLockMode LockMode(bool bIncludeMyLocks)
         {
-            return BaseDocument.LockMode( bIncludeMyLocks );
+            return BaseDocument.LockMode(bIncludeMyLocks);
         }
 
         public void PopDbmod()
@@ -425,9 +444,9 @@ namespace Pyrrha
             BaseDocument.PushDbmod();
         }
 
-        public void SendStringToExecute( string command, bool activate, bool wrapUpInactiveDoc, bool echoCommand )
+        public void SendStringToExecute(string command, bool activate, bool wrapUpInactiveDoc, bool echoCommand)
         {
-            BaseDocument.SendStringToExecute( command, activate, wrapUpInactiveDoc, echoCommand );
+            BaseDocument.SendStringToExecute(command, activate, wrapUpInactiveDoc, echoCommand);
         }
 
         public Database TryGetDatabase()
@@ -549,7 +568,7 @@ namespace Pyrrha
         public void Dispose()
         {
             if (_beginDocumentDispose != null)
-                _beginDocumentDispose( this, new EventArgs() );
+                _beginDocumentDispose(this, new EventArgs());
 
             ObjectManager.Dispose();
         }
@@ -558,28 +577,28 @@ namespace Pyrrha
 
         #region IEqualityComparer implementation
 
-        public override bool Equals( object obj )
+        public override bool Equals(object obj)
         {
-            if (ReferenceEquals( null, obj ))
+            if (ReferenceEquals(null, obj))
                 return false;
-            if (ReferenceEquals( this, obj ))
+            if (ReferenceEquals(this, obj))
                 return true;
-            return obj.GetType() == GetType() && Equals( (PyrrhaDocument) obj );
+            return obj.GetType() == GetType() && Equals((PyrrhaDocument)obj);
         }
 
-        internal bool Equals( PyrrhaDocument other )
+        internal bool Equals(PyrrhaDocument other)
         {
-            return Equals( BaseDocument, other.BaseDocument )
-                   && Equals( _objectManager, other._objectManager );
+            return Equals(BaseDocument, other.BaseDocument)
+                   && Equals(_objectManager, other._objectManager);
         }
 
         public override int GetHashCode()
         {
             unchecked
             {
-                return ( ( BaseDocument != null
+                return ((BaseDocument != null
                     ? BaseDocument.GetHashCode()
-                    : 0 )*397 );
+                    : 0) * 397);
             }
         }
 

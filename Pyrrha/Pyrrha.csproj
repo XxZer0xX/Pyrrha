@@ -51,6 +51,7 @@
     <Compile Include="Attributes\ScriptingMethodAttribute.cs" />
     <Compile Include="Attributes\ScriptingPropertyAttribute.cs" />
     <Compile Include="Collections\LinetypeCollection.cs" />
+    <Compile Include="Collections\OpenObjectCollection.cs" />
     <Compile Include="Collections\RecordCollection.cs" />
     <Compile Include="Collections\LayerCollection.cs" />
     <Compile Include="Collections\EntityCollection.cs" />
@@ -64,7 +65,9 @@
     </Compile>
     <Compile Include="PyrrhaDocument.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Query\Query.cs" />
     <Compile Include="Query\SelectionFilter.cs" />
+    <Compile Include="Query\SelectQuery.cs" />
     <Compile Include="Runtime\PyrrhaException.cs" />
     <Compile Include="Util\PyrrhaScriptingMethods.cs" />
     <Compile Include="Util\Query\EntityQuery.cs" />

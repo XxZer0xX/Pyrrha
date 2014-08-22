@@ -4,8 +4,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Remoting;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Runtime;
+using Autodesk.AutoCAD.Windows.Data;
 using Exception = Autodesk.AutoCAD.Runtime.Exception;
 
 #endregion
@@ -21,18 +23,18 @@ namespace Pyrrha
             get { return this.OpenObjects.Count; }
         }
 
-        public Database Database {get; private set;}
+        public Database Database { get; private set; }
 
         public PyrrhaDocument Document { get; private set; }
 
         public IDictionary<ObjectId, DBObject> OpenObjects
         {
             get { return this._openObjects ?? (this._openObjects = new Dictionary<ObjectId, DBObject>()); }
-            private set { this._openObjects = value;}
+            private set { this._openObjects = value; }
         }
         private IDictionary<ObjectId, DBObject> _openObjects;
 
-        public IList<Transaction> Transactions { get; private set; }
+        internal IList<Transaction> Transactions { get; private set; }
 
         #endregion
 
@@ -49,30 +51,23 @@ namespace Pyrrha
 
         #region Methods
 
-        private DBObject AddObject(ObjectId id, Transaction trans, OpenMode mode)
+        private DBObject _addObject(ObjectId id, Transaction trans, OpenMode mode)
         {
             DBObject returnObj = null;
 
             try
             {
-               
                 returnObj = trans.GetObject(id, mode);
             }
             catch (Exception ex)
             {
-                if (ex.ErrorStatus == ErrorStatus.NotOpenForWrite)
-                    this.AddObject(id, trans, OpenMode.ForRead).Close();
-                
-                id.GetObject(OpenMode.ForRead).Close();
-                this.AddObject(id, trans, mode);
+                if (ex.ErrorStatus == ErrorStatus.WasOpenForWrite || ex.ErrorStatus == ErrorStatus.WasOpenForRead)
+                    id.GetObject(OpenMode.ForRead).Close();
 
-                throw;
+                this._addObject(id, trans, mode);
             }
 
-            if (this.OpenObjects.ContainsKey(id))
-                this.OpenObjects[id] = returnObj;
-            else
-                this.OpenObjects.Add(id, returnObj);
+            this.OpenObjects.Add(id, returnObj);
             return returnObj;
         }
 
@@ -83,7 +78,7 @@ namespace Pyrrha
             this.OpenObjects = null;
         }
 
-        public Transaction AddTransaction()
+        public Transaction GetTransaction()
         {
             var newTrans = this.Database.TransactionManager.StartOpenCloseTransaction();
             this.Transactions.Add(newTrans);
@@ -91,7 +86,7 @@ namespace Pyrrha
             return newTrans;
         }
 
-        public void CommitAll(bool clearobjects = true)
+        public void CommitAll()
         {
             foreach (var trans in this.Transactions)
             {
@@ -101,40 +96,64 @@ namespace Pyrrha
             this.Transactions.Clear();
         }
 
-        public DBObject GetRecord(ObjectId id, Transaction trans, OpenMode mode)
+        /// <summary>
+        /// Get an object from the database
+        /// </summary>
+        /// <param type="Enum" name="mode"> open for read or for write </param>
+        public DBObject GetObject(ObjectId id, OpenMode mode)
         {
-            return GetObject(id, trans, mode);
+            return this.GetObject(id, new OpenCloseTransaction(), mode);
         }
 
-        public DBObject GetTable(ObjectId id, Transaction trans, OpenMode mode)
+        public IEnumerable<DBObject> GetObject(OpenMode mode, params ObjectId[] ids)
         {
-            return GetObject(id, trans, mode);
+            var trans = new OpenCloseTransaction();
+            return ids.Select(id => GetObject(id, trans, mode));
+        }
+
+        public IEnumerable<DBObject> GetObject(OpenMode mode, IEnumerable<ObjectId> ids)
+        {
+            var trans = new OpenCloseTransaction();
+            return ids.Select(id => GetObject(id, trans, mode));
         }
 
         public DBObject GetObject(ObjectId id, Transaction trans, OpenMode mode)
         {
-            //bool inCollection = collection.Contains(id);
-            bool inManager = this.OpenObjects.ContainsKey(id);
+            if (!this.OpenObjects.ContainsKey(id))
+                return this._addObject(id, trans, mode);
 
-            // Check the object for a value;
-            var returnObj = inManager ? this.OpenObjects[id] : null;
+            var obj = this.OpenObjects[id];
 
-            bool isNull = returnObj == null;
-            bool isOpen = !isNull && (this.OpenObjects[id].IsReadEnabled || this.OpenObjects[id].IsWriteEnabled);
+            if (mode.Equals(OpenMode.ForWrite) && obj.IsReadEnabled)
+                obj.UpgradeOpen();
+            else if (!mode.Equals(OpenMode.ForWrite) && obj.IsWriteEnabled)
+                obj.DowngradeOpen();
 
-            // The DBObject is managed and already open
-            if (inManager && isOpen)
-            {
-                if (!returnObj.IsReadEnabled && mode != OpenMode.ForRead)
-                    returnObj.DowngradeOpen();
-                else if (returnObj.IsWriteEnabled && mode != OpenMode.ForWrite)
-                    returnObj.UpgradeOpen();
+            return obj;
 
-                return this.OpenObjects[id];
-            }
 
-            // Add the object to the transaction owned by the collection
-            return this.AddObject(id, trans, mode);
+            ////bool inCollection = collection.Contains(id);
+            //bool inManager = this.OpenObjects.ContainsKey(id);
+
+            //// Check the object for a value;
+            //var returnObj = inManager ? this.OpenObjects[id] : null;
+
+            //bool isNull = returnObj == null;
+            //bool isOpen = !isNull && (this.OpenObjects[id].IsReadEnabled || this.OpenObjects[id].IsWriteEnabled);
+
+            //// The DBObject is managed and already open
+            //if (inManager && isOpen)
+            //{
+            //    if (!returnObj.IsReadEnabled && mode != OpenMode.ForRead)
+            //        returnObj.DowngradeOpen();
+            //    else if (returnObj.IsWriteEnabled && mode != OpenMode.ForWrite)
+            //        returnObj.UpgradeOpen();
+
+            //    return this.OpenObjects[id];
+            //}
+
+            //// Add the object to the transaction owned by the collection
+            //return this._addObject(id, trans, mode);
         }
 
         internal void RemoveObject(ObjectId id, bool erase = false)
@@ -147,9 +166,9 @@ namespace Pyrrha
             {
                 if (erase)
                     obj.Erase();
-                obj.Close();                  
+                obj.Close();
             }
-                
+
             this.OpenObjects.Remove(id);
         }
 
@@ -211,8 +230,8 @@ namespace Pyrrha
                 trans.Dispose();
 
             foreach (var obj in this.OpenObjects.Values.Where(obj => obj != null))
-                obj.Close();
-                
+                obj.Dispose();
+
             this._disposed = true;
             GC.SuppressFinalize(this);
         }

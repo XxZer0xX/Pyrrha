@@ -1,4 +1,9 @@
-﻿#region Referencing
+﻿using System.Collections.Generic;
+using System.Data;
+using System.Reflection;
+using Autodesk.AutoCAD.Runtime;
+
+#region Referencing
 
 using ErrorStatus = Autodesk.AutoCAD.Runtime.ErrorStatus;
 using Exception = Autodesk.AutoCAD.Runtime.Exception;
@@ -150,6 +155,28 @@ namespace Pyrrha
         {
             this.ObjectManager.CommitAll();
         }
+
+        public IList<Entity> ExecuteQuery(string query)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IList<Entity> Select(string selectQuery)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Update(string updateQuery)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Delete(string deleteQuery)
+        {
+            throw new NotImplementedException();
+        }
+
+
 
         #endregion
 

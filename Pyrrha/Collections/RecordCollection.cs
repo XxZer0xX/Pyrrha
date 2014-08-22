@@ -1,7 +1,6 @@
 ﻿#region Referencing
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Autodesk.AutoCAD.DatabaseServices;
@@ -11,43 +10,20 @@ using Pyrrha.Runtime;
 
 namespace Pyrrha.Collections
 {
-    public abstract class RecordCollection<TTable,TRecord> : ICollection<TRecord>, IDisposable
+    public class RecordCollection<TTable,TRecord> : OpenObjectCollection<TRecord>
         where TTable : SymbolTable
         where TRecord : SymbolTableRecord
     {
         #region Properties
         
-        private bool _disposed;
         private readonly ObjectId _tableId;
 
-        internal TTable RecordTable
-        {
-            get { return this._recordTable ?? (this._recordTable = this.GetRecordTable()); }
-            set { this._recordTable = value; }
-        }
-        private TTable _recordTable;
-
-        protected Transaction Transaction
-        {
-            get { return this._transaction ?? (this._transaction = this.ObjectManager.AddTransaction()); }
-        }
-        private Transaction _transaction;
-
-        public int Count
-        {
-            get { return this.GetCount(); }
-        }
+        internal TTable RecordTable { get; set; }
 
         public bool Has(string record)
         {
             return this.RecordTable.Has(record);
         }
-
-        public bool IsReadOnly
-        {
-            get { return this._isReadOnly; }
-        }
-        private readonly bool _isReadOnly;
 
         public OpenMode Mode
         {
@@ -55,13 +31,13 @@ namespace Pyrrha.Collections
             set
             {
                 this._mode = value;
+
+                // What is this doing?
                 foreach (var id in this.RecordTable)
                     this.GetRecord(id);
             }
         }
         private OpenMode _mode;
-
-        public OpenObjectManager ObjectManager { get; private set; }
 
         public TRecord this[int index]
         {
@@ -84,14 +60,11 @@ namespace Pyrrha.Collections
 
         #region Constructor
 
-        protected RecordCollection(PyrrhaDocument document, ObjectId tableid, OpenMode openMode = OpenMode.ForRead)
+        protected RecordCollection(PyrrhaDocument document, ObjectId tableid, OpenMode openMode = OpenMode.ForRead) 
+            : base(document.ObjectManager)
         {
-            this.ObjectManager = document.ObjectManager;
             this._mode = openMode;
-            this._isReadOnly = false;
             this._tableId = tableid;
-            this._recordTable = null;
-
             this.Refresh();
         }
 
@@ -108,34 +81,20 @@ namespace Pyrrha.Collections
         {
             using (var iter = this.RecordTable.GetEnumerator())
             {
-                int i = -1;
+                var i = -1;
                 while (i++ != index)
                     iter.MoveNext();
 
                 return this.GetRecord(iter.Current);
             }
         }
+
         private TRecord GetIndex(string recordName)
         {
             var id = this.RecordTable[recordName];
             return this.GetRecord(id);
         }
 
-        private int GetCount()
-        {
-            int result = 0;
-            using (var iter = this.RecordTable.GetEnumerator())
-            {
-                while (iter.MoveNext())
-                    result++;
-            }
-
-            return result;
-        }
-        private TTable GetRecordTable()
-        {
-            return (TTable)this.Transaction.GetObject(this._tableId, this.Mode);
-        }
         private void SetIndex(TRecord value)
         {
             if (this.ObjectManager.OpenObjects.ContainsKey(value.Id))
@@ -150,7 +109,7 @@ namespace Pyrrha.Collections
             if (this.ObjectManager == null)
                 throw new PyrrhaException("ObjectManager is null");
 
-            return (TRecord)this.ObjectManager.GetRecord(id, this.Transaction, this.Mode);
+            return (TRecord)this.ObjectManager.GetObject(id, this.Transaction, this.Mode);
         }
 
         public void Commit()
@@ -158,19 +117,24 @@ namespace Pyrrha.Collections
             this.Transaction.Commit();
             this.Transaction.Dispose();
         }
+
         public bool Contains(ObjectId id)
         {
             return this.RecordTable.Has(id);
         }
+
         public void Refresh()
         {
+            RecordTable = (TTable)this.Transaction.GetObject(this._tableId, this.Mode);
             foreach (var id in this.RecordTable)
                 this.GetRecord(id);
         }
 
-        #region ICollection
+        #endregion
 
-        public virtual void Add(TRecord item)
+        #region Overridden ICollection
+
+        new public virtual void Add(TRecord item)
         {
             if (Contains(item))
                 throw new PyrrhaException("This {0} already exists in the collection", item.GetType().Name);
@@ -182,21 +146,26 @@ namespace Pyrrha.Collections
             this.Transaction.AddNewlyCreatedDBObject(item, true);
             this.GetRecord(item.Id); // Make sure its managed
         }
-        public void Clear()
+
+        // What is this?
+        public override void Clear()
         {
             foreach (var obj in this)
                 this.Remove(obj);
         }
-        public bool Contains(TRecord item)
+
+        public override bool Contains(TRecord item)
         {
             return this.RecordTable.Has(item.Id);
         }
-        public void CopyTo(TRecord[] array, int arrayIndex)
+
+        public override void CopyTo(TRecord[] array, int arrayIndex)
         {
             var currentObjects = this.ToArray();
             currentObjects.CopyTo(array, arrayIndex);
         }
-        public virtual bool Remove(TRecord item)
+
+        new public virtual bool Remove(TRecord item)
         {
             if (!Contains(item))
                 throw new PyrrhaException("The {0} does not exist in the collection", item.GetType().Name);
@@ -209,9 +178,9 @@ namespace Pyrrha.Collections
 
         #endregion
 
-        #region IEnumerable
+        #region Overridden IEnumerable
 
-        public IEnumerator<TRecord> GetEnumerator()
+        public override IEnumerator<TRecord> GetEnumerator()
         {
             if (this.ObjectManager == null)
                 throw new PyrrhaException("ObjectManager is null");
@@ -222,36 +191,6 @@ namespace Pyrrha.Collections
                     yield return this.GetRecord(iter.Current);
             }
         }
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return this.GetEnumerator();
-        }
-
-        #endregion
-
-        #region IDisposable
-
-        ~RecordCollection()
-        {
-            this.Dispose(false);
-        }
-        public void Dispose()
-        {
-            this.Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-        protected virtual void Dispose(bool disposing)
-        {
-            if (this._disposed)
-                return;
-
-            if (disposing)
-                this.Transaction.Dispose();
-
-            this._disposed = true;
-        }
-
-        #endregion
 
         #endregion
     }

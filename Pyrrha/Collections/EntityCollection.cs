@@ -11,7 +11,7 @@ using Pyrrha.Runtime;
 
 namespace Pyrrha.Collections
 {
-    public abstract class EntityCollection<T> : ICollection<T> where T : Entity
+    public class EntityCollection<T> : ICollection<T> where T : Entity
     {
                
         #region Properties
@@ -58,7 +58,7 @@ namespace Pyrrha.Collections
         {
             this.IsReadOnly = false;
             this.ObjectManager = manager;
-            this._transaction = this.ObjectManager.AddTransaction();
+            this._transaction = this.ObjectManager.GetTransaction();
             this._openMode = openmode;
             this._innerList = new List<T>();
         }
@@ -141,7 +141,6 @@ namespace Pyrrha.Collections
         {
             foreach (var obj in this._innerList)
                 this.Remove(obj);
-            this._innerList.Clear();
         }
 
         public void Commit()

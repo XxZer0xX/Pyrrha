@@ -94,7 +94,6 @@
     </Compile>
     <Compile Include="Runtime\PyrrhaScriptEngine.cs" />
     <Compile Include="Runtime\PythonSession.cs" />
-    <Compile Include="Util\ParamsDelegate.cs" />
     <Compile Include="Util\StaticExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -126,6 +125,9 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <None Include="TestScipts\pyrrhaLayersTesting.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Help\CommandHelp.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

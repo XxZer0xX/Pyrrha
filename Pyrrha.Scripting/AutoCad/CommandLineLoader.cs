@@ -30,7 +30,7 @@ namespace Pyrrha.Scripting.AutoCad
         public void PythonLoad(bool useCmdLine)
         {
             var doc = AcApp.DocumentManager.MdiActiveDocument;
-            var editor = doc.Editor;
+            var ed = doc.Editor;
 
             var fd = (short)AcApp.GetSystemVariable("FILEDIA");
 
@@ -44,7 +44,7 @@ namespace Pyrrha.Scripting.AutoCad
                 PreferCommandLine = (useCmdLine || fd == 0)
             };
 
-            var pr = editor.GetFileNameForOpen(pfo);
+            var pr = ed.GetFileNameForOpen(pfo);
 
             if (pr.Status == PromptStatus.OK && File.Exists(pr.StringResult))
                 LoadSciptFromFile(pr.StringResult);

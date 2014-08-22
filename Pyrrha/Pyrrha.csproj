@@ -68,11 +68,9 @@
     <Compile Include="Query\Query.cs" />
     <Compile Include="Query\SelectionFilter.cs" />
     <Compile Include="Query\SelectQuery.cs" />
-    <Compile Include="SQL\Parser.cs" />
-    <Compile Include="SQL\Query.cs" />
     <Compile Include="Runtime\PyrrhaException.cs" />
     <Compile Include="Util\PyrrhaScriptingMethods.cs" />
-    <Compile Include="SQL\EntityQuery.cs" />
+    <Compile Include="Util\Query\EntityQuery.cs" />
     <Compile Include="Util\StaticExtenstions.cs" />
     <Compile Include="Util\TypeExtenstions\DbObject.cs" />
     <Compile Include="Util\TypeExtenstions\Entity.cs" />

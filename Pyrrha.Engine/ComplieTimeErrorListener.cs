@@ -1,15 +1,21 @@
-﻿#region Referencing
-
-using System.Collections.Generic;
-using Microsoft.Scripting;
-using Microsoft.Scripting.Hosting;
-
-#endregion
-
+﻿
 namespace Pyrrha.Engine
 {
+    #region Referenceing
+
+    using System.Collections.Generic;
+    using Microsoft.Scripting;
+    using Microsoft.Scripting.Hosting;
+
+    #endregion
+
     public class ComplieTimeErrorListener : ErrorListener
     {
+        public ComplieTimeErrorListener()
+        {
+            ErrorData = new List<ErrorData>();
+        }
+
         public IList<ErrorData> ErrorData { get; set; }
         public bool FoundError { get; set; }
 
@@ -20,21 +26,16 @@ namespace Pyrrha.Engine
             int errorCode,
             Severity severity)
         {
-            this.FoundError = true;
+            FoundError = true;
 
-            this.ErrorData.Add(new ErrorData
+            ErrorData.Add(new ErrorData
             {
                 Message = message,
                 Span = span,
                 ErrorCode = errorCode,
                 Severity = severity,
-                ErroredCode = GetErroredCode(source,span)
+                ErroredCode = GetErroredCode(source, span)
             });
-        }
-
-        public ComplieTimeErrorListener()
-        {
-            this.ErrorData = new List<ErrorData>();
         }
 
         // TODO

@@ -1,45 +1,43 @@
-﻿using System;
-using System.CodeDom;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.DatabaseServices;
-using Autodesk.AutoCAD.Runtime;
-using IronPython.Hosting;
-using Microsoft.Scripting;
-using Microsoft.Scripting.Hosting;
+﻿#region Referenceing
+
 using AcadExc = Autodesk.AutoCAD.Runtime.Exception;
+
+#endregion
 
 namespace Pyrrha.Engine
 {
-    using Exception = System.Exception;
+    #region Referenceing
+
+    using Autodesk.AutoCAD.ApplicationServices;
+    using Autodesk.AutoCAD.DatabaseServices;
+    using IronPython.Hosting;
+    using Microsoft.Scripting.Hosting;
+
+    #endregion
 
     public sealed class PyrrhaEngine
     {
         private readonly ScriptEngine _engine;
 
         private ComplieTimeErrorListener _errorListener;
-        public ComplieTimeErrorListener ErrorListener
-        {
-            get { return this._errorListener ?? (this._errorListener = new ComplieTimeErrorListener()); }
-            private set { this._errorListener = value; }
-        }
-
-        public ScriptScope DefaultScope { get; private set; }
 
         public PyrrhaEngine()
         {
             _engine = Python.CreateEngine();
 
             var runtime = _engine.Runtime;
-            runtime.LoadAssembly(typeof(Application).Assembly);
-            runtime.LoadAssembly(typeof(DBObject).Assembly);
-            DefaultScope = _engine.CreateScope();  
+            runtime.LoadAssembly(typeof (Application).Assembly);
+            runtime.LoadAssembly(typeof (DBObject).Assembly);
+            DefaultScope = _engine.CreateScope();
         }
+
+        public ComplieTimeErrorListener ErrorListener
+        {
+            get { return _errorListener ?? (_errorListener = new ComplieTimeErrorListener()); }
+            private set { _errorListener = value; }
+        }
+
+        public ScriptScope DefaultScope { get; private set; }
 
         public ScriptSource CreateScriptSourceFromFile(string path)
         {
@@ -53,7 +51,7 @@ namespace Pyrrha.Engine
 
         public CompiledCode Compile(ScriptSource source)
         {
-            return source.Compile(this.ErrorListener);
+            return source.Compile(ErrorListener);
         }
 
         public bool HasCompilationError(ScriptSource source)
@@ -84,7 +82,7 @@ namespace Pyrrha.Engine
         private void writeExceptions(AcadExc ex)
         {
             Application.DocumentManager.MdiActiveDocument.Editor.WriteMessage(
-                    string.Format("{0}: {1}\n\t{2}", ex.ErrorStatus, ex.Message, ex.StackTrace));
+                string.Format("{0}: {1}\n\t{2}", ex.ErrorStatus, ex.Message, ex.StackTrace));
         }
     }
 }

@@ -1,17 +1,23 @@
 ﻿#region Referencing
 
-using System;
-using System.IO;
-using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.DatabaseServices;
-using Autodesk.AutoCAD.EditorInput;
-using Autodesk.AutoCAD.Runtime;
-using Pyrrha.Engine;
+
 
 #endregion
 
 namespace Pyrrha.Loader.AutoCad
 {
+    #region Referenceing
+
+    using System;
+    using System.IO;
+    using Autodesk.AutoCAD.ApplicationServices;
+    using Autodesk.AutoCAD.DatabaseServices;
+    using Autodesk.AutoCAD.EditorInput;
+    using Autodesk.AutoCAD.Runtime;
+    using Engine;
+
+    #endregion
+
     public class CommandLineLoader
     {
         [CommandMethod("-PYLOAD")]
@@ -31,12 +37,12 @@ namespace Pyrrha.Loader.AutoCad
             var doc = Application.DocumentManager.MdiActiveDocument;
             var ed = doc.Editor;
 
-            var fd = (short)Application.GetSystemVariable("FILEDIA");
+            var fd = (short) Application.GetSystemVariable("FILEDIA");
 
             // Todo Implement Custom Loader View
 
             var pfo = new PromptOpenFileOptions(
-                  "Select Python project or script to load"
+                "Select Python project or script to load"
                 )
             {
                 Filter = "Python script (*.py)|*.py",
@@ -55,7 +61,7 @@ namespace Pyrrha.Loader.AutoCad
             const int rtstr = 5005;
 
             var doc =
-              Application.DocumentManager.MdiActiveDocument;
+                Application.DocumentManager.MdiActiveDocument;
             if (rb == null)
             {
                 doc.Editor.WriteMessage("\nError: too few arguments\n");
@@ -63,13 +69,12 @@ namespace Pyrrha.Loader.AutoCad
             }
 
             var args = rb.AsArray();
-            var typedValue = (TypedValue)args.GetValue(0);
+            var typedValue = (TypedValue) args.GetValue(0);
 
             if (typedValue.TypeCode != rtstr)
                 return null;
 
             var filePath = Convert.ToString(typedValue.Value);
-
 
             return LoadSciptFromFile(filePath)
                 ? new ResultBuffer(new TypedValue(rtstr, typedValue.Value))
@@ -82,6 +87,5 @@ namespace Pyrrha.Loader.AutoCad
             eng.CompileAndExecute(eng.CreateScriptSourceFromFile(filePath));
             return true;
         }
-
     }
 }

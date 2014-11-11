@@ -1,11 +1,17 @@
 ﻿#region Referencing
 
-using Microsoft.Scripting;
+
 
 #endregion
 
 namespace Pyrrha.Engine
 {
+    #region Referenceing
+
+    using Microsoft.Scripting;
+
+    #endregion
+
     public class ErrorData
     {
         public string Message { get; set; }

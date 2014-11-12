@@ -1,15 +1,16 @@
-﻿<Window x:Class="PyrrhaAppLoad.MainWindow"
+﻿<Window x:Class="PyrrhaAppLoad.PyLoadWindow"
        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        SizeToContent="WidthAndHeight"
         Title="Pyrrha PyLoad"
+        SizeToContent="WidthAndHeight"
+        WindowStartupLocation="CenterOwner"
+         
         mc:Ignorable="d" Background="#FFE8E8E8" >
+
     <Window.Resources>
 
-        
-        
         <LinearGradientBrush x:Key="PyBgGradientBrush" StartPoint="0.5,0" EndPoint="0.5,1" MappingMode="RelativeToBoundingBox">
             <GradientStop Offset="1" Color="#FF8D8D8D"/>
             <GradientStop Color="White"/>
@@ -22,8 +23,8 @@
         
         <Style x:Key="PyTextBlockStyle" TargetType="TextBlock">
             <Setter Property="Foreground" Value="DarkGreen" />
-            <Setter Property="Padding" Value="15,0,15,0"></Setter>
-            <Setter Property="Width" Value="Auto"></Setter>
+            <Setter Property="Padding" Value="15,0,15,0" />
+            <Setter Property="Width" Value="Auto" />
         </Style>
     </Window.Resources>
     <Grid x:Name="MainGrid" Margin="5">
@@ -43,7 +44,7 @@
                 </Grid.ColumnDefinitions>
                 <DockPanel Grid.Row="0" Margin="0" HorizontalAlignment="Stretch" />
                 <StackPanel Grid.Column="0" HorizontalAlignment="Right" Orientation="Horizontal">
-                    <Button Width="30" Margin="0,0,3,0" Padding="3" Style="{StaticResource PyButton}" Content="&lt;" />
+                    <Button  Width="30" Margin="0,0,3,0" Padding="3" Style="{StaticResource PyButton}" Content="&lt;" />
                     <Button Width="30" Margin="0,0,5,0" Padding="3" Style="{StaticResource PyButton}" Content="&gt;" />
                 </StackPanel>
                 <GridSplitter Name="GridSplitter1" 
@@ -67,16 +68,31 @@
                       VerticalAlignment="Stretch"
                       Foreground="DarkGreen"
                       BorderBrush="DarkGreen"
-                      BorderThickness="2" Opacity="0.8" >
+                      BorderThickness="2" Opacity="0.8"
+                      MouseDoubleClick="DirectoryView_OnMouseDoubleClick"
+                      SelectionMode="Single"
+                      ItemsSource="{Binding CurrentDirctoryEntries}"
+                      SelectedItem="{Binding SelectedListViewItem,Mode=OneWayToSource}">
+                
                 <ListView.Effect>
                     <DropShadowEffect Color="#FFDFF0DD" Direction="325" RenderingBias="Quality"/>
                 </ListView.Effect>
-
+                
+                <ListView.Resources>
+                    <DataTemplate x:Key="ItemTemplate">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Margin="0,0,7,0" Source="{Binding Path=FileIconUri}"></Image>
+                            <TextBlock Text="{Binding Name}"></TextBlock>
+                        </StackPanel>
+                        
+                    </DataTemplate>
+                </ListView.Resources>
+                
                 <ListView.View>
                     <GridView>
                         <GridView.ColumnHeaderContainerStyle>
                             <Style TargetType="GridViewColumnHeader">
-                                <Setter Property="Foreground" Value="DarkGreen"></Setter>
+                                <Setter Property="Foreground" Value="DarkGreen" />
                                 <Setter Property="Background" >
                                     <Setter.Value>
                                         <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
@@ -85,16 +101,22 @@
                                         </LinearGradientBrush>
                                     </Setter.Value>
                                 </Setter>
-                                <Setter Property="BorderBrush" Value="DarkGreen"></Setter>
-                                <Setter Property="BorderThickness" Value="4"></Setter>
+                                <Setter Property="BorderBrush" Value="DarkGreen" />
+                                <Setter Property="BorderThickness" Value="4" />
                             </Style>
                         </GridView.ColumnHeaderContainerStyle>
-                        <GridViewColumn DisplayMemberBinding="{Binding Name}">
-                            <GridViewColumn.Header >
-                                <TextBlock Style="{StaticResource PyTextBlockStyle}" Text="File"></TextBlock>
+
+                        <GridViewColumn Width="Auto" CellTemplate="{StaticResource ItemTemplate}" >
+                            <GridViewColumn.Header>
+                                <TextBlock Style="{StaticResource PyTextBlockStyle}" Text="File Name" />
                             </GridViewColumn.Header>
                         </GridViewColumn>
-                        <GridViewColumn Width="Auto" DisplayMemberBinding="{Binding Modified}">
+                        <GridViewColumn Width="Auto" DisplayMemberBinding="{Binding Created}">
+                            <GridViewColumn.Header>
+                                <TextBlock Style="{StaticResource PyTextBlockStyle}" Text="Created" />
+                            </GridViewColumn.Header>
+                        </GridViewColumn>
+                        <GridViewColumn Width="Auto" DisplayMemberBinding="{Binding LastModified}">
                             <GridViewColumn.Header>
                                 <TextBlock Style="{StaticResource PyTextBlockStyle}" Text="Last Modifed" />
                             </GridViewColumn.Header>
@@ -103,7 +125,12 @@
                 </ListView.View>
             </ListView>
             <DockPanel Margin="0,5,0,5">
-                <Label Height="Auto" Padding="1" HorizontalAlignment="Left" VerticalAlignment="Center" Foreground="DarkGreen" DockPanel.Dock="Left" Content="SomePath\to\somewhere" />
+                <Label Height="Auto" Padding="1" 
+                       HorizontalAlignment="Left" 
+                       VerticalAlignment="Center" 
+                       Foreground="DarkGreen" 
+                       DockPanel.Dock="Left" 
+                       Content="{Binding CurrentDirectory, Mode=OneWay}" />
                 <Button Width="75" HorizontalAlignment="Right" Style="{StaticResource PyButton}" Content="Load" />
             </DockPanel>
 

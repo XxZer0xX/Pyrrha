@@ -97,6 +97,10 @@
       <Project>{19710649-9a0a-4eb3-8625-d77b967a67d7}</Project>
       <Name>Pyrrha.Engine</Name>
     </ProjectReference>
+    <ProjectReference Include="..\PyrrhaAppLoad\PyrrhaAppLoad.csproj">
+      <Project>{3b1564b8-9e5c-4ffc-8607-13053f402bdd}</Project>
+      <Name>PyrrhaAppLoad</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -36,6 +36,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -53,7 +54,16 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Page Include="MainWindow.xaml">
+    <Compile Include="Bindings\PyLoadViewModel.cs" />
+    <Compile Include="Bindings\RelayCommand.cs" />
+    <Compile Include="Bindings\ViewModelBase.cs" />
+    <Compile Include="Bindings\ViewModelCommands.cs" />
+    <Compile Include="FileIO\Extern\Win32.cs" />
+    <Compile Include="FileIO\SHfileInfo.cs" />
+    <Compile Include="Imaging\ImageUtility.cs" />
+    <Compile Include="Properties\Annotations.cs" />
+    <Compile Include="PyListViewItem.cs" />
+    <Page Include="PyLoadWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -61,8 +71,8 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="MainWindow.xaml.cs">
-      <DependentUpon>MainWindow.xaml</DependentUpon>
+    <Compile Include="PyLoadWindow.xaml.cs">
+      <DependentUpon>PyLoadWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>

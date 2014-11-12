@@ -15,6 +15,7 @@ namespace Pyrrha.Loader.AutoCad
     using Autodesk.AutoCAD.EditorInput;
     using Autodesk.AutoCAD.Runtime;
     using Engine;
+    using PyrrhaAppLoad;
 
     #endregion
 
@@ -39,20 +40,26 @@ namespace Pyrrha.Loader.AutoCad
 
             var fd = (short) Application.GetSystemVariable("FILEDIA");
 
+            if (useCmdLine)
+            {
+                var promptStrOptions = new PromptStringOptions("\n Input Python File Path: ");
+                var promptStrRes = ed.GetString(promptStrOptions);
+            }
+            else
+            {
+                var pyLoadUi = new PyLoadWindow();
+                pyLoadUi.ShowDialog();
+                var result = pyLoadUi.FileSelectionResult;
+
+                if(string.IsNullOrEmpty(result))
+                    return;
+            }
             // Todo Implement Custom Loader View
 
-            var pfo = new PromptOpenFileOptions(
-                "Select Python project or script to load"
-                )
-            {
-                Filter = "Python script (*.py)|*.py",
-                PreferCommandLine = (useCmdLine || fd == 0)
-            };
+           
 
-            var pr = ed.GetFileNameForOpen(pfo);
-
-            if (pr.Status == PromptStatus.OK && File.Exists(pr.StringResult))
-                LoadSciptFromFile(pr.StringResult);
+            //if (pr.Status == PromptStatus.OK && File.Exists(pr.StringResult))
+            //    LoadSciptFromFile(pr.StringResult);
         }
 
         [LispFunction("PYLOAD")]

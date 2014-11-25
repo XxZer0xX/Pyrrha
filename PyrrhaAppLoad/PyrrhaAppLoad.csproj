@@ -37,6 +37,9 @@
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -54,15 +57,26 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Bindings\PyLoadViewModel.cs" />
+    <Compile Include="Bindings\AttachedCommandBehavior\BehaviorBinding.cs" />
+    <Compile Include="Bindings\AttachedCommandBehavior\CommandBehavior.cs" />
+    <Compile Include="Bindings\AttachedCommandBehavior\CommandBehaviorBinding.cs" />
+    <Compile Include="Bindings\AttachedCommandBehavior\CommandBehaviorCollection.cs" />
+    <Compile Include="Bindings\AttachedCommandBehavior\EventHandlerGenerator.cs" />
+    <Compile Include="Bindings\AttachedCommandBehavior\ExecutionStrategy.cs" />
+    <Compile Include="Bindings\ViewModelProperties.cs" />
     <Compile Include="Bindings\RelayCommand.cs" />
     <Compile Include="Bindings\ViewModelBase.cs" />
     <Compile Include="Bindings\ViewModelCommands.cs" />
+    <Compile Include="Bindings\WaitingViewModel.cs" />
     <Compile Include="FileIO\Extern\Win32.cs" />
     <Compile Include="FileIO\SHfileInfo.cs" />
     <Compile Include="Imaging\ImageUtility.cs" />
     <Compile Include="Properties\Annotations.cs" />
+    <Compile Include="Properties\Annotations1.cs" />
     <Compile Include="PyListViewItem.cs" />
+    <Compile Include="WaitingDialog.xaml.cs">
+      <DependentUpon>WaitingDialog.xaml</DependentUpon>
+    </Compile>
     <Page Include="PyLoadWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -75,6 +89,10 @@
       <DependentUpon>PyLoadWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="WaitingDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
@@ -103,6 +121,7 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

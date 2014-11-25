@@ -1,24 +1,34 @@
-﻿namespace PyrrhaAppLoad.Bindings
+﻿#region Referenceing
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Windows.Input;
+using PyrrhaAppLoad.Properties;
+
+#endregion
+
+namespace PyrrhaAppLoad.Bindings
 {
-    using System;
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Linq;
-    using System.Windows.Input;
-    using Properties;
+    #region Referenceing
 
-    internal partial class PyLoadViewModel
+    
+
+    #endregion
+
+    internal partial class ViewModel
     {
-
         #region ICommands
-        private ICommand _initCommand;
-        private ICommand _loadedCommand;
+
         private ICommand _backDirectoryCommand;
-        private ICommand _forwardDirectoryCommand;
-        private ICommand _loadFileCommand;
         private ICommand _closeCommand;
-        private ICommand _searchCommand;
+        private ICommand _forwardDirectoryCommand;
+        private ICommand _initCommand;
         private ICommand _listViewItemDoubleClickCommand;
+        private ICommand _loadFileCommand;
+        private ICommand _loadedCommand;
+        private ICommand _searchCommand;
 
 
         public ICommand ListViewItemDoubleClickCommand
@@ -50,8 +60,6 @@
             }
         }
 
-
-
         #endregion
 
         #region ICommand Actions
@@ -60,7 +68,7 @@
         {
             // not loading the selected item
             var fileEntries = GetFileSystemEntries(SelectedListViewItem.Path);
-            LoadListViewItems(fileEntries); 
+            LoadListViewItems(fileEntries);
         }
 
         private void _initCommandAction(object obj)
@@ -68,17 +76,13 @@
             if (!string.IsNullOrEmpty(Settings.Default.LastLocation))
                 return;
             CurrentDirectory = "Computer";
-            _loadedCommandAction(_accessableDrives);
         }
 
         private void _loadedCommandAction(object obj)
         {
-            if (CurrentDirctoryEntries != null)
-                CurrentDirctoryEntries.Clear();
-
-            var fileSystemEntries = obj == null 
-                ? GetFileSystemEntries(Settings.Default.LastLocation) 
-                : _accessableDrives;
+            var fileSystemEntries = !string.IsNullOrEmpty(LastLocation)
+                ? GetFileSystemEntries(LastLocation)
+                : App.AccessableDrives;
 
             LoadListViewItems(fileSystemEntries);
         }
@@ -86,27 +90,22 @@
 
         private void _backDirectoryCommandAction(object obj)
         {
-
         }
 
         private void _forwardDirectoryCommandAction(object obj)
         {
-
         }
 
         private void _loadFileCommandAction(object obj)
         {
-
         }
 
         private void _closeCommandAction(object obj)
         {
-
         }
 
         private void _searchCommandAction(object obj)
         {
-
         }
 
         #endregion
@@ -150,9 +149,9 @@
         internal IEnumerable<string> GetFileSystemEntries(string path)
         {
             return Directory.EnumerateFileSystemEntries(path).Where(
-                    subpath =>
-                        !Path.HasExtension(path) ||
-                        Path.GetExtension(subpath).Equals(".py", StringComparison.CurrentCultureIgnoreCase));
+                subpath =>
+                    !Path.HasExtension(path) ||
+                    Path.GetExtension(subpath).Equals(".py", StringComparison.CurrentCultureIgnoreCase));
         }
 
         internal void LoadListViewItems(IEnumerable<string> paths)

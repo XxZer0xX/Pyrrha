@@ -1,13 +1,21 @@
 ﻿#region Referencing
 
+#endregion
 
+#region Referenceing
+
+using System;
+using System.Runtime.InteropServices;
 
 #endregion
 
 namespace PyrrhaAppLoad.FileIO.Extern
 {
-    using System;
-    using System.Runtime.InteropServices;
+    #region Referenceing
+
+    
+
+    #endregion
 
     internal sealed class Win32
     {
@@ -17,13 +25,13 @@ namespace PyrrhaAppLoad.FileIO.Extern
 
         public const uint SHGFI_SMALLICON = 0x1; // small
 
-        [DllImport( "shell32.dll" )]
+        [DllImport("shell32.dll")]
         public static extern IntPtr SHGetFileInfo(
             string pszPath,
             uint dwFileAttributes,
             ref SHfileInfo psfi,
             uint cbSizeFileInfo,
-            uint uFlags );
+            uint uFlags);
 
         [DllImport("User32.dll")]
         public static extern int DestroyIcon(IntPtr hIcon);

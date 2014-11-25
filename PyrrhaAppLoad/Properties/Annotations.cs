@@ -1,4 +1,9 @@
-﻿
+﻿#region Referenceing
+
+using System;
+
+#endregion
+
 #pragma warning disable 1591
 // ReSharper disable UnusedMember.Global
 // ReSharper disable UnusedParameter.Local
@@ -12,7 +17,7 @@ namespace PyrrhaAppLoad.Properties
 {
     #region Referenceing
 
-    using System;
+    
 
     #endregion
 

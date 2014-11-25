@@ -1,22 +1,28 @@
 ﻿#region Referencing
 
+#endregion
 
+#region Referenceing
+
+using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using PyrrhaAppLoad.FileIO;
+using PyrrhaAppLoad.FileIO.Extern;
+using PyrrhaAppLoad.Properties;
 
 #endregion
 
 namespace PyrrhaAppLoad.Imaging
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Drawing;
-    using System.Drawing.Imaging;
-    using System.IO;
-    using System.Linq;
-    using System.Reflection;
-    using System.Runtime.InteropServices;
-    using FileIO;
-    using FileIO.Extern;
-    using Properties;
+    #region Referenceing
+
+    
+
+    #endregion
 
     public class ImageUtility
     {
@@ -25,6 +31,7 @@ namespace PyrrhaAppLoad.Imaging
         private static string[] _mappedDrives;
 
         private static string IconsDirectory;
+        private IDictionary<string, string> _cachedIcons;
 
         private ImageUtility()
         {
@@ -40,13 +47,9 @@ namespace PyrrhaAppLoad.Imaging
 
         public static ImageUtility Instance
         {
-            get
-            {
-                return _instance ?? (_instance = new ImageUtility());
-            }
+            get { return _instance ?? (_instance = new ImageUtility()); }
         }
 
-        private IDictionary<string, string> _cachedIcons;
         public IDictionary<string, string> CachedIcons
         {
             get { return _cachedIcons ?? (_cachedIcons = new Dictionary<string, string>()); }
@@ -61,7 +64,8 @@ namespace PyrrhaAppLoad.Imaging
                 return CachedIcons[ext];
 
             var shinfo = new SHfileInfo();
-            Win32.SHGetFileInfo(filePath, 0, ref shinfo, (uint)Marshal.SizeOf(shinfo), Win32.SHGFI_ICON | Win32.SHGFI_SMALLICON);
+            Win32.SHGetFileInfo(filePath, 0, ref shinfo, (uint) Marshal.SizeOf(shinfo),
+                Win32.SHGFI_ICON | Win32.SHGFI_SMALLICON);
 
             Icon icon;
             using (var origIcon = Icon.FromHandle(shinfo.hIcon))

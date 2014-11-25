@@ -1,15 +1,23 @@
 ﻿#region Referencing
 
+#endregion
 
+#region Referenceing
+
+using System;
+using System.Runtime.InteropServices;
 
 #endregion
 
 namespace PyrrhaAppLoad.FileIO
 {
-    using System;
-    using System.Runtime.InteropServices;
+    #region Referenceing
 
-    [StructLayout( LayoutKind.Sequential )]
+    
+
+    #endregion
+
+    [StructLayout(LayoutKind.Sequential)]
     public struct SHfileInfo
     {
         public IntPtr hIcon;
@@ -18,10 +26,8 @@ namespace PyrrhaAppLoad.FileIO
 
         public uint dwAttributes;
 
-        [MarshalAs( UnmanagedType.ByValTStr, SizeConst = 260 )]
-        public string szDisplayName;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)] public string szDisplayName;
 
-        [MarshalAs( UnmanagedType.ByValTStr, SizeConst = 80 )]
-        public string szTypeName;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 80)] public string szTypeName;
     }
 }

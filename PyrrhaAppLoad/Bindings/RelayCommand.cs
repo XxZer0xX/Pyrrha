@@ -1,9 +1,15 @@
-﻿namespace PyrrhaAppLoad.Bindings
+﻿#region Referenceing
+
+using System;
+using System.Windows.Input;
+
+#endregion
+
+namespace PyrrhaAppLoad.Bindings
 {
     #region Referenceing
 
-    using System;
-    using System.Windows.Input;
+    
 
     #endregion
 

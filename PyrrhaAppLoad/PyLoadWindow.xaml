@@ -3,11 +3,23 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:bindings="clr-namespace:PyrrhaAppLoad.Bindings"
+        xmlns:attcom="clr-namespace:PyrrhaAppLoad.Bindings.AttachedCommandBehavior"
+        xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
         Title="Pyrrha PyLoad"
         SizeToContent="WidthAndHeight"
         WindowStartupLocation="CenterOwner"
-         
         mc:Ignorable="d" Background="#FFE8E8E8" >
+    
+    <Window.DataContext>
+        <bindings:ViewModel />
+    </Window.DataContext>
+
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="Loaded">
+            <i:InvokeCommandAction Command="{Binding LoadedCommand}" />
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
 
     <Window.Resources>
 
@@ -60,7 +72,7 @@
                 <Button Grid.Column="3" VerticalAlignment="Stretch" Content="Search" Style="{StaticResource PyButton}" />
             </Grid>
 
-
+            <!--MouseDoubleClick="{Binding ListViewItemDoubleClickCommand}"-->
             <ListView x:Name="DirectoryView"
                       MinWidth="570"
                       MinHeight="200"
@@ -69,10 +81,10 @@
                       Foreground="DarkGreen"
                       BorderBrush="DarkGreen"
                       BorderThickness="2" Opacity="0.8"
-                      MouseDoubleClick="DirectoryView_OnMouseDoubleClick"
                       SelectionMode="Single"
                       ItemsSource="{Binding CurrentDirctoryEntries}"
-                      SelectedItem="{Binding SelectedListViewItem,Mode=OneWayToSource}">
+                      attcom:CommandBehavior.Event="MouseDoubleClick"
+                      attcom:CommandBehavior.Command="{Binding  ListViewItemDoubleClickCommand}" >
                 
                 <ListView.Effect>
                     <DropShadowEffect Color="#FFDFF0DD" Direction="325" RenderingBias="Quality"/>
@@ -81,8 +93,8 @@
                 <ListView.Resources>
                     <DataTemplate x:Key="ItemTemplate">
                         <StackPanel Orientation="Horizontal">
-                            <Image Margin="0,0,7,0" Source="{Binding Path=FileIconUri}"></Image>
-                            <TextBlock Text="{Binding Name}"></TextBlock>
+                            <Image Margin="0,0,7,0" Source="{Binding Path=FileIconUri}" />
+                            <TextBlock Text="{Binding Name}" />
                         </StackPanel>
                         
                     </DataTemplate>

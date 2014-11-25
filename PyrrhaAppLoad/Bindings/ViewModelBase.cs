@@ -1,11 +1,17 @@
-﻿namespace PyrrhaAppLoad.Bindings
+﻿#region Referenceing
+
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using PyrrhaAppLoad.Properties;
+
+#endregion
+
+namespace PyrrhaAppLoad.Bindings
 {
     #region Referenceing
 
-    using System.Collections.Generic;
-    using System.ComponentModel;
-    using System.Runtime.CompilerServices;
-    using Properties;
+    
 
     #endregion
 

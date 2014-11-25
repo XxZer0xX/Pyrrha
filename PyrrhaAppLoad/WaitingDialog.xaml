@@ -1,0 +1,17 @@
+﻿<UserControl x:Class="PyrrhaAppLoad.WaitingDialog"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:this="clr-namespace:PyrrhaAppLoad.Bindings"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008">    
+    <Grid>
+            
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="{Binding DisplayText}"></TextBlock>
+        <ProgressBar IsIndeterminate="True" Grid.Row="1" Height="25" Width="Auto"></ProgressBar>
+    </Grid>
+</UserControl>

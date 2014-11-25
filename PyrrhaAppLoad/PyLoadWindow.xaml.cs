@@ -1,8 +1,18 @@
-﻿namespace PyrrhaAppLoad
+﻿#region Referenceing
+
+using System.Windows;
+using System.Windows.Input;
+using PyrrhaAppLoad.Bindings;
+
+#endregion
+
+namespace PyrrhaAppLoad
 {
-    using System.Windows.Controls;
-    using System.Windows.Input;
-    using Bindings;
+    #region Referenceing
+
+    
+
+    #endregion
 
     /// <summary>
     ///     Interaction logic for PyLoadWindow.xaml
@@ -12,23 +22,10 @@
         public PyLoadWindow()
         {
             InitializeComponent();
-            DataContext = ViewModel ?? (ViewModel = new PyLoadViewModel());
-            ViewModel.InitializedCommand.Execute(null);
+            //ViewModel.InitializedCommand.Execute(null);
             //Loaded += PyLoadWindow_Loaded;
         }
 
-        void PyLoadWindow_Loaded(object sender, System.Windows.RoutedEventArgs e)
-        {
-            ViewModel.LoadedCommand.Execute(null);
-        }
-
-        internal PyLoadViewModel ViewModel { get; set; }
-
         public string FileSelectionResult { get; private set; }
-
-        private void DirectoryView_OnMouseDoubleClick(object sender, MouseButtonEventArgs e)
-        {
-            ViewModel.ListViewItemDoubleClickCommand.Execute(null);
-        }
     }
 }

@@ -47,12 +47,7 @@ namespace Pyrrha.Loader.AutoCad
             }
             else
             {
-                var pyLoadUi = new PyLoadWindow();
-                pyLoadUi.ShowDialog();
-                var result = pyLoadUi.FileSelectionResult;
-
-                if(string.IsNullOrEmpty(result))
-                    return;
+                var pyLoad = new PyrrhaAppLoad.App();
             }
             // Todo Implement Custom Loader View
 

@@ -46,5 +46,14 @@ namespace PyrrhaAppLoad.Properties {
                 this["IconDirectory"] = value;
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Pyrrha AppLoad")]
+        public string WindowTitle {
+            get {
+                return ((string)(this["WindowTitle"]));
+            }
+        }
     }
 }

@@ -21,19 +21,18 @@
                     <ColumnDefinition Width=".75*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <DockPanel Grid.Row="0" Grid.RowSpan="1" HorizontalAlignment="Stretch" Margin="0" Background="LightBlue" Name="DockPanel1">
-                </DockPanel>
-                <GridSplitter Grid.Column="1" 
+                <DockPanel Name="DockPanel1" Grid.Row="0" Grid.RowSpan="1" Margin="0" HorizontalAlignment="Stretch" Background="LightBlue" />
+                <GridSplitter Name="GridSplitter1" 
+                              Grid.Column="1" 
+                              Width="2" 
+                              Height="Auto" 
+                              Margin="0" HorizontalAlignment="Stretch" 
                               BorderThickness="5" 
-                              BorderBrush="DeepPink" 
-                              ResizeDirection="Columns" 
-                              Width="2" Height="Auto" 
-                              HorizontalAlignment="Stretch" 
-                              Margin="0" Name="GridSplitter1" />
+                              BorderBrush="DeepPink" ResizeDirection="Columns" />
 
-                <TextBox Grid.Column="2" Width="Auto"></TextBox>
+                <TextBox Grid.Column="2" Width="Auto" />
 
-                <Button Grid.Column="3" Content="Search"></Button>
+                <Button Grid.Column="3" Content="Search" />
             </Grid>
             
 
@@ -41,11 +40,9 @@
                       MinWidth="570"
                       MinHeight="200"
                       HorizontalAlignment="Stretch"
-                      VerticalAlignment="Stretch" >
-
-            </ListView>
+                      VerticalAlignment="Stretch" />
             <StackPanel>
-                <Label Height="Auto" Padding="1" VerticalAlignment="Bottom" HorizontalAlignment="Left" Content="SomePath\to\somewhere"></Label>
+                <Label Height="Auto" Padding="1" HorizontalAlignment="Left" VerticalAlignment="Bottom" Content="SomePath\to\somewhere" />
             </StackPanel>
 
         </StackPanel>

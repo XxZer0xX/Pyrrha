@@ -1,36 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
+﻿#region Referenceing
+
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using PyrrhaAppLoad.Annotations;
-using PyrrhaAppLoad.Bindings;
+
+#endregion
 
 namespace PyrrhaAppLoad
 {
     /// <summary>
-    /// Interaction logic for Waiting.xaml
+    ///     Interaction logic for Waiting.xaml
     /// </summary>
     public partial class WaitingDialog : INotifyPropertyChanged
     {
+        private string _displayText;
+
         public WaitingDialog()
         {
             InitializeComponent();
             DataContext = this;
         }
-
-        private string _displayText;
 
         public string DisplayText
         {
@@ -38,16 +27,20 @@ namespace PyrrhaAppLoad
             set
             {
                 _displayText = value;
-                OnPropertyChanged(); 
+                OnPropertyChanged();
             }
         }
 
+        #region INotifyPropertyChanged Members
+
         public event PropertyChangedEventHandler PropertyChanged;
+
+        #endregion
 
         [NotifyPropertyChangedInvocator]
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
-            PropertyChangedEventHandler handler = PropertyChanged;
+            var handler = PropertyChanged;
             if (handler != null) handler(this, new PropertyChangedEventArgs(propertyName));
         }
     }

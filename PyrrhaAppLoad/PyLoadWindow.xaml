@@ -5,147 +5,378 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:bindings="clr-namespace:PyrrhaAppLoad.Bindings"
         xmlns:attcom="clr-namespace:PyrrhaAppLoad.Bindings.AttachedCommandBehavior"
-        xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
-        Title="Pyrrha PyLoad"
+        Title="PyLoad"
+        MinWidth="400"
+        ResizeMode="NoResize"
+        AllowsTransparency="True"
+        BorderBrush="Transparent"
+        BorderThickness="0"
+        WindowStyle="None"
         SizeToContent="WidthAndHeight"
         WindowStartupLocation="CenterOwner"
         mc:Ignorable="d" Background="#FFE8E8E8" >
-    
+
     <Window.DataContext>
         <bindings:ViewModel />
     </Window.DataContext>
 
-    <i:Interaction.Triggers>
-        <i:EventTrigger EventName="Loaded">
-            <i:InvokeCommandAction Command="{Binding LoadedCommand}" />
-        </i:EventTrigger>
-    </i:Interaction.Triggers>
-
     <Window.Resources>
-
-        <LinearGradientBrush x:Key="PyBgGradientBrush" StartPoint="0.5,0" EndPoint="0.5,1" MappingMode="RelativeToBoundingBox">
-            <GradientStop Offset="1" Color="#FF8D8D8D"/>
-            <GradientStop Color="White"/>
-        </LinearGradientBrush>
-
-        <Style x:Key="PyButton" TargetType="Button">
-            <Setter Property="Background" Value="{StaticResource PyBgGradientBrush}"/>
+        <Style x:Key="WindowButtonBase" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Opacity" Value=".8"/>
             <Setter Property="Foreground" Value="DarkGreen" />
         </Style>
-        
-        <Style x:Key="PyTextBlockStyle" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="DarkGreen" />
-            <Setter Property="Padding" Value="15,0,15,0" />
-            <Setter Property="Width" Value="Auto" />
+
+        <Style x:Key="AbstractButtonStyle" 
+                       TargetType="Button"
+                       BasedOn="{StaticResource WindowButtonBase}">
+            <Setter Property="Padding" Value="5,0"/>
+            <Setter Property="HorizontalAlignment" Value="Right" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+            <Setter Property="BorderBrush" Value="DarkGreen" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Foreground" Value="#3E80B6" />
+                    <Setter Property="BorderBrush" Value="#3E80B6" />
+                </Trigger>
+            </Style.Triggers>
         </Style>
+       
     </Window.Resources>
-    <Grid x:Name="MainGrid" Margin="5">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-        <StackPanel Grid.Row="0"
-                    Orientation="Vertical">
-            <Grid Margin="0,0,0,5">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width=".75*"  />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <DockPanel Grid.Row="0" Margin="0" HorizontalAlignment="Stretch" />
-                <StackPanel Grid.Column="0" HorizontalAlignment="Right" Orientation="Horizontal">
-                    <Button  Width="30" Margin="0,0,3,0" Padding="3" Style="{StaticResource PyButton}" Content="&lt;" />
-                    <Button Width="30" Margin="0,0,5,0" Padding="3" Style="{StaticResource PyButton}" Content="&gt;" />
-                </StackPanel>
-                <GridSplitter Name="GridSplitter1" 
-                              Grid.Column="1" 
-                              Width="2" 
-                              Height="Auto" 
-                              Margin="0" HorizontalAlignment="Stretch" 
-                              BorderThickness="5" 
-                              BorderBrush="#0001911D" ResizeDirection="Columns" />
 
-                <TextBox Grid.Column="2" Width="Auto" VerticalAlignment="Stretch" Background="#FFE7F9E9" />
+    <DockPanel>
 
-                <Button Grid.Column="3" VerticalAlignment="Stretch" Content="Search" Style="{StaticResource PyButton}" />
+
+        <Grid x:Name="MainGrid" >
+
+            <Grid.Resources>
+
+
+                <Style x:Key="CloseButtonStyle" 
+                       TargetType="Button" 
+                       BasedOn="{StaticResource AbstractButtonStyle}">
+                    <Setter Property="Width" Value="25"/>
+                    <Setter Property="Height" Value="25"/>
+                    <Setter Property="IsCancel" Value="True" />
+                    <Setter Property="Margin" Value="0,3,0,0" />
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="{x:Type Button}">
+                                <Border Background="{TemplateBinding Background}">
+                                    <Image Source="/PyrrhaAppLoad;component/Resources/App_Close.png" />
+                                </Border>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                    <Style.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="#00BEBEBE" />
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="{x:Type Button}">
+                                        <Border Background="{TemplateBinding Background}">
+                                            <Image Source="/PyrrhaAppLoad;component/Resources/App_Close_Hover.png" />
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="{x:Type Button}">
+                                        <Border Background="{TemplateBinding Background}">
+                                            <Image Source="/PyrrhaAppLoad;component/Resources/App_Close_Pressed.png" />
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Resources>
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+
+            <Grid Grid.Row="0"
+                  Grid.Column="0"
+                  Grid.ColumnSpan="2"
+                  Margin="0"
+				  Height="35"
+				  VerticalAlignment="Top"
+				  DockPanel.Dock="Top"
+				  Background="Transparent"
+				  MouseDown="Window_Move">
+
+                <Image Width="20"
+                   Height="20"
+                   Margin="10,0,0,0"
+                   HorizontalAlignment="Left"/>
+
+                <Button ToolTip="Close"
+                        Grid.Column="0"
+                        Margin="0"
+                        Style="{StaticResource CloseButtonStyle}"
+                        Click="CancelButton_Click" >
+                    <Button.LayoutTransform>
+                        <RotateTransform CenterX="0.5" CenterY="0.5" Angle="180"/>
+                    </Button.LayoutTransform>
+                </Button>
             </Grid>
 
-            <!--MouseDoubleClick="{Binding ListViewItemDoubleClickCommand}"-->
-            <ListView x:Name="DirectoryView"
-                      MinWidth="570"
-                      MinHeight="200"
-                      HorizontalAlignment="Stretch"
-                      VerticalAlignment="Stretch"
-                      Foreground="DarkGreen"
-                      BorderBrush="DarkGreen"
-                      BorderThickness="2" Opacity="0.8"
-                      SelectionMode="Single"
-                      ItemsSource="{Binding CurrentDirctoryEntries}"
-                      attcom:CommandBehavior.Event="MouseDoubleClick"
-                      attcom:CommandBehavior.Command="{Binding  ListViewItemDoubleClickCommand}" >
-                
-                <ListView.Effect>
-                    <DropShadowEffect Color="#FFDFF0DD" Direction="325" RenderingBias="Quality"/>
-                </ListView.Effect>
-                
-                <ListView.Resources>
-                    <DataTemplate x:Key="ItemTemplate">
-                        <StackPanel Orientation="Horizontal">
-                            <Image Margin="0,0,7,0" Source="{Binding Path=FileIconUri}" />
-                            <TextBlock Text="{Binding Name}" />
-                        </StackPanel>
-                        
-                    </DataTemplate>
-                </ListView.Resources>
-                
-                <ListView.View>
-                    <GridView>
-                        <GridView.ColumnHeaderContainerStyle>
-                            <Style TargetType="GridViewColumnHeader">
-                                <Setter Property="Foreground" Value="DarkGreen" />
-                                <Setter Property="Background" >
-                                    <Setter.Value>
-                                        <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
-                                            <GradientStop Offset="1" Color="#FFD0F3DB" FrameworkElement.FlowDirection="RightToLeft"/>
-                                            <GradientStop Color="White"/>
-                                        </LinearGradientBrush>
-                                    </Setter.Value>
-                                </Setter>
-                                <Setter Property="BorderBrush" Value="DarkGreen" />
-                                <Setter Property="BorderThickness" Value="4" />
-                            </Style>
-                        </GridView.ColumnHeaderContainerStyle>
+            <StackPanel Grid.Column="0"
+                        Grid.ColumnSpan="2"
+                        Grid.Row="1"
+                        Orientation="Vertical">
 
-                        <GridViewColumn Width="Auto" CellTemplate="{StaticResource ItemTemplate}" >
-                            <GridViewColumn.Header>
-                                <TextBlock Style="{StaticResource PyTextBlockStyle}" Text="File Name" />
-                            </GridViewColumn.Header>
-                        </GridViewColumn>
-                        <GridViewColumn Width="Auto" DisplayMemberBinding="{Binding Created}">
-                            <GridViewColumn.Header>
-                                <TextBlock Style="{StaticResource PyTextBlockStyle}" Text="Created" />
-                            </GridViewColumn.Header>
-                        </GridViewColumn>
-                        <GridViewColumn Width="Auto" DisplayMemberBinding="{Binding LastModified}">
-                            <GridViewColumn.Header>
-                                <TextBlock Style="{StaticResource PyTextBlockStyle}" Text="Last Modifed" />
-                            </GridViewColumn.Header>
-                        </GridViewColumn>
-                    </GridView>
-                </ListView.View>
-            </ListView>
-            <DockPanel Margin="0,5,0,5">
-                <Label Height="Auto" Padding="1" 
+                <Grid Margin="5,0,5,5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto"  />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+
+
+                    <StackPanel Grid.Column="2" 
+                                HorizontalAlignment="Right" 
+                                Orientation="Horizontal">
+                        <Button  Width="30" 
+                                 Margin="0,0,3,0" 
+                                 Padding="3" 
+                                 Command="{Binding BackDirectoryCommand}">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource AbstractButtonStyle}">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border>
+                                                    <Image Source="Resources/Nav_Back.png"></Image>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate>
+                                                        <Border>
+                                                            <Image Source="Resources/Nav_Back_Hover.png"></Image>
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Trigger>
+                                        <Trigger Property="IsPressed" Value="True">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate>
+                                                        <Border>
+                                                            <Image Source="Resources/Nav_Back_Pressed.png"></Image>
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Trigger>
+                                        <Trigger Property="IsEnabled" Value="False">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate>
+                                                        <Border>
+                                                            <Image Source="Resources/Nav_Back_Disabled.png"></Image>
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+
+                        <Button Width="30" 
+                            Margin="0,0,5,0" 
+                            Padding="3" 
+                            Command="{Binding ForwardDirectoryCommand}">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource AbstractButtonStyle}">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border>
+                                                    <Image Source="Resources/Nav_Forward.png"></Image>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate>
+                                                        <Border>
+                                                            <Image Source="Resources/Nav_Forward_Hover.png"></Image>
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Trigger>
+                                        <Trigger Property="IsPressed" Value="True">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate>
+                                                        <Border>
+                                                            <Image Source="Resources/Nav_Forward_Pressed.png"></Image>
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Trigger>
+                                        <Trigger Property="IsEnabled" Value="False">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate>
+                                                        <Border>
+                                                            <Image Source="Resources/Nav_Forward_Disabled.png"></Image>
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+
+                    </StackPanel>
+                    <GridSplitter Name="GridSplitter1" 
+                              Grid.Column="1" 
+                              Width="2" 
+                              Height="Auto"
+                              Margin="0" 
+                              HorizontalAlignment="Stretch" IsTabStop="False" 
+                              BorderThickness="5"/>
+
+                    <TextBox Name="SearchBox"
+                             Grid.Column="0" 
+                             Grid.ColumnSpan="2"
+                             Width="Auto" 
+                             MinWidth="150"
+                             PreviewKeyDown="SearchBox_OnPreviewKeyDown"
+                             VerticalAlignment="Stretch" 
+                             Foreground="DarkGreen"
+                             VerticalContentAlignment="Center"
+                             HorizontalContentAlignment="Left"
+                             Background="#FFE7F9E9" />
+
+                    <!--<Button Grid.Column="3" 
+                            VerticalAlignment="Stretch" 
+                            Content="Search" 
+                            Style="{StaticResource AbstractButtonStyle}"
+                            Command="{Binding SearchButtonCommand}"
+                            CommandParameter="{Binding ElementName=SearchBox, Path=Text}"/>-->
+                </Grid>
+
+                <ListView x:Name="DirectoryView"
+                          Height="200"
+                          MinWidth="600"
+                          MaxHeight="200"
+                          HorizontalAlignment="Stretch"
+                          VerticalAlignment="Stretch"
+                          IsTabStop="False"
+                          Foreground="DarkGreen"
+                          BorderThickness="0"
+                          Opacity="0.8"
+                          SelectionMode="Single"
+                          PreviewKeyDown="DirectoryView_OnPreviewKeyDown"
+                          ItemsSource="{Binding NavigationManager.CurrentDirectoryContent}"
+                          SelectedItem="{Binding NavigationManager.SelectedDirectoryNavigationItem, Mode=OneWayToSource}"
+                          attcom:CommandBehavior.Event="MouseDoubleClick"
+                          attcom:CommandBehavior.Command="{Binding  ListViewItemDoubleClickCommand}" >
+
+                    <ListView.Effect>
+                        <DropShadowEffect Color="#FFDFF0DD" Direction="270" RenderingBias="Quality"/>
+                    </ListView.Effect>
+
+                    <ListView.Resources>
+                        <DataTemplate x:Key="ItemTemplate">
+                            <StackPanel Orientation="Horizontal">
+                                <Image Width="15" Height="15" Margin="0,0,7,0" Source="{Binding Path=FileIconUri}" />
+                                <TextBlock Text="{Binding Name}" />
+                            </StackPanel>
+                        </DataTemplate>
+
+                        <Style x:Key="PyTextBlockStyle" TargetType="TextBlock">
+                            <Setter Property="Foreground" Value="DarkGreen" />
+                            <Setter Property="Padding" Value="15,0,15,0" />
+                            <Setter Property="Width" Value="Auto" />
+                        </Style>
+                    </ListView.Resources>
+
+                    <ListView.View>
+                        <GridView>
+                            <GridView.ColumnHeaderContainerStyle>
+                                <Style TargetType="GridViewColumnHeader">
+                                    <Setter Property="Foreground" Value="DarkGreen" />
+                                    <Setter Property="Background" >
+                                        <Setter.Value>
+                                            <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                                                <GradientStop Offset="1" Color="#FFD0F3DB" FrameworkElement.FlowDirection="RightToLeft"/>
+                                                <GradientStop Color="White"/>
+                                            </LinearGradientBrush>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Setter Property="BorderBrush" Value="DarkGreen" />
+                                    <Setter Property="BorderThickness" Value="0" />
+                                </Style>
+                            </GridView.ColumnHeaderContainerStyle>
+
+                            <GridViewColumn  CellTemplate="{StaticResource ItemTemplate}" >
+                                <GridViewColumn.Header>
+                                    <TextBlock Style="{StaticResource PyTextBlockStyle}" Text="File Name" />
+                                </GridViewColumn.Header>
+                            </GridViewColumn>
+                            <GridViewColumn Width="Auto" DisplayMemberBinding="{Binding Created}">
+                                <GridViewColumn.Header>
+                                    <TextBlock Style="{StaticResource PyTextBlockStyle}" Text="Created" />
+                                </GridViewColumn.Header>
+                            </GridViewColumn>
+                            <GridViewColumn Width="Auto" DisplayMemberBinding="{Binding LastModified}">
+                                <GridViewColumn.Header>
+                                    <TextBlock Style="{StaticResource PyTextBlockStyle}" Text="Last Modifed" />
+                                </GridViewColumn.Header>
+                            </GridViewColumn>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+                <DockPanel Margin="5,7,5,5">
+                    <Label Height="Auto" Padding="1" 
                        HorizontalAlignment="Left" 
                        VerticalAlignment="Center" 
                        Foreground="DarkGreen" 
                        DockPanel.Dock="Left" 
-                       Content="{Binding CurrentDirectory, Mode=OneWay}" />
-                <Button Width="75" HorizontalAlignment="Right" Style="{StaticResource PyButton}" Content="Load" />
-            </DockPanel>
+                       Content="{Binding NavigationManager.CurrentNavigationTarget, Mode=OneWay}" />
+                    <Button Style="{StaticResource AbstractButtonStyle}" 
+                            Padding="20,5,20,5"
+                            Content="Load" 
+                            Command="{Binding }"/>
+                </DockPanel>
 
-        </StackPanel>
-    </Grid>
+            </StackPanel>
+
+
+        </Grid>
+    </DockPanel>
 </Window>

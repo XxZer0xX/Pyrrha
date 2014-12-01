@@ -1,5 +1,9 @@
 ﻿#region Referenceing
 
+using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.DatabaseServices;
+using IronPython.Hosting;
+using Microsoft.Scripting.Hosting;
 using AcadExc = Autodesk.AutoCAD.Runtime.Exception;
 
 #endregion
@@ -8,10 +12,7 @@ namespace Pyrrha.Engine
 {
     #region Referenceing
 
-    using Autodesk.AutoCAD.ApplicationServices;
-    using Autodesk.AutoCAD.DatabaseServices;
-    using IronPython.Hosting;
-    using Microsoft.Scripting.Hosting;
+    
 
     #endregion
 

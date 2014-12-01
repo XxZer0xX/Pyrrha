@@ -15,9 +15,8 @@ using System;
 
 namespace PyrrhaAppLoad.Properties
 {
-    #region Referenceing
 
-    
+    #region Referenceing
 
     #endregion
 

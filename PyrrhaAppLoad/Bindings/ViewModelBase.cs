@@ -9,9 +9,8 @@ using PyrrhaAppLoad.Properties;
 
 namespace PyrrhaAppLoad.Bindings
 {
-    #region Referenceing
 
-    
+    #region Referenceing
 
     #endregion
 

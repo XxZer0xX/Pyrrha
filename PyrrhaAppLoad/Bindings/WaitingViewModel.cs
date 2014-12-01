@@ -1,13 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace PyrrhaAppLoad.Bindings
+﻿namespace PyrrhaAppLoad.Bindings
 {
     internal class WaitingViewModel : ViewModelBase
     {
-        
     }
 }

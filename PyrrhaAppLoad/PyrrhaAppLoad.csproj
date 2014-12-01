@@ -37,9 +37,6 @@
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
-    <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -68,12 +65,13 @@
     <Compile Include="Bindings\ViewModelBase.cs" />
     <Compile Include="Bindings\ViewModelCommands.cs" />
     <Compile Include="Bindings\WaitingViewModel.cs" />
+    <Compile Include="DirectoryNavigationManager.cs" />
     <Compile Include="FileIO\Extern\Win32.cs" />
     <Compile Include="FileIO\SHfileInfo.cs" />
     <Compile Include="Imaging\ImageUtility.cs" />
     <Compile Include="Properties\Annotations.cs" />
     <Compile Include="Properties\Annotations1.cs" />
-    <Compile Include="PyListViewItem.cs" />
+    <Compile Include="DirectoryNavigationItem.cs" />
     <Compile Include="WaitingDialog.xaml.cs">
       <DependentUpon>WaitingDialog.xaml</DependentUpon>
     </Compile>
@@ -121,7 +119,25 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Resource Include="Resources\App_Close.png" />
+    <Resource Include="Resources\App_Close_Hover.png" />
+    <Resource Include="Resources\App_Close_Pressed.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Nav_Back.png" />
+    <Resource Include="Resources\Nav_Forward.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Nav_Back_Hover.png" />
+    <Resource Include="Resources\Nav_Back_Pressed.png" />
+    <Resource Include="Resources\Nav_Forward_Hover.png" />
+    <Resource Include="Resources\Nav_Forward_Pressed.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Nav_Back_Disabled.png" />
+    <Resource Include="Resources\Nav_Forward_Disabled.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

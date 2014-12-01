@@ -1,6 +1,16 @@
 ﻿#region Referencing
 
+#endregion
 
+#region Referenceing
+
+using System;
+using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.EditorInput;
+using Autodesk.AutoCAD.Runtime;
+using Pyrrha.Engine;
+using PyrrhaAppLoad;
 
 #endregion
 
@@ -8,14 +18,7 @@ namespace Pyrrha.Loader.AutoCad
 {
     #region Referenceing
 
-    using System;
-    using System.IO;
-    using Autodesk.AutoCAD.ApplicationServices;
-    using Autodesk.AutoCAD.DatabaseServices;
-    using Autodesk.AutoCAD.EditorInput;
-    using Autodesk.AutoCAD.Runtime;
-    using Engine;
-    using PyrrhaAppLoad;
+    
 
     #endregion
 
@@ -47,11 +50,9 @@ namespace Pyrrha.Loader.AutoCad
             }
             else
             {
-                var pyLoad = new PyrrhaAppLoad.App();
+                var pyLoad = new App();
             }
             // Todo Implement Custom Loader View
-
-           
 
             //if (pr.Status == PromptStatus.OK && File.Exists(pr.StringResult))
             //    LoadSciptFromFile(pr.StringResult);

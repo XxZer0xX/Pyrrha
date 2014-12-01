@@ -11,7 +11,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Text="{Binding DisplayText}"></TextBlock>
-        <ProgressBar IsIndeterminate="True" Grid.Row="1" Height="25" Width="Auto"></ProgressBar>
+        <TextBlock Text="{Binding DisplayText}" />
+        <ProgressBar Grid.Row="1" Width="Auto" Height="25" IsIndeterminate="True" />
     </Grid>
 </UserControl>

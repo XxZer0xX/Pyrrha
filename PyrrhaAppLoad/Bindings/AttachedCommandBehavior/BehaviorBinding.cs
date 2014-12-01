@@ -1,27 +1,33 @@
-﻿using System;
+﻿#region Referenceing
+
+using System;
 using System.Windows;
 using System.Windows.Input;
+
+#endregion
 
 namespace PyrrhaAppLoad.Bindings.AttachedCommandBehavior
 {
     /// <summary>
-    /// Defines a Command Binding
-    /// This inherits from freezable so that it gets inheritance context for DataBinding to work
+    ///     Defines a Command Binding
+    ///     This inherits from freezable so that it gets inheritance context for DataBinding to work
     /// </summary>
     public class BehaviorBinding : Freezable
     {
         CommandBehaviorBinding behavior;
+
+        DependencyObject owner;
+
         /// <summary>
-        /// Stores the Command Behavior Binding
+        ///     Stores the Command Behavior Binding
         /// </summary>
         internal CommandBehaviorBinding Behavior
         {
             get { return behavior ?? (behavior = new CommandBehaviorBinding()); }
         }
 
-        DependencyObject owner;
         /// <summary>
-        /// Gets or sets the Owner of the binding
+        ///     Gets or sets the Owner of the binding
         /// </summary>
         public DependencyObject Owner
         {
@@ -36,31 +42,31 @@ namespace PyrrhaAppLoad.Bindings.AttachedCommandBehavior
         #region Command
 
         /// <summary>
-        /// Command Dependency Property
+        ///     Command Dependency Property
         /// </summary>
         public static readonly DependencyProperty CommandProperty =
-            DependencyProperty.Register("Command", typeof(ICommand), typeof(BehaviorBinding),
-                new FrameworkPropertyMetadata(null,OnCommandChanged));
+            DependencyProperty.Register("Command", typeof (ICommand), typeof (BehaviorBinding),
+                new FrameworkPropertyMetadata(null, OnCommandChanged));
 
         /// <summary>
-        /// Gets or sets the Command property.  
+        ///     Gets or sets the Command property.
         /// </summary>
         public ICommand Command
         {
-            get { return (ICommand)GetValue(CommandProperty); }
+            get { return (ICommand) GetValue(CommandProperty); }
             set { SetValue(CommandProperty, value); }
         }
 
         /// <summary>
-        /// Handles changes to the Command property.
+        ///     Handles changes to the Command property.
         /// </summary>
         private static void OnCommandChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            ((BehaviorBinding)d).OnCommandChanged(e);
+            ((BehaviorBinding) d).OnCommandChanged(e);
         }
 
         /// <summary>
-        /// Provides derived classes an opportunity to handle changes to the Command property.
+        ///     Provides derived classes an opportunity to handle changes to the Command property.
         /// </summary>
         protected virtual void OnCommandChanged(DependencyPropertyChangedEventArgs e)
         {
@@ -72,31 +78,31 @@ namespace PyrrhaAppLoad.Bindings.AttachedCommandBehavior
         #region Action
 
         /// <summary>
-        /// Action Dependency Property
+        ///     Action Dependency Property
         /// </summary>
         public static readonly DependencyProperty ActionProperty =
-            DependencyProperty.Register("Action", typeof(Action<object>), typeof(BehaviorBinding),
+            DependencyProperty.Register("Action", typeof (Action<object>), typeof (BehaviorBinding),
                 new FrameworkPropertyMetadata(null, OnActionChanged));
 
         /// <summary>
-        /// Gets or sets the Action property. 
+        ///     Gets or sets the Action property.
         /// </summary>
         public Action<object> Action
         {
-            get { return (Action<object>)GetValue(ActionProperty); }
+            get { return (Action<object>) GetValue(ActionProperty); }
             set { SetValue(ActionProperty, value); }
         }
 
         /// <summary>
-        /// Handles changes to the Action property.
+        ///     Handles changes to the Action property.
         /// </summary>
         private static void OnActionChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            ((BehaviorBinding)d).OnActionChanged(e);
+            ((BehaviorBinding) d).OnActionChanged(e);
         }
 
         /// <summary>
-        /// Provides derived classes an opportunity to handle changes to the Action property.
+        ///     Provides derived classes an opportunity to handle changes to the Action property.
         /// </summary>
         protected virtual void OnActionChanged(DependencyPropertyChangedEventArgs e)
         {
@@ -108,32 +114,32 @@ namespace PyrrhaAppLoad.Bindings.AttachedCommandBehavior
         #region CommandParameter
 
         /// <summary>
-        /// CommandParameter Dependency Property
+        ///     CommandParameter Dependency Property
         /// </summary>
         public static readonly DependencyProperty CommandParameterProperty =
-            DependencyProperty.Register("CommandParameter", typeof(object), typeof(BehaviorBinding),
-                new FrameworkPropertyMetadata((object)null,
-                    new PropertyChangedCallback(OnCommandParameterChanged)));
+            DependencyProperty.Register("CommandParameter", typeof (object), typeof (BehaviorBinding),
+                new FrameworkPropertyMetadata(null,
+                    OnCommandParameterChanged));
 
         /// <summary>
-        /// Gets or sets the CommandParameter property.  
+        ///     Gets or sets the CommandParameter property.
         /// </summary>
         public object CommandParameter
         {
-            get { return (object)GetValue(CommandParameterProperty); }
+            get { return GetValue(CommandParameterProperty); }
             set { SetValue(CommandParameterProperty, value); }
         }
 
         /// <summary>
-        /// Handles changes to the CommandParameter property.
+        ///     Handles changes to the CommandParameter property.
         /// </summary>
         private static void OnCommandParameterChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            ((BehaviorBinding)d).OnCommandParameterChanged(e);
+            ((BehaviorBinding) d).OnCommandParameterChanged(e);
         }
 
         /// <summary>
-        /// Provides derived classes an opportunity to handle changes to the CommandParameter property.
+        ///     Provides derived classes an opportunity to handle changes to the CommandParameter property.
         /// </summary>
         protected virtual void OnCommandParameterChanged(DependencyPropertyChangedEventArgs e)
         {
@@ -145,32 +151,32 @@ namespace PyrrhaAppLoad.Bindings.AttachedCommandBehavior
         #region Event
 
         /// <summary>
-        /// Event Dependency Property
+        ///     Event Dependency Property
         /// </summary>
         public static readonly DependencyProperty EventProperty =
-            DependencyProperty.Register("Event", typeof(string), typeof(BehaviorBinding),
-                new FrameworkPropertyMetadata((string)null,
-                    new PropertyChangedCallback(OnEventChanged)));
+            DependencyProperty.Register("Event", typeof (string), typeof (BehaviorBinding),
+                new FrameworkPropertyMetadata(null,
+                    OnEventChanged));
 
         /// <summary>
-        /// Gets or sets the Event property.  
+        ///     Gets or sets the Event property.
         /// </summary>
         public string Event
         {
-            get { return (string)GetValue(EventProperty); }
+            get { return (string) GetValue(EventProperty); }
             set { SetValue(EventProperty, value); }
         }
 
         /// <summary>
-        /// Handles changes to the Event property.
+        ///     Handles changes to the Event property.
         /// </summary>
         private static void OnEventChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            ((BehaviorBinding)d).OnEventChanged(e);
+            ((BehaviorBinding) d).OnEventChanged(e);
         }
 
         /// <summary>
-        /// Provides derived classes an opportunity to handle changes to the Event property.
+        ///     Provides derived classes an opportunity to handle changes to the Event property.
         /// </summary>
         protected virtual void OnEventChanged(DependencyPropertyChangedEventArgs e)
         {
@@ -181,7 +187,7 @@ namespace PyrrhaAppLoad.Bindings.AttachedCommandBehavior
 
         static void OwnerReset(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            ((BehaviorBinding)d).ResetEventBinding();
+            ((BehaviorBinding) d).ResetEventBinding();
         }
 
         private void ResetEventBinding()
@@ -198,7 +204,7 @@ namespace PyrrhaAppLoad.Bindings.AttachedCommandBehavior
         }
 
         /// <summary>
-        /// This is not actually used. This is just a trick so that this object gets WPF Inheritance Context
+        ///     This is not actually used. This is just a trick so that this object gets WPF Inheritance Context
         /// </summary>
         /// <returns></returns>
         protected override Freezable CreateInstanceCore()

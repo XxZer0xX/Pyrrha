@@ -18,9 +18,8 @@ using PyrrhaAppLoad.Properties;
 
 namespace PyrrhaAppLoad.Imaging
 {
-    #region Referenceing
 
-    
+    #region Referenceing
 
     #endregion
 

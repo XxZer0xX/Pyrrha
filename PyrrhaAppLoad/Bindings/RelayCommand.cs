@@ -7,12 +7,6 @@ using System.Windows.Input;
 
 namespace PyrrhaAppLoad.Bindings
 {
-    #region Referenceing
-
-    
-
-    #endregion
-
     public class RelayCommand : ICommand
     {
         #region Fields

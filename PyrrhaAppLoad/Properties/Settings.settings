@@ -8,5 +8,8 @@
     <Setting Name="IconDirectory" Type="System.String" Scope="User">
       <Value Profile="(Default)">icons</Value>
     </Setting>
+    <Setting Name="WindowTitle" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">Pyrrha AppLoad</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

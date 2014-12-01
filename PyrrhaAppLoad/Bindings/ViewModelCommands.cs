@@ -3,28 +3,18 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Windows.Input;
-using PyrrhaAppLoad.Properties;
 
 #endregion
 
 namespace PyrrhaAppLoad.Bindings
 {
-    #region Referenceing
-
-    
-
-    #endregion
-
     internal partial class ViewModel
     {
         #region ICommands
 
         private ICommand _backDirectoryCommand;
-        private ICommand _closeCommand;
         private ICommand _forwardDirectoryCommand;
-        private ICommand _initCommand;
         private ICommand _listViewItemDoubleClickCommand;
         private ICommand _loadFileCommand;
         private ICommand _loadedCommand;
@@ -36,27 +26,46 @@ namespace PyrrhaAppLoad.Bindings
             get
             {
                 return _listViewItemDoubleClickCommand ??
-                       (_listViewItemDoubleClickCommand = new RelayCommand(_listViewItemDoubleClickCommandAction));
+                       (_listViewItemDoubleClickCommand = new RelayCommand(
+                           obj => NavigationManager.NavigateToSelectedItem()));
             }
         }
 
-
-        public ICommand InitializedCommand
+        public ICommand BackDirectoryCommand
         {
             get
             {
-                return _initCommand ??
-                       (_initCommand = new RelayCommand(_initCommandAction));
+                return _backDirectoryCommand ??
+                       (_backDirectoryCommand = new RelayCommand(obj => NavigationManager.NavigateToParent()
+                           , obj => NavigationManager.CanNavigatetoParent));
             }
         }
 
-
-        public ICommand LoadedCommand
+        public ICommand ForwardDirectoryCommand
         {
             get
             {
-                return _loadedCommand ??
-                       (_loadedCommand = new RelayCommand(_loadedCommandAction));
+                return _forwardDirectoryCommand ??
+                       (_forwardDirectoryCommand = new RelayCommand(obj => NavigationManager.NavigateToPrevious()
+                           , obj => NavigationManager.CanNavigateToPrevious));
+            }
+        }
+
+        public ICommand LoadFileCommand
+        {
+            get
+            {
+                return _loadFileCommand ??
+                       (_loadFileCommand = new RelayCommand(_loadFileCommandAction, _loadFileCommandPredicate));
+            }
+        }
+
+        public ICommand SearchButtonCommand
+        {
+            get
+            {
+                return _searchCommand ?? 
+                       (_searchCommand = new RelayCommand(_searchCommandAction,_searchCommandPredicate));
             }
         }
 
@@ -64,103 +73,51 @@ namespace PyrrhaAppLoad.Bindings
 
         #region ICommand Actions
 
-        private void _listViewItemDoubleClickCommandAction(object obj)
-        {
-            // not loading the selected item
-            var fileEntries = GetFileSystemEntries(SelectedListViewItem.Path);
-            LoadListViewItems(fileEntries);
-        }
-
-        private void _initCommandAction(object obj)
-        {
-            if (!string.IsNullOrEmpty(Settings.Default.LastLocation))
-                return;
-            CurrentDirectory = "Computer";
-        }
-
-        private void _loadedCommandAction(object obj)
-        {
-            var fileSystemEntries = !string.IsNullOrEmpty(LastLocation)
-                ? GetFileSystemEntries(LastLocation)
-                : App.AccessableDrives;
-
-            LoadListViewItems(fileSystemEntries);
-        }
-
-
-        private void _backDirectoryCommandAction(object obj)
-        {
-        }
-
-        private void _forwardDirectoryCommandAction(object obj)
-        {
-        }
-
         private void _loadFileCommandAction(object obj)
         {
         }
 
-        private void _closeCommandAction(object obj)
-        {
-        }
 
         private void _searchCommandAction(object obj)
         {
+            var expectedPath = string.Empty;
+            var searchString = (string) obj;
+            if (Path.HasExtension(searchString))
+            {
+                var fileInfo = new FileInfo(searchString);
+                expectedPath = fileInfo.DirectoryName;
+            }
+            else
+            {
+                var dirInfo = new DirectoryInfo(searchString);
+                expectedPath = dirInfo.FullName;
+            }
+            NavigationManager.NavigateToExplicit(new DirectoryNavigationItem(expectedPath));
         }
 
         #endregion
 
         #region ICommand Predicates
 
-        private bool _loadCommandPredicate(object obj)
-        {
-            return false;
-        }
-
-        private bool _backDirectoryCommandPredicate(object obj)
-        {
-            return false;
-        }
-
-        private bool _forwardDirectoryCommandPredicate(object obj)
-        {
-            return false;
-        }
-
         private bool _loadFileCommandPredicate(object obj)
-        {
-            return false;
-        }
-
-        private bool _closeCommandPredicate(object obj)
         {
             return false;
         }
 
         private bool _searchCommandPredicate(object obj)
         {
-            return false;
+            if(obj == null)
+                return false;
+
+            var expectedString = (string) obj;
+            return !string.IsNullOrEmpty(expectedString) 
+                && !NavigationManager.CurrentNavigationTarget.Equals(expectedString,StringComparison.CurrentCultureIgnoreCase);
         }
 
         #endregion
 
-        #region Functional
-
-        internal IEnumerable<string> GetFileSystemEntries(string path)
+        public void DoSomethingWithFile(string path)
         {
-            return Directory.EnumerateFileSystemEntries(path).Where(
-                subpath =>
-                    !Path.HasExtension(path) ||
-                    Path.GetExtension(subpath).Equals(".py", StringComparison.CurrentCultureIgnoreCase));
         }
-
-        internal void LoadListViewItems(IEnumerable<string> paths)
-        {
-            var items = paths.Select(path => new PyListViewItem(path, ImageUtility.GetRegisteredIcon(path)));
-            foreach (var item in items)
-                CurrentDirctoryEntries.Add(item);
-        }
-
-        #endregion
     }
 }

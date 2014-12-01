@@ -1,4 +1,10 @@
-﻿namespace Pyrrha.Loader.AutoCad.UI
+﻿#region Referenceing
+
+using System.Windows;
+
+#endregion
+
+namespace Pyrrha.Loader.AutoCad.UI
 {
     /// <summary>
     ///     Interaction logic for PyAppLoad.xaml
@@ -10,9 +16,8 @@
             InitializeComponent();
         }
 
-        private void SearchBox_Loaded(object sender, System.Windows.RoutedEventArgs e)
+        private void SearchBox_Loaded(object sender, RoutedEventArgs e)
         {
-
         }
     }
 }

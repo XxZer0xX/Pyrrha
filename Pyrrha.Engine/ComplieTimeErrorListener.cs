@@ -1,11 +1,16 @@
-﻿
+﻿#region Referenceing
+
+using System.Collections.Generic;
+using Microsoft.Scripting;
+using Microsoft.Scripting.Hosting;
+
+#endregion
+
 namespace Pyrrha.Engine
 {
     #region Referenceing
 
-    using System.Collections.Generic;
-    using Microsoft.Scripting;
-    using Microsoft.Scripting.Hosting;
+    
 
     #endregion
 

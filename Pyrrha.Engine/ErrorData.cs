@@ -10,9 +10,8 @@ using Microsoft.Scripting;
 
 namespace Pyrrha.Engine
 {
-    #region Referenceing
 
-    
+    #region Referenceing
 
     #endregion
 

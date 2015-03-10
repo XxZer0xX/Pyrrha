@@ -61,20 +61,20 @@ namespace PyrrhaAppLoad.Bindings.AttachedCommandBehavior
             var sourceCollection = (BehaviorBindingCollection) sender;
             switch (e.Action)
             {
-                    //when an item(s) is added we need to set the Owner property implicitly
+                //when an item(s) is added we need to set the Owner property implicitly
                 case NotifyCollectionChangedAction.Add:
                     if (e.NewItems != null)
                         foreach (BehaviorBinding item in e.NewItems)
                             item.Owner = sourceCollection.Owner;
                     break;
-                    //when an item(s) is removed we should Dispose the BehaviorBinding
+                //when an item(s) is removed we should Dispose the BehaviorBinding
                 case NotifyCollectionChangedAction.Remove:
                     if (e.OldItems != null)
                         foreach (BehaviorBinding item in e.OldItems)
                             item.Behavior.Dispose();
                     break;
 
-                    //here we have to set the owner property to the new item and unregister the old item
+                //here we have to set the owner property to the new item and unregister the old item
                 case NotifyCollectionChangedAction.Replace:
                     if (e.NewItems != null)
                         foreach (BehaviorBinding item in e.NewItems)
@@ -85,7 +85,7 @@ namespace PyrrhaAppLoad.Bindings.AttachedCommandBehavior
                             item.Behavior.Dispose();
                     break;
 
-                    //when an item(s) is removed we should Dispose the BehaviorBinding
+                //when an item(s) is removed we should Dispose the BehaviorBinding
                 case NotifyCollectionChangedAction.Reset:
                     if (e.OldItems != null)
                         foreach (BehaviorBinding item in e.OldItems)

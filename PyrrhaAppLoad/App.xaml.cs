@@ -21,7 +21,6 @@ namespace PyrrhaAppLoad
         public string FileSelectionResult { get; private set; }
         public string ScriptPathResult { get; private set; }
 
-
         private void App_DispatcherUnhandledException(object sender,
             DispatcherUnhandledExceptionEventArgs e)
         {

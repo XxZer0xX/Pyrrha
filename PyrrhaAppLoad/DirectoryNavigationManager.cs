@@ -1,16 +1,16 @@
 ﻿#region Referenceing
 
+using PyrrhaAppLoad.Properties;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Security.RightsManagement;
+using System.Security.AccessControl;
+using System.Security.Principal;
 using System.Threading;
 using System.Windows;
-using PyrrhaAppLoad.Annotations;
-using PyrrhaAppLoad.Imaging;
 
 #endregion
 
@@ -18,6 +18,19 @@ namespace PyrrhaAppLoad
 {
     public sealed class DirectoryNavigationManager : List<DirectoryNavigationItem>, INotifyPropertyChanged
     {
+        #region ctor
+
+        public DirectoryNavigationManager()
+        {
+            setCurrentDirectoryContent();
+        }
+
+        #endregion
+
+        #region Shadowed
+
+        new private void Insert(int index, DirectoryNavigationItem item) => base.Insert(index, item);
+        #endregion
 
         #region Properties
 
@@ -37,6 +50,7 @@ namespace PyrrhaAppLoad
                 OnPropertyChanged();
             }
         }
+
 
         public IEnumerable<DirectoryNavigationItem> CurrentDirectoryContent
         {
@@ -61,33 +75,19 @@ namespace PyrrhaAppLoad
             }
         }
 
-        public static IEnumerable<string> AccessableDrives
-        {
-            get { return _accessableDrives ?? (_accessableDrives = loadAccessableDrives()); }
-        }
+        public static IEnumerable<string> AccessableDrives { get; } = loadAccessableDrives();
 
         public bool CanNavigateToPrevious
         {
-            get { return currentIndex <= Count; }
+            get { return currentIndex < Count - 1 && currentIndex > -1; }
         }
 
         public bool CanNavigatetoParent
         {
-            get { return _currentDirectory != null && _currentDirectory.Parent != null; }
+            get { return _currentDirectory != null; }
         }
 
         #endregion
-
-
-        #region ctor
-
-        public DirectoryNavigationManager()
-        {
-            setCurrentDirectoryContent();
-        }
-
-        #endregion
-
 
         #region Public Methods
 
@@ -108,7 +108,7 @@ namespace PyrrhaAppLoad
         public void NavigateToParent()
         {
             currentIndex--;
-            
+
             _currentDirectory = _currentDirectory.Parent;
 
             if (_currentDirectory == null)
@@ -164,7 +164,7 @@ namespace PyrrhaAppLoad
                 foreach (var navigationItem in stack)
                 {
                     currentIndex++;
-                    Insert(currentIndex,navigationItem);
+                    Insert(currentIndex, navigationItem);
                 }
 
                 setCurrentDirectoryContent();
@@ -180,7 +180,7 @@ namespace PyrrhaAppLoad
             if (currentIndex == Count)
                 return;
 
-            if (_currentDirectory.FullName != this[currentIndex].Path)
+            if (currentIndex < Count && _currentDirectory.FullName != this[currentIndex].Path)
                 RemoveRange(currentIndex, Math.Abs(currentIndex - Count));
         }
 
@@ -220,7 +220,8 @@ namespace PyrrhaAppLoad
                         {
                             var dirInfo = new DirectoryInfo(subpath);
                             var attrs = dirInfo.Attributes;
-                            if ((attrs ^ FileAttributes.Directory) == 0)
+
+                            if (UserHasAccess(subpath) && (attrs ^ FileAttributes.Directory) == 0 || (attrs ^ FileAttributes.Archive) == 0)
                                 return true;
                             return (attrs & FileAttributes.Hidden) == 0
                                    &&
@@ -233,13 +234,38 @@ namespace PyrrhaAppLoad
                     obj => new DirectoryNavigationItem(obj));
         }
 
-        #endregion
-
-        #region Shadowed
-
-        new private void Insert(int index, DirectoryNavigationItem item)
+        private bool UserHasAccess(string subpath)
         {
-            base.Insert(index, item);
+            if (Path.HasExtension(subpath))
+                return true;
+
+            DirectorySecurity acl = null;
+            
+            try
+            {
+                acl = Directory.GetAccessControl(subpath);
+            }
+            catch (Exception ex) if (ex is DirectoryNotFoundException)
+            {
+                return false;
+            }
+
+            var arc = acl?.GetAccessRules(true, true, typeof(SecurityIdentifier));
+
+            if (arc == null)
+                return false;
+
+            foreach (FileSystemAccessRule rule in arc)
+            {
+                if ((FileSystemRights.Write & rule.FileSystemRights) != FileSystemRights.Write)
+                    continue;
+
+                if (rule.AccessControlType == AccessControlType.Allow)
+                    return true;
+                else if (rule.AccessControlType == AccessControlType.Deny)
+                    return false;
+            }
+            return false;
         }
 
         #endregion
@@ -249,14 +275,13 @@ namespace PyrrhaAppLoad
         public event PropertyChangedEventHandler PropertyChanged;
 
         [NotifyPropertyChangedInvocator]
-        private void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            var handler = PropertyChanged;
-            if (handler != null) handler(this, new PropertyChangedEventArgs(propertyName));
-        }
+        private void OnPropertyChanged([CallerMemberName] string propertyName = null) 
+            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+
+
 
         #endregion
 
-       
+  
     }
 }

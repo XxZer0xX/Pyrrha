@@ -70,7 +70,6 @@
     <Compile Include="FileIO\SHfileInfo.cs" />
     <Compile Include="Imaging\ImageUtility.cs" />
     <Compile Include="Properties\Annotations.cs" />
-    <Compile Include="Properties\Annotations1.cs" />
     <Compile Include="DirectoryNavigationItem.cs" />
     <Compile Include="WaitingDialog.xaml.cs">
       <DependentUpon>WaitingDialog.xaml</DependentUpon>
@@ -137,6 +136,9 @@
   <ItemGroup>
     <Resource Include="Resources\Nav_Back_Disabled.png" />
     <Resource Include="Resources\Nav_Forward_Disabled.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\App_Icon.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

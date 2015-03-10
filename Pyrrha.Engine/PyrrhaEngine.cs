@@ -10,17 +10,15 @@ using AcadExc = Autodesk.AutoCAD.Runtime.Exception;
 
 namespace Pyrrha.Engine
 {
-    #region Referenceing
 
-    
+    #region Referenceing
 
     #endregion
 
     public sealed class PyrrhaEngine
     {
-        private readonly ScriptEngine _engine;
-
         private ComplieTimeErrorListener _errorListener;
+        private readonly ScriptEngine _engine;
 
         public PyrrhaEngine()
         {

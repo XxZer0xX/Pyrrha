@@ -14,6 +14,50 @@ namespace PyrrhaAppLoad.Bindings.AttachedCommandBehavior
     /// </summary>
     public class CommandBehaviorBinding : IDisposable
     {
+        //Creates an EventHandler on runtime and registers that handler to the Event specified
+
+        bool disposed;
+
+        #region IDisposable Members
+
+        /// <summary>
+        ///     Unregisters the EventHandler from the Event
+        /// </summary>
+        public void Dispose()
+        {
+            if (!disposed)
+            {
+                Event.RemoveEventHandler(Owner, EventHandler);
+                disposed = true;
+            }
+        }
+
+        #endregion
+
+        public void BindEvent(DependencyObject owner, string eventName)
+        {
+            EventName = eventName;
+            Owner = owner;
+            Event = Owner.GetType().GetEvent(EventName, BindingFlags.Public | BindingFlags.Instance);
+            if (Event == null)
+                throw new InvalidOperationException(String.Format("Could not resolve event name {0}", EventName));
+
+            //Create an event handler for the event that will call the ExecuteCommand method
+            EventHandler = EventHandlerGenerator.CreateDelegate(
+                Event.EventHandlerType,
+                typeof (CommandBehaviorBinding).GetMethod("Execute", BindingFlags.Public | BindingFlags.Instance), this);
+            //Register the handler to the Event
+            Event.AddEventHandler(Owner, EventHandler);
+        }
+
+        /// <summary>
+        ///     Executes the strategy
+        /// </summary>
+        public void Execute()
+        {
+            strategy.Execute(CommandParameter);
+        }
+
         #region Properties
 
         /// <summary>
@@ -81,49 +125,5 @@ namespace PyrrhaAppLoad.Bindings.AttachedCommandBehavior
         #endregion
 
         #endregion
-
-        //Creates an EventHandler on runtime and registers that handler to the Event specified
-
-        bool disposed;
-
-        #region IDisposable Members
-
-        /// <summary>
-        ///     Unregisters the EventHandler from the Event
-        /// </summary>
-        public void Dispose()
-        {
-            if (!disposed)
-            {
-                Event.RemoveEventHandler(Owner, EventHandler);
-                disposed = true;
-            }
-        }
-
-        #endregion
-
-        public void BindEvent(DependencyObject owner, string eventName)
-        {
-            EventName = eventName;
-            Owner = owner;
-            Event = Owner.GetType().GetEvent(EventName, BindingFlags.Public | BindingFlags.Instance);
-            if (Event == null)
-                throw new InvalidOperationException(String.Format("Could not resolve event name {0}", EventName));
-
-            //Create an event handler for the event that will call the ExecuteCommand method
-            EventHandler = EventHandlerGenerator.CreateDelegate(
-                Event.EventHandlerType,
-                typeof (CommandBehaviorBinding).GetMethod("Execute", BindingFlags.Public | BindingFlags.Instance), this);
-            //Register the handler to the Event
-            Event.AddEventHandler(Owner, EventHandler);
-        }
-
-        /// <summary>
-        ///     Executes the strategy
-        /// </summary>
-        public void Execute()
-        {
-            strategy.Execute(CommandParameter);
-        }
     }
 }

@@ -13,6 +13,22 @@ namespace PyrrhaAppLoad.Bindings.AttachedCommandBehavior
     /// </summary>
     public class CommandBehavior
     {
+        #region Helpers
+
+        //tries to get a CommandBehaviorBinding from the element. Creates a new instance if there is not one attached
+        private static CommandBehaviorBinding FetchOrCreateBinding(DependencyObject d)
+        {
+            var binding = GetBehavior(d);
+            if (binding != null)
+                return binding;
+
+            binding = new CommandBehaviorBinding();
+            SetBehavior(d, binding);
+            return binding;
+        }
+
+        #endregion
+
         #region Behavior
 
         /// <summary>
@@ -187,22 +203,6 @@ namespace PyrrhaAppLoad.Bindings.AttachedCommandBehavior
                 binding.Dispose();
             //bind the new event to the command
             binding.BindEvent(d, e.NewValue.ToString());
-        }
-
-        #endregion
-
-        #region Helpers
-
-        //tries to get a CommandBehaviorBinding from the element. Creates a new instance if there is not one attached
-        private static CommandBehaviorBinding FetchOrCreateBinding(DependencyObject d)
-        {
-            var binding = GetBehavior(d);
-            if (binding != null)
-                return binding;
-
-            binding = new CommandBehaviorBinding();
-            SetBehavior(d, binding);
-            return binding;
         }
 
         #endregion

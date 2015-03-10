@@ -26,9 +26,7 @@ namespace PyrrhaAppLoad.Imaging
     public class ImageUtility
     {
         private static ImageUtility _instance;
-
         private static string[] _mappedDrives;
-
         private static string IconsDirectory;
         private IDictionary<string, string> _cachedIcons;
 

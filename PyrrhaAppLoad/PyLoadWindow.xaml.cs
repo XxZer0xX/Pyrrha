@@ -10,11 +10,6 @@ using PyrrhaAppLoad.Bindings;
 
 namespace PyrrhaAppLoad
 {
-
-    #region Referenceing
-
-    #endregion
-
     /// <summary>
     ///     Interaction logic for PyLoadWindow.xaml
     /// </summary>
@@ -24,6 +19,8 @@ namespace PyrrhaAppLoad
         {
             InitializeComponent();
         }
+
+        private void CancelButton_Click(object sender, RoutedEventArgs e) => Close();
 
         private void Window_Move(object sender, MouseButtonEventArgs e)
         {
@@ -66,11 +63,6 @@ namespace PyrrhaAppLoad
                 context.LoadFileCommand.Execute(null);
             else
                 context.NavigationManager.NavigateTo(item);
-        }
-
-        private void CancelButton_Click(object sender, RoutedEventArgs e)
-        {
-            Close();
         }
 
         private void SearchBox_OnPreviewKeyDown(object sender, KeyEventArgs e)

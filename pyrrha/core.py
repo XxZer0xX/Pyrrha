@@ -24,6 +24,7 @@ class PyrrhaManager(object):
     @active_document.setter
     def active_document(self, value):
         self.__document = value
+        _app.DocumentManager.MdiActiveDocument = value
 
     def write(self, message):
         self.__document.Editor.WriteMessage(message)

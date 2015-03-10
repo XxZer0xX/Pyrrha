@@ -15,7 +15,6 @@ namespace PyrrhaAppLoad.Bindings.AttachedCommandBehavior
     public class BehaviorBinding : Freezable
     {
         CommandBehaviorBinding behavior;
-
         DependencyObject owner;
 
         /// <summary>
@@ -37,6 +36,33 @@ namespace PyrrhaAppLoad.Bindings.AttachedCommandBehavior
                 owner = value;
                 ResetEventBinding();
             }
+        }
+
+        static void OwnerReset(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((BehaviorBinding) d).ResetEventBinding();
+        }
+
+        private void ResetEventBinding()
+        {
+            if (Owner != null) //only do this when the Owner is set
+            {
+                //check if the Event is set. If yes we need to rebind the Command to the new event and unregister the old one
+                if (Behavior.Event != null && Behavior.Owner != null)
+                    Behavior.Dispose();
+
+                //bind the new event to the command
+                Behavior.BindEvent(Owner, Event);
+            }
+        }
+
+        /// <summary>
+        ///     This is not actually used. This is just a trick so that this object gets WPF Inheritance Context
+        /// </summary>
+        /// <returns></returns>
+        protected override Freezable CreateInstanceCore()
+        {
+            throw new NotImplementedException();
         }
 
         #region Command
@@ -184,32 +210,5 @@ namespace PyrrhaAppLoad.Bindings.AttachedCommandBehavior
         }
 
         #endregion
-
-        static void OwnerReset(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            ((BehaviorBinding) d).ResetEventBinding();
-        }
-
-        private void ResetEventBinding()
-        {
-            if (Owner != null) //only do this when the Owner is set
-            {
-                //check if the Event is set. If yes we need to rebind the Command to the new event and unregister the old one
-                if (Behavior.Event != null && Behavior.Owner != null)
-                    Behavior.Dispose();
-
-                //bind the new event to the command
-                Behavior.BindEvent(Owner, Event);
-            }
-        }
-
-        /// <summary>
-        ///     This is not actually used. This is just a trick so that this object gets WPF Inheritance Context
-        /// </summary>
-        /// <returns></returns>
-        protected override Freezable CreateInstanceCore()
-        {
-            throw new NotImplementedException();
-        }
     }
 }

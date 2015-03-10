@@ -8,9 +8,8 @@ using Microsoft.Scripting.Hosting;
 
 namespace Pyrrha.Engine
 {
-    #region Referenceing
 
-    
+    #region Referenceing
 
     #endregion
 

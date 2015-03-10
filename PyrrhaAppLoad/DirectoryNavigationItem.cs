@@ -11,12 +11,11 @@ namespace PyrrhaAppLoad
 {
     public sealed class DirectoryNavigationItem
     {
-        internal readonly FileSystemInfo Info;
         private DateTime? _created;
         private DateTime? _lastModified;
-
         private string _name;
         private string _path;
+        internal readonly FileSystemInfo Info;
 
         public DirectoryNavigationItem(string path)
         {

@@ -1,7 +1,6 @@
 ﻿#region Referenceing
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Windows.Input;
 
@@ -11,6 +10,10 @@ namespace PyrrhaAppLoad.Bindings
 {
     internal partial class ViewModel
     {
+        public void DoSomethingWithFile(string path)
+        {
+        }
+
         #region ICommands
 
         private ICommand _backDirectoryCommand;
@@ -64,8 +67,8 @@ namespace PyrrhaAppLoad.Bindings
         {
             get
             {
-                return _searchCommand ?? 
-                       (_searchCommand = new RelayCommand(_searchCommandAction,_searchCommandPredicate));
+                return _searchCommand ??
+                       (_searchCommand = new RelayCommand(_searchCommandAction, _searchCommandPredicate));
             }
         }
 
@@ -106,18 +109,16 @@ namespace PyrrhaAppLoad.Bindings
 
         private bool _searchCommandPredicate(object obj)
         {
-            if(obj == null)
+            if (obj == null)
                 return false;
 
             var expectedString = (string) obj;
-            return !string.IsNullOrEmpty(expectedString) 
-                && !NavigationManager.CurrentNavigationTarget.Equals(expectedString,StringComparison.CurrentCultureIgnoreCase);
+            return !string.IsNullOrEmpty(expectedString)
+                   &&
+                   !NavigationManager.CurrentNavigationTarget.Equals(expectedString,
+                       StringComparison.CurrentCultureIgnoreCase);
         }
 
         #endregion
-
-        public void DoSomethingWithFile(string path)
-        {
-        }
     }
 }

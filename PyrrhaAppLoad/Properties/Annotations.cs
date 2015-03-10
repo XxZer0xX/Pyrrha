@@ -1,6 +1,8 @@
 ﻿#region Referenceing
 
 using System;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 #endregion
 
@@ -16,9 +18,6 @@ using System;
 namespace PyrrhaAppLoad.Properties
 {
 
-    #region Referenceing
-
-    #endregion
 
     /// <summary>
     ///     Indicates that the value of the marked element could be <c>null</c> sometimes,
@@ -36,9 +35,10 @@ namespace PyrrhaAppLoad.Properties
     [AttributeUsage(
         AttributeTargets.Method | AttributeTargets.Parameter |
         AttributeTargets.Property | AttributeTargets.Delegate |
-        AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
+        AttributeTargets.Field)]
     public sealed class CanBeNullAttribute : Attribute
     {
+
     }
 
     /// <summary>
@@ -54,7 +54,7 @@ namespace PyrrhaAppLoad.Properties
     [AttributeUsage(
         AttributeTargets.Method | AttributeTargets.Parameter |
         AttributeTargets.Property | AttributeTargets.Delegate |
-        AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
+        AttributeTargets.Field)]
     public sealed class NotNullAttribute : Attribute
     {
     }
@@ -74,8 +74,7 @@ namespace PyrrhaAppLoad.Properties
     /// </code>
     /// </example>
     [AttributeUsage(
-        AttributeTargets.Constructor | AttributeTargets.Method,
-        AllowMultiple = false, Inherited = true)]
+        AttributeTargets.Constructor | AttributeTargets.Method)]
     public sealed class StringFormatMethodAttribute : Attribute
     {
         /// <param name="formatParameterName">
@@ -102,7 +101,7 @@ namespace PyrrhaAppLoad.Properties
     /// }
     /// </code>
     /// </example>
-    [AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false, Inherited = true)]
+    [AttributeUsage(AttributeTargets.Parameter)]
     public sealed class InvokerParameterNameAttribute : Attribute
     {
     }
@@ -162,7 +161,7 @@ namespace PyrrhaAppLoad.Properties
     ///         </item>
     ///     </list>
     /// </example>
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
+    [AttributeUsage(AttributeTargets.Method)]
     public sealed class NotifyPropertyChangedInvocatorAttribute : Attribute
     {
         public NotifyPropertyChangedInvocatorAttribute()
@@ -231,7 +230,7 @@ namespace PyrrhaAppLoad.Properties
     ///         </item>
     ///     </list>
     /// </examples>
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
     public sealed class ContractAnnotationAttribute : Attribute
     {
         public ContractAnnotationAttribute([NotNull] string contract)
@@ -260,7 +259,7 @@ namespace PyrrhaAppLoad.Properties
     /// }
     /// </code>
     /// </example>
-    [AttributeUsage(AttributeTargets.All, AllowMultiple = false, Inherited = true)]
+    [AttributeUsage(AttributeTargets.All)]
     public sealed class LocalizationRequiredAttribute : Attribute
     {
         public LocalizationRequiredAttribute() : this(true)
@@ -298,7 +297,7 @@ namespace PyrrhaAppLoad.Properties
     /// </example>
     [AttributeUsage(
         AttributeTargets.Interface | AttributeTargets.Class |
-        AttributeTargets.Struct, AllowMultiple = false, Inherited = true)]
+        AttributeTargets.Struct)]
     public sealed class CannotApplyEqualityOperatorAttribute : Attribute
     {
     }
@@ -315,8 +314,8 @@ namespace PyrrhaAppLoad.Properties
     /// public class MyComponent : IComponent { }
     /// </code>
     /// </example>
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true),
-     BaseTypeRequired(typeof (Attribute))]
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true),
+     BaseTypeRequired(typeof(Attribute))]
     public sealed class BaseTypeRequiredAttribute : Attribute
     {
         public BaseTypeRequiredAttribute([NotNull] Type baseType)
@@ -333,7 +332,7 @@ namespace PyrrhaAppLoad.Properties
     ///     (e.g. via reflection, in external library), so this symbol
     ///     will not be marked as unused (as well as by other usage inspections)
     /// </summary>
-    [AttributeUsage(AttributeTargets.All, AllowMultiple = false, Inherited = true)]
+    [AttributeUsage(AttributeTargets.All)]
     public sealed class UsedImplicitlyAttribute : Attribute
     {
         public UsedImplicitlyAttribute()
@@ -367,7 +366,7 @@ namespace PyrrhaAppLoad.Properties
     ///     to not mark symbols marked with such attributes as unused
     ///     (as well as by other usage inspections)
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
+    [AttributeUsage(AttributeTargets.Class)]
     public sealed class MeansImplicitUseAttribute : Attribute
     {
         public MeansImplicitUseAttribute()
@@ -417,7 +416,7 @@ namespace PyrrhaAppLoad.Properties
         InstantiatedWithFixedConstructorSignature = 4,
 
         /// <summary>Indicates implicit instantiation of a type</summary>
-        InstantiatedNoFixedConstructorSignature = 8,
+        InstantiatedNoFixedConstructorSignature = 8
     }
 
     /// <summary>
@@ -465,7 +464,7 @@ namespace PyrrhaAppLoad.Properties
     ///     If the parameter is an enumerable, indicates that it is enumerated
     ///     while the method is executed
     /// </summary>
-    [AttributeUsage(AttributeTargets.Parameter, Inherited = true)]
+    [AttributeUsage(AttributeTargets.Parameter)]
     public sealed class InstantHandleAttribute : Attribute
     {
     }
@@ -483,7 +482,7 @@ namespace PyrrhaAppLoad.Properties
     /// }
     /// </code>
     /// </example>
-    [AttributeUsage(AttributeTargets.Method, Inherited = true)]
+    [AttributeUsage(AttributeTargets.Method)]
     public sealed class PureAttribute : Attribute
     {
     }
@@ -509,263 +508,12 @@ namespace PyrrhaAppLoad.Properties
         public string BasePath { get; private set; }
     }
 
-    // ASP.NET MVC attributes
-
-    [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
-    public sealed class AspMvcAreaMasterLocationFormatAttribute : Attribute
+    public static class Extensions
     {
-        public AspMvcAreaMasterLocationFormatAttribute(string format)
+        public static void ForEach<T>(this T[] array, Action<T> action)
         {
+            foreach (T obj in array)
+                action(obj);
         }
-    }
-
-    [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
-    public sealed class AspMvcAreaPartialViewLocationFormatAttribute : Attribute
-    {
-        public AspMvcAreaPartialViewLocationFormatAttribute(string format)
-        {
-        }
-    }
-
-    [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
-    public sealed class AspMvcAreaViewLocationFormatAttribute : Attribute
-    {
-        public AspMvcAreaViewLocationFormatAttribute(string format)
-        {
-        }
-    }
-
-    [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
-    public sealed class AspMvcMasterLocationFormatAttribute : Attribute
-    {
-        public AspMvcMasterLocationFormatAttribute(string format)
-        {
-        }
-    }
-
-    [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
-    public sealed class AspMvcPartialViewLocationFormatAttribute : Attribute
-    {
-        public AspMvcPartialViewLocationFormatAttribute(string format)
-        {
-        }
-    }
-
-    [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
-    public sealed class AspMvcViewLocationFormatAttribute : Attribute
-    {
-        public AspMvcViewLocationFormatAttribute(string format)
-        {
-        }
-    }
-
-    /// <summary>
-    ///     ASP.NET MVC attribute. If applied to a parameter, indicates that the parameter
-    ///     is an MVC action. If applied to a method, the MVC action name is calculated
-    ///     implicitly from the context. Use this attribute for custom wrappers similar to
-    ///     <c>System.Web.Mvc.Html.ChildActionExtensions.RenderAction(HtmlHelper, String)</c>
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Method)]
-    public sealed class AspMvcActionAttribute : Attribute
-    {
-        public AspMvcActionAttribute()
-        {
-        }
-
-        public AspMvcActionAttribute([NotNull] string anonymousProperty)
-        {
-            AnonymousProperty = anonymousProperty;
-        }
-
-        [NotNull]
-        public string AnonymousProperty { get; private set; }
-    }
-
-    /// <summary>
-    ///     ASP.NET MVC attribute. Indicates that a parameter is an MVC area.
-    ///     Use this attribute for custom wrappers similar to
-    ///     <c>System.Web.Mvc.Html.ChildActionExtensions.RenderAction(HtmlHelper, String)</c>
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Parameter)]
-    public sealed class AspMvcAreaAttribute : PathReferenceAttribute
-    {
-        public AspMvcAreaAttribute()
-        {
-        }
-
-        public AspMvcAreaAttribute([NotNull] string anonymousProperty)
-        {
-            AnonymousProperty = anonymousProperty;
-        }
-
-        [NotNull]
-        public string AnonymousProperty { get; private set; }
-    }
-
-    /// <summary>
-    ///     ASP.NET MVC attribute. If applied to a parameter, indicates that
-    ///     the parameter is an MVC controller. If applied to a method,
-    ///     the MVC controller name is calculated implicitly from the context.
-    ///     Use this attribute for custom wrappers similar to
-    ///     <c>System.Web.Mvc.Html.ChildActionExtensions.RenderAction(HtmlHelper, String, String)</c>
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Method)]
-    public sealed class AspMvcControllerAttribute : Attribute
-    {
-        public AspMvcControllerAttribute()
-        {
-        }
-
-        public AspMvcControllerAttribute([NotNull] string anonymousProperty)
-        {
-            AnonymousProperty = anonymousProperty;
-        }
-
-        [NotNull]
-        public string AnonymousProperty { get; private set; }
-    }
-
-    /// <summary>
-    ///     ASP.NET MVC attribute. Indicates that a parameter is an MVC Master.
-    ///     Use this attribute for custom wrappers similar to
-    ///     <c>System.Web.Mvc.Controller.View(String, String)</c>
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Parameter)]
-    public sealed class AspMvcMasterAttribute : Attribute
-    {
-    }
-
-    /// <summary>
-    ///     ASP.NET MVC attribute. Indicates that a parameter is an MVC model type.
-    ///     Use this attribute for custom wrappers similar to
-    ///     <c>System.Web.Mvc.Controller.View(String, Object)</c>
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Parameter)]
-    public sealed class AspMvcModelTypeAttribute : Attribute
-    {
-    }
-
-    /// <summary>
-    ///     ASP.NET MVC attribute. If applied to a parameter, indicates that
-    ///     the parameter is an MVC partial view. If applied to a method,
-    ///     the MVC partial view name is calculated implicitly from the context.
-    ///     Use this attribute for custom wrappers similar to
-    ///     <c>System.Web.Mvc.Html.RenderPartialExtensions.RenderPartial(HtmlHelper, String)</c>
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Method)]
-    public sealed class AspMvcPartialViewAttribute : PathReferenceAttribute
-    {
-    }
-
-    /// <summary>
-    ///     ASP.NET MVC attribute. Allows disabling all inspections
-    ///     for MVC views within a class or a method.
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
-    public sealed class AspMvcSupressViewErrorAttribute : Attribute
-    {
-    }
-
-    /// <summary>
-    ///     ASP.NET MVC attribute. Indicates that a parameter is an MVC display template.
-    ///     Use this attribute for custom wrappers similar to
-    ///     <c>System.Web.Mvc.Html.DisplayExtensions.DisplayForModel(HtmlHelper, String)</c>
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Parameter)]
-    public sealed class AspMvcDisplayTemplateAttribute : Attribute
-    {
-    }
-
-    /// <summary>
-    ///     ASP.NET MVC attribute. Indicates that a parameter is an MVC editor template.
-    ///     Use this attribute for custom wrappers similar to
-    ///     <c>System.Web.Mvc.Html.EditorExtensions.EditorForModel(HtmlHelper, String)</c>
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Parameter)]
-    public sealed class AspMvcEditorTemplateAttribute : Attribute
-    {
-    }
-
-    /// <summary>
-    ///     ASP.NET MVC attribute. Indicates that a parameter is an MVC template.
-    ///     Use this attribute for custom wrappers similar to
-    ///     <c>System.ComponentModel.DataAnnotations.UIHintAttribute(System.String)</c>
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Parameter)]
-    public sealed class AspMvcTemplateAttribute : Attribute
-    {
-    }
-
-    /// <summary>
-    ///     ASP.NET MVC attribute. If applied to a parameter, indicates that the parameter
-    ///     is an MVC view. If applied to a method, the MVC view name is calculated implicitly
-    ///     from the context. Use this attribute for custom wrappers similar to
-    ///     <c>System.Web.Mvc.Controller.View(Object)</c>
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Method)]
-    public sealed class AspMvcViewAttribute : PathReferenceAttribute
-    {
-    }
-
-    /// <summary>
-    ///     ASP.NET MVC attribute. When applied to a parameter of an attribute,
-    ///     indicates that this parameter is an MVC action name
-    /// </summary>
-    /// <example>
-    ///     <code>
-    /// [ActionName("Foo")]
-    /// public ActionResult Login(string returnUrl) {
-    ///   ViewBag.ReturnUrl = Url.Action("Foo"); // OK
-    ///   return RedirectToAction("Bar"); // Error: Cannot resolve action
-    /// }
-    /// </code>
-    /// </example>
-    [AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Property)]
-    public sealed class AspMvcActionSelectorAttribute : Attribute
-    {
-    }
-
-    [AttributeUsage(
-        AttributeTargets.Parameter | AttributeTargets.Property |
-        AttributeTargets.Field, Inherited = true)]
-    public sealed class HtmlElementAttributesAttribute : Attribute
-    {
-        public HtmlElementAttributesAttribute()
-        {
-        }
-
-        public HtmlElementAttributesAttribute([NotNull] string name)
-        {
-            Name = name;
-        }
-
-        [NotNull]
-        public string Name { get; private set; }
-    }
-
-    [AttributeUsage(
-        AttributeTargets.Parameter | AttributeTargets.Field |
-        AttributeTargets.Property, Inherited = true)]
-    public sealed class HtmlAttributeValueAttribute : Attribute
-    {
-        public HtmlAttributeValueAttribute([NotNull] string name)
-        {
-            Name = name;
-        }
-
-        [NotNull]
-        public string Name { get; private set; }
-    }
-
-    // Razor attributes
-
-    /// <summary>
-    ///     Razor attribute. Indicates that a parameter or a method is a Razor section.
-    ///     Use this attribute for custom wrappers similar to
-    ///     <c>System.Web.WebPages.WebPageBase.RenderSection(String)</c>
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Method, Inherited = true)]
-    public sealed class RazorSectionAttribute : Attribute
-    {
     }
 }

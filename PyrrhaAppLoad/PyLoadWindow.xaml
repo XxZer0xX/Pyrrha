@@ -118,10 +118,16 @@
 				  Background="Transparent"
 				  MouseDown="Window_Move">
 
-                <Image Width="20"
-                   Height="20"
-                   Margin="10,0,0,0"
-                   HorizontalAlignment="Left"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                    <Image Width="20"
+                       Height="20"
+                           Margin="10,0,5,0"
+                       VerticalAlignment="Center"
+                       HorizontalAlignment="Left"
+                       Source="/PyrrhaAppLoad;component/Resources/App_Icon.png" />
+                    <TextBlock Text="Pyrrha AppLoad" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="DarkGreen"/>
+                </StackPanel>
+                
 
                 <Button ToolTip="Close"
                         Grid.Column="0"
@@ -162,7 +168,7 @@
                                         <Setter.Value>
                                             <ControlTemplate TargetType="Button">
                                                 <Border>
-                                                    <Image Source="Resources/Nav_Back.png"></Image>
+                                                    <Image Source="Resources/Nav_Back.png" />
                                                 </Border>
                                             </ControlTemplate>
                                         </Setter.Value>
@@ -173,7 +179,7 @@
                                                 <Setter.Value>
                                                     <ControlTemplate>
                                                         <Border>
-                                                            <Image Source="Resources/Nav_Back_Hover.png"></Image>
+                                                            <Image Source="Resources/Nav_Back_Hover.png" />
                                                         </Border>
                                                     </ControlTemplate>
                                                 </Setter.Value>
@@ -184,7 +190,7 @@
                                                 <Setter.Value>
                                                     <ControlTemplate>
                                                         <Border>
-                                                            <Image Source="Resources/Nav_Back_Pressed.png"></Image>
+                                                            <Image Source="Resources/Nav_Back_Pressed.png" />
                                                         </Border>
                                                     </ControlTemplate>
                                                 </Setter.Value>
@@ -195,7 +201,7 @@
                                                 <Setter.Value>
                                                     <ControlTemplate>
                                                         <Border>
-                                                            <Image Source="Resources/Nav_Back_Disabled.png"></Image>
+                                                            <Image Source="Resources/Nav_Back_Disabled.png" />
                                                         </Border>
                                                     </ControlTemplate>
                                                 </Setter.Value>
@@ -205,18 +211,17 @@
                                 </Style>
                             </Button.Style>
                         </Button>
-
                         <Button Width="30" 
                             Margin="0,0,5,0" 
                             Padding="3" 
                             Command="{Binding ForwardDirectoryCommand}">
                             <Button.Style>
-                                <Style TargetType="Button" BasedOn="{StaticResource AbstractButtonStyle}">
+                                <Style TargetType="{x:Type Button}" BasedOn="{StaticResource AbstractButtonStyle}">
                                     <Setter Property="Template">
                                         <Setter.Value>
-                                            <ControlTemplate TargetType="Button">
+                                            <ControlTemplate TargetType="{x:Type Button}">
                                                 <Border>
-                                                    <Image Source="Resources/Nav_Forward.png"></Image>
+                                                    <Image Source="Resources/Nav_Forward.png"/>
                                                 </Border>
                                             </ControlTemplate>
                                         </Setter.Value>
@@ -227,7 +232,7 @@
                                                 <Setter.Value>
                                                     <ControlTemplate>
                                                         <Border>
-                                                            <Image Source="Resources/Nav_Forward_Hover.png"></Image>
+                                                            <Image Source="Resources/Nav_Forward_Hover.png"/>
                                                         </Border>
                                                     </ControlTemplate>
                                                 </Setter.Value>
@@ -238,7 +243,7 @@
                                                 <Setter.Value>
                                                     <ControlTemplate>
                                                         <Border>
-                                                            <Image Source="Resources/Nav_Forward_Pressed.png"></Image>
+                                                            <Image Source="Resources/Nav_Forward_Pressed.png"/>
                                                         </Border>
                                                     </ControlTemplate>
                                                 </Setter.Value>
@@ -249,7 +254,7 @@
                                                 <Setter.Value>
                                                     <ControlTemplate>
                                                         <Border>
-                                                            <Image Source="Resources/Nav_Forward_Disabled.png"></Image>
+                                                            <Image Source="Resources/Nav_Forward_Disabled.png"/>
                                                         </Border>
                                                     </ControlTemplate>
                                                 </Setter.Value>

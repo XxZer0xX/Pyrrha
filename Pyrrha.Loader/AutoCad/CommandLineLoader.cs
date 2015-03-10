@@ -16,9 +16,8 @@ using PyrrhaAppLoad;
 
 namespace Pyrrha.Loader.AutoCad
 {
-    #region Referenceing
 
-    
+    #region Referenceing
 
     #endregion
 
@@ -27,13 +26,13 @@ namespace Pyrrha.Loader.AutoCad
         [CommandMethod("-PYLOAD")]
         public void PythonLoadCmdLine()
         {
-            this.PythonLoad(true);
+            PythonLoad(true);
         }
 
         [CommandMethod("PYLOAD")]
         public void PythonLoadUI()
         {
-            this.PythonLoad(false);
+            PythonLoad(false);
         }
 
         public void PythonLoad(bool useCmdLine)
